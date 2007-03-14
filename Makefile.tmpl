@@ -1,0 +1,21 @@
+# Makefile
+
+CC=gcc
+CFLAGS=-c
+<?if serial?>LIBS=-lm<?end if?><?if parallel?>LIBS=-lm -lmpi<?end if?>
+SOURCES=main.c memory.c xml.c messageboards.c<?foreach functionfiles?> $filepath<?end foreach?>
+
+OBJECTS=$(SOURCES:.c=.o)
+EXECUTABLE=main
+RM=rm -f
+
+all: $(SOURCES) $(EXECUTABLE)
+
+$(EXECUTABLE): $(OBJECTS) 
+	$(CC) $(LDFLAGS) $(OBJECTS) -o $@ $(LIBS)
+
+.c.o:
+	$(CC) $(CFLAGS) $< -o $@
+
+clean:
+	$(RM) *.o main.exe main

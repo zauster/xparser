@@ -1,0 +1,306 @@
+/**
+ * \file  main.c
+ * \brief Holds main function of the program.
+ */
+
+#include "header.h"
+
+/** \fn int main(int argc, char ** argv)
+ * \brief Main program loop.
+ * \param argc Argument count.
+ * \param argv Pointer Pointer to Argument vector.
+ */
+int main(int argc, char ** argv)
+{
+	/* Timing variables */
+	time_t start, stop, interval;
+	FILE *file;
+	char data[100];
+	char logfilepath[100];
+	char inputpath[100];
+	int position = 0;
+	int lastd = 0;
+	int i;
+	int iteration_number;
+	int iteration_total;
+	int * p_iteration_number;
+	xmachine * temp_free_xmachine;
+<?if parallel?>	int err; /* MPI errors */
+	char processor_name[MPI_MAX_PROCESSOR_NAME];
+	int processor_name_length;
+	MPI_Aint extent, baseaddress;
+	/* Variables needed to construct spacePartitionType */
+	space_partition tmp_space_partition;
+	int array_of_block_lengths[2] = {1, 6};
+	MPI_Aint array_of_displacements[2];
+	MPI_Datatype array_of_types[2] = {MPI_INT, MPI_DOUBLE};
+	/* Create mpi datatypes for X-machines */	<?foreach xagent?>
+	/* Variables needed to construct $name X-machine Type */
+	xmachine_memory_$name tmp_$name_xmachine;
+	int $name_xmachine_array_of_block_lengths[$var_number] = {<?foreach xagentvar?>1<?if notlast?>, <?end if?><?end foreach?>};
+	MPI_Aint $name_xmachine_array_of_displacements[$var_number];
+	MPI_Datatype $name_xmachine_array_of_types[$var_number] = {<?foreach xagentvar?>$mpi_type<?if notlast?>, <?end if?><?end foreach?>};<?end foreach?>
+	/* Create mpi datatypes for messages */	<?foreach message?>
+	/* Variables needed to construct message$nameType */
+	xmachine_message_$name_data tmp_$name_message;
+	int $name_array_of_block_lengths[$var_number] = {<?foreach messagevar?>1<?if notlast?>, <?end if?><?end foreach?>};
+	MPI_Aint $name_array_of_displacements[$var_number];
+	MPI_Datatype $name_array_of_types[$var_number] = {<?foreach messagevar?>$mpi_type<?if notlast?>, <?end if?><?end foreach?>};<?end foreach?>
+<?end if?>
+	
+	/* Don't use binary output as default */
+	use_binary_output = 0;
+	/* Output frequency is 1 as default */
+	output_frequency = 1;
+	/* Set random seed */
+	srand(time(NULL));
+	
+	/* Initialise pointers */
+	initialise_pointers();
+	p_iteration_number = &iteration_number;
+	<?if parallel?>
+		
+		/* MPI initialisation routine */
+		err = MPI_Init(&argc, &argv);
+  		if (err != MPI_SUCCESS)
+		{
+			printf("MPI initialization failed!\n");
+			exit(1);
+		}
+		/* Get total number of nodes and own node number */
+		MPI_Comm_size(MPI_COMM_WORLD, &totalnodes);
+		MPI_Comm_rank(MPI_COMM_WORLD, &node_number);
+		/* Initialise spacePartitionType */
+		//array_of_displacements[0] = 0;
+		//MPI_Type_extent(MPI_INT, &extent);
+		//array_of_displacements[1] = extent;
+		MPI_Address(&tmp_space_partition, &baseaddress);
+		MPI_Address(&tmp_space_partition.node_id, &array_of_displacements[0]);
+		array_of_displacements[0] -= baseaddress;
+		MPI_Address(&tmp_space_partition.partition_data[0], &array_of_displacements[1]);
+		array_of_displacements[1] -= baseaddress;
+		MPI_Type_struct(2, array_of_block_lengths, array_of_displacements, array_of_types, &spacePartitionType);
+		MPI_Type_commit(&spacePartitionType);
+		/* Initialise mpi datatypes for X-machines */
+<?foreach xagent?>		/* Initialise $name X-machine Type */
+		MPI_Address(&tmp_$name_xmachine, &baseaddress);
+<?foreach xagentvar?>		MPI_Address(&tmp_$agent_name_xmachine.$name, &$agent_name_xmachine_array_of_displacements[$var_count]);
+		$agent_name_xmachine_array_of_displacements[$var_count] -= baseaddress;
+<?end foreach?>		MPI_Type_struct($var_number, $name_xmachine_array_of_block_lengths, $name_xmachine_array_of_displacements, $name_xmachine_array_of_types, &xmachine$nameType);
+		MPI_Type_commit(&xmachine$nameType);
+<?end foreach?>		/* Initialise mpi datatypes for messages */
+<?foreach message?>		/* Initialise message$nameType */
+		MPI_Address(&tmp_$name_message, &baseaddress);
+<?foreach messagevar?>		MPI_Address(&tmp_$messagename_message.$name, &$messagename_array_of_displacements[$var_count]);
+		$messagename_array_of_displacements[$var_count] -= baseaddress;
+<?end foreach?>		MPI_Type_struct($var_number, $name_array_of_block_lengths, $name_array_of_displacements, $name_array_of_types, &message$nameType);
+		MPI_Type_commit(&message$nameType);
+<?end foreach?>
+<?end if?>	if(argc < 2)
+	{
+		printf("No arguments defined\n");
+		exit(0);
+	}
+	iteration_total = atoi(argv[1]);
+<?if parallel?>	if(node_number == 0) <?end if?>printf("Iterations: %i\n", iteration_total);
+	
+	/* Read initial states of x-machines */
+	if(argc < 3)
+	{
+		printf("Need two parameters\n");
+		exit(0);
+	}
+	strcpy(inputpath, argv[2]);
+<?if parallel?>	if(node_number == 0) <?end if?>printf("Initial states: %s\n", inputpath);
+	
+	i = 0;
+	while(inputpath[i] != '\0')
+	{
+		/* For windows directories */
+		if(inputpath[i] == '\\') lastd=i;
+		/* For unix directories */
+		if(inputpath[i] == '/') lastd=i;
+		i++;
+	}
+	strcpy(outputpath, inputpath);
+	outputpath[lastd+1] = '\0';
+<?if parallel?>	if(node_number == 0) <?end if?>printf("Ouput dir: %s\n", outputpath);
+	
+<?if serial?>
+	/* Read number of space partitions (1 by default) */
+	totalnodes = 1;
+	if(argc > 3)
+	{
+		totalnodes = atoi(argv[3]);
+	}
+	
+<?end if?>
+	i = 3;
+	while(argc > i)
+	{
+		/* Use binary format for results */
+		if(strcmp(argv[i],"-b") == 0) use_binary_output = 1;
+		if(use_binary_output) printf("Using binary output for results\n");
+		if(strcmp(argv[i],"-f") == 0)
+		{
+			if(argc > (i+1))
+			{
+				output_frequency = atoi(argv[(i+1)]);
+				printf("Using output frequency of: %i\n", output_frequency);
+				i++;
+			}
+			else
+			{
+				printf("Output frequency number not defined\n");
+				exit(0);
+			}
+		}
+		i++;
+	}
+	
+	/* Create space partitions */
+	create_partitions(inputpath, p_iteration_number);
+<?if parallel?>
+	
+	p_xmachine = &current_node->agents;
+<?foreach message?>	p_$name_message = &current_node->$name_messages;
+<?end foreach?>	
+<?end if?>
+	/* Read initial x-agent states */
+<?if serial?>
+	current_node = *p_node_info;
+	while(current_node)
+	{
+		p_xmachine = &current_node->agents;
+<?end if?>
+	readinitialstates(inputpath, p_iteration_number, 1);
+<?if serial?>
+		current_node = current_node->next;
+	}
+<?end if?>
+	
+<?if serial?>
+		i = 0;
+		current_node = *p_node_info;
+		while(current_node)
+		{
+			printf("No of agents on partition %d: %d\n", current_node->node_id, current_node->agent_total);
+			i += current_node->agent_total;
+			current_node = current_node->next;
+		}
+		printf("Agent total check: %d\n", i);
+<?end if?>
+<?if parallel?>
+		/* Print processor name */
+		printf("%d> ", node_number);
+		MPI_Get_processor_name(processor_name, &processor_name_length);
+		printf("Processor name: %s\n", processor_name);
+		/* Print number of agents on node */
+		printf("%d> ", node_number);
+		printf("No of agents on node: %d\n", current_node->agent_total);
+		
+		/* Quickly check account for all agents */
+		MPI_Reduce(&current_node->agent_total, &i, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+		if(node_number == 0) printf("Agent total check: %d\n", i);
+<?end if?>
+	
+	/* Start log file (now so that xvisualiser can read straight away) */
+<?if parallel?>	if(node_number == 0)
+	{<?end if?>
+	/* Write log file */
+	sprintf(logfilepath, "%slog.xml", outputpath);
+	file = fopen(logfilepath, "w");
+	fputs("<model_run>\n", file);
+	fputs("<codetype>", file);
+<?if serial?>	fputs("serial", file);<?end if?>
+<?if parallel?>	fputs("parallel", file);<?end if?>
+	fputs("</codetype>\n", file);
+	fputs("<nodes>", file);
+	sprintf(data, "%i", totalnodes);
+	fputs(data, file);
+	fputs("</nodes>\n", file);
+	fclose(file);
+<?if parallel?>	}<?end if?>
+	/* Start timing */
+	start = time(NULL);
+	
+	for(iteration_loop=iteration_number+1; iteration_loop < iteration_number+iteration_total+1; iteration_loop++)
+	{
+		interval = time(NULL);
+		/* Print out iteration number */
+<?if serial?>		<?end if?><?if parallel?>		if(node_number == 0) <?end if?>printf("Iteration - %d\n", iteration_loop);
+		/* START OF ITERATION */
+<?foreach funclayer?><?if serial?>
+		current_node = *p_node_info;
+		while(current_node)
+		{
+<?foreach message?>		p_$name_message = &current_node->$name_messages;
+<?end foreach?>		p_xmachine = &current_node->agents;
+<?end if?>		/* Randomise xmemory list */
+		randomisexagent();<?if parallel?>		/* Barrier synchronisation */
+		MPI_Barrier(MPI_COMM_WORLD);<?end if?>
+		/* Loop through x-machines */
+		current_xmachine = *p_xmachine;
+		while(current_xmachine)
+		{
+			i = 0;<?foreach function?>
+			if(current_xmachine->xmachine_$note != NULL)
+			{
+				i = $name();
+			}<?end foreach?>	
+			/* If agent is freed */
+			if(i == 1)
+			{
+				temp_free_xmachine = current_xmachine->next;
+				free_agent();
+				current_xmachine = temp_free_xmachine;
+			}
+			else
+			{
+				current_xmachine = current_xmachine->next;
+			}
+		}
+<?if parallel?>		/* Propagate messages between nodes */
+		propagate_messages();<?end if?><?if serial?>		current_node = current_node->next;
+		}<?end if?>		<?end foreach?><?foreach enditfunc?>
+		/* End of iteration code */
+		$code<?end foreach?>
+		if(iteration_loop%output_frequency == 0)
+		{
+			if(use_binary_output) saveiterationdata_binary(iteration_loop);
+			else saveiterationdata(iteration_loop);
+		}<?if serial?>		current_node = *p_node_info;
+		while(current_node)
+		{<?end if?><?foreach message?><?if serial?>
+		p_$name_message = &current_node->$name_messages;<?end if?>
+		free$namemessages();<?end foreach?>
+<?if serial?>		p_xmachine = &current_node->agents;<?end if?>
+		/* Calculate if any agents need to jump S.P. */
+		propagate_agents();<?if serial?>
+		current_node = current_node->next;
+		}<?end if?>
+	/* Save iteration time to log file */
+<?if parallel?>		if(node_number == 0)
+		{<?end if?>
+		file = fopen(logfilepath, "a");
+		fputs("<iteration><no>", file);
+		sprintf(data, "%i", iteration_loop);
+		fputs(data, file);
+		fputs("</no><time>", file);
+		sprintf(data, "%i", time(NULL)-interval);
+		fputs(data, file);
+		fputs("</time></iteration>\n", file);
+		fclose(file);
+<?if parallel?>		}<?end if?>
+	}
+	
+	/* Stop timing and print total time */
+	stop = time(NULL);
+	total_time = stop-start;
+<?if serial?>	<?end if?><?if parallel?>	if(node_number == 0) <?end if?>printf("Execution time - %d:%02d [mins:secs]\n", total_time/60, total_time%60);
+	
+	clean_up(0);
+	
+	/* Exit successfully by returning zero to Operating System */
+	return 0;
+}

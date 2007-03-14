@@ -1,0 +1,302 @@
+/**
+ * \file  xml.c
+ * \brief Holds xml reading and writing functions.
+ */
+
+#include "header.h"
+
+/** \fn void readinitialstates(char * filename, int * itno, int flag)
+ * \brief Read initial X-machine memory starting values from a file.
+ * \param filename The path to the file.
+ * \param itno Pointer to the iteration number.
+ * \param flag Flag for whether to check space partitions.
+ */
+void readinitialstates(char * filename, int * itno, int flag)
+{
+	/* Pointer to file */
+	FILE *file;
+	/* Char and char buffer for reading file to */
+	char c = ' ';
+	char buffer[10000];
+	char agentname[1000];
+	char arraydata[10000];
+	/* Pointer to x-memory for initial state data */
+	//xmachine * current_xmachine;
+	/* Variables for checking tags */
+	int reading, i, j;
+	int array_k;
+	int arraycount;
+	int in_tag, in_itno, in_agent, in_name, in_environment;
+<?foreach allvar?>	int in_$name;
+<?end foreach?>
+<?foreach envvar?>	int in_$name;
+<?end foreach?>
+	/* Variables for initial state data */
+<?foreach allvar?>	$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[] = {}<?end if?>;
+<?end foreach?>
+	/* Open config file to read-only */
+	if((file = fopen(filename, "r"))==NULL)
+	{
+		printf("error opening initial states\n");
+		exit(0);
+	}
+	/* Initialise variables */
+	/* TODO: initialise static arrays with zero for each element? */
+	next_avaliable_id = -1;
+	reading = 1;
+	i = 0;
+	in_tag = 0;
+	in_itno = 0;
+	in_agent = 0;
+	in_name = 0;
+	in_environment = 0;
+<?foreach allvar?>	in_$name = 0;
+<?end foreach?>
+<?foreach envvar?>	in_$name = 0;
+<?end foreach?>
+	/* Default variables for memory */
+	/* Not implemented static arrays */
+<?foreach allvar?><?if not_array?>	$name = $default_value;
+<?end if?><?end foreach?>
+<?foreach envvar?>	$name = $default_value;
+<?end foreach?>
+	/* Read file until end of xml */
+	while(reading==1)
+	{
+		/* Get the next char from the file */
+		c = fgetc(file);
+		
+		/* If the end of a tag */
+		if(c == '>')
+		{
+			/* Place 0 at end of buffer to make chars a string */
+			buffer[i] = 0;
+			
+			if(strcmp(buffer, "states") == 0) reading = 1;
+			if(strcmp(buffer, "/states") == 0) reading = 0;
+			if(strcmp(buffer, "itno") == 0) in_itno = 1;
+			if(strcmp(buffer, "/itno") == 0) in_itno = 0;
+			if(strcmp(buffer, "name") == 0) in_name = 1;
+			if(strcmp(buffer, "/name") == 0) in_name = 0;
+			if(strcmp(buffer, "environment") == 0) in_environment = 1;
+			if(strcmp(buffer, "/environment") == 0) in_environment = 0;
+			if(strcmp(buffer, "xagent") == 0) in_agent = 1;
+			if(strcmp(buffer, "/xagent") == 0)
+			{
+				in_agent = 0;
+				
+<?foreach xagent?>				<?if notfirst?>else <?end if?>if(strcmp(agentname, "$name") == 0)
+				{
+					/* Check if agent in space partition (or flag is zero)*/
+					if(flag == 0 ||
+					((current_node->partition_data[0] == SPINF) || (current_node->partition_data[0] != SPINF && $xvar >= current_node->partition_data[0])) &&
+					((current_node->partition_data[1] == SPINF) || (current_node->partition_data[1] != SPINF && $xvar < current_node->partition_data[1])) &&
+					((current_node->partition_data[2] == SPINF) || (current_node->partition_data[2] != SPINF && $yvar >= current_node->partition_data[2])) &&
+					((current_node->partition_data[3] == SPINF) || (current_node->partition_data[3] != SPINF && $yvar < current_node->partition_data[3])) &&
+					((current_node->partition_data[4] == SPINF) || (current_node->partition_data[4] != SPINF && $zvar >= current_node->partition_data[4])) &&
+					((current_node->partition_data[5] == SPINF) || (current_node->partition_data[5] != SPINF && $zvar < current_node->partition_data[5])))
+					{
+						add_$name_agent(<?foreach xagentvar?>$name<?if notlast?>, <?end if?><?end foreach?>);
+					}
+				}
+<?end foreach?>				else
+				{
+					printf("Warning: agent name undefined - '%s'\n", agentname);
+				}
+				/* Reset xagent variables */
+				/* Not implemented static arrays */
+<?foreach allvar?><?if not_array?>				$name = $default_value;
+<?end if?><?end foreach?>			}
+<?foreach allvar?>			if(strcmp(buffer, "$name") == 0) in_$name = 1;
+			if(strcmp(buffer, "/$name") == 0) in_$name = 0;
+<?end foreach?>
+<?foreach envvar?>			if(strcmp(buffer, "$name") == 0) in_$name = 1;
+			if(strcmp(buffer, "/$name") == 0) in_$name = 0;
+<?end foreach?>
+			
+			/* End of tag and reset buffer */
+			in_tag = 0;
+			i = 0;
+		}
+		/* If start of tag */
+		else if(c == '<')
+		{
+			/* Place /0 at end of buffer to end numbers */
+			buffer[i] = 0;
+			/* Flag in tag */
+			in_tag = 1;
+			
+			if(in_itno) *itno = atoi(buffer);
+			if(in_name) strcpy(agentname, buffer);
+			if(in_environment)
+			{
+<?foreach envvar?>				if(in_$name) $name = ato$c_type(buffer);
+<?end foreach?>			}
+			else
+			{
+<?foreach allvar?>				if(in_$name)<?if not_array?> $name = ato$c_type(buffer);<?end if?><?if array?>
+				{
+					<?if char_array?>j = 0;<?end if?><?if notchar_array?>j = 1;<?end if?>
+					arraycount = 0;
+					<?if dynamic_array?>$name = init_$type();<?end if?><?if char_array?>while(buffer[j] != '\0')
+					{
+						add_char($name, buffer[j]);
+						j++;
+					}<?end if?><?if notchar_array?>
+					while(buffer[j] != '}')
+					{
+						array_k = 0;
+						while(buffer[j] != ',' && buffer[j] != '}')
+						{
+							arraydata[array_k] = buffer[j];
+							array_k++;
+							j++;
+						}
+						arraydata[array_k] = 0;
+						<?if int_array?>add_int($name, <?end if?><?if double_array?>add_double($name, <?end if?><?if static_array?>$name[arraycount] = <?end if?>ato$c_type(arraydata)<?if dynamic_array?><?if char_array?>[0]<?end if?>)<?end if?>;
+						arraycount++;
+						if(buffer[j] != '}') j = j++;
+					}<?end if?>
+				}<?end if?>
+<?end foreach?>			}
+			
+			/* Reset buffer */
+			i = 0;
+		}
+		/* If in tag put read char into buffer */
+		else if(in_tag)
+		{
+			buffer[i] = c;
+			i++;
+		}
+		/* If in data read char into buffer */
+		else
+		{
+			buffer[i] = c;
+			i++;
+		}
+	}
+	/* Close the file */
+	fclose(file);
+}
+
+/** \fn void saveiterationdata_binary(int iteration_number)
+ * \brief Save X-machine memory to a binary file.
+ * \param iteration_number The current iteration number.
+ */
+void saveiterationdata_binary(int iteration_number)
+{
+	/* Pointer to file */
+	FILE *file;
+	char data[100];
+	int i;
+	int agentcount = 0;
+	xmachine * current;
+<?foreach xagent?>	xmachine_memory_$name * current_$name;
+<?end foreach?><?foreach allvar?><?if static_array?>	$type * $name;
+<?end if?><?end foreach?>
+<?if serial?>	sprintf(data, "%s%i.binary", outputpath, iteration_number);<?end if?><?if parallel?>	sprintf(data, "%snode%i-%i.binary", outputpath, node_number, iteration_number);<?end if?>
+	file = fopen(data, "wb");
+	// iteration number
+	fwrite(&iteration_number ,sizeof(int), 1, file);
+	// number of xagent memories written (update at end)
+	fwrite(&i ,sizeof(int), 1, file);
+	
+<?if parallel?>	if(node_number == 0)
+		{
+<?end if?><?if parallel?>	}<?end if?><?if serial?>	current_node = *p_node_info;
+	while(current_node)
+	{
+	p_xmachine = &current_node->agents;
+<?end if?>	current_xmachine = *p_xmachine;
+	while(current_xmachine)
+	{
+<?foreach xagent?>		<?if notfirst?>else <?end if?>if(current_xmachine->xmachine_$name != NULL)
+		{
+			current_$name = current_xmachine->xmachine_$name;
+			agentcount++;
+		}
+<?end foreach?>		
+		current_xmachine = current_xmachine->next;
+	}
+<?if serial?>		current_node = current_node->next;
+	}<?end if?>
+	
+	// update agent count\n", file);
+	fseek(file,sizeof(int)*1,SEEK_SET);
+	fwrite(&agentcount,sizeof(int),1,file);
+	
+	/* Close the file */
+	fclose(file);
+}
+
+/** \fn void saveiterationdata(int iteration_number)
+ * \brief Save X-machine memory to a file.
+ * \param iteration_number The current iteration number.
+ */
+void saveiterationdata(int iteration_number)
+{
+	/* Pointer to file */
+	FILE *file;
+	char data[100];
+	int i;
+	xmachine * current;
+<?foreach xagent?>	xmachine_memory_$name * current_$name;
+<?end foreach?><?foreach allvar?><?if array?>	$type * $name;
+<?end if?><?end foreach?>	
+<?if serial?>	sprintf(data, "%s%i.xml", outputpath, iteration_number);<?end if?><?if parallel?>	sprintf(data, "%snode%i-%i.xml", outputpath, node_number, iteration_number);<?end if?>
+	file = fopen(data, "w");
+<?if parallel?>	if(node_number == 0)
+	{<?end if?>	fputs("<states>\n<itno>", file);
+	sprintf(data, "%i", iteration_number);
+	fputs(data, file);
+	fputs("</itno>\n", file);
+	fputs("<environment>\n" , file);
+<?foreach envvar?>	fputs("<$name>", file);
+	sprintf(data, "%$c_type", $name);
+	fputs(data, file);
+	fputs("</$name>\n", file);
+<?end foreach?>	fputs("</environment>\n" , file);
+<?if parallel?>	}<?end if?>
+<?if serial?>
+	current_node = *p_node_info;
+	while(current_node)
+	{
+		p_xmachine = &current_node->agents;
+<?end if?>
+		current_xmachine = *p_xmachine;
+	while(current_xmachine)
+	{
+		fputs("<xagent>\n" , file);
+<?foreach xagent?>		<?if notfirst?>else <?end if?>if(current_xmachine->xmachine_$name != NULL)
+		{
+			current_$name = current_xmachine->xmachine_$name;
+			fputs("<name>$name</name>\n", file);
+<?foreach xagentvar?>			fputs("<$name>", file);
+<?if not_array?>			sprintf(data, "%$c_type", current_$agent_name->$name);
+			fputs(data, file);<?end if?><?if array?>			$name = current_$agent_name->$name;
+<?if notchar_array?>			fputs("{", file);<?end if?>
+			for(i=0; i<<?if static_array?>$arraylength<?end if?><?if dynamic_array?>$name->size<?end if?>; i++)
+			{
+				sprintf(data, "%$c_type", $name<?if dynamic_array?>->array[i]<?end if?>);
+				fputs(data, file);
+				<?if static_array?>$name++;<?end if?>
+				<?if notchar_array?>if(i < <?if static_array?>$arraylength-1<?end if?><?if dynamic_array?>($name->size-1)<?end if?>) fputs(", ", file);<?end if?>
+			}
+			<?if notchar_array?>fputs("}", file);<?end if?><?end if?>
+			fputs("</$name>\n", file);
+<?end foreach?>		}
+<?end foreach?>	
+		fputs("</xagent>\n", file);
+		
+		current_xmachine = current_xmachine->next;
+	}
+	<?if serial?>		current_node = current_node->next;
+	}<?end if?>
+<?if parallel?>if(node_number == totalnodes-1) <?end if?>fputs("</states>\n" , file);
+	
+	/* Close the file */
+	fclose(file);
+	
+	next_avaliable_id++;
+}

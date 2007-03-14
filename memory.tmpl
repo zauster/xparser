@@ -1,0 +1,1621 @@
+/**
+ * \file  memory.c
+ * \brief Holds memory functions.
+ */
+
+#include "header.h"
+
+/** \fn void initialise_pointers()
+ * \brief Initialises pointers to xmachine, message, and node lists.
+ */
+void initialise_pointers()
+{
+	temp_xmachine = NULL;
+	p_xmachine = &temp_xmachine;
+<?foreach message?>	temp_$name_message = NULL;
+	p_$name_message = &temp_$name_message;
+<?end foreach?>	temp_node_info = NULL;
+	p_node_info = &temp_node_info;
+}
+
+/* add_location */
+/** \fn void add_location(double point, double iradius, location ** p_location)
+ * \brief Adds a location in order into the location list.
+ * \param point Position of an agent.
+ * \param iradius Interaction radius.
+ * \param p_location Pointer Pointer to the location list.
+ */
+void add_location(double point, double iradius, location ** p_location)
+{
+	location * current = *p_location;
+	location * tmp = NULL;
+	location * newlocation = NULL;
+	int found = 0;
+	
+	while(found == 0)
+	{
+		if(current == NULL) found = 1;
+		else if(point > current->point) found = 1;
+		else
+		{
+			tmp = current;
+			current = current->next;
+		}
+	}
+	
+	newlocation = (location *)malloc(sizeof(location));
+	
+	if(tmp)
+	{
+		tmp->next = newlocation;
+	}
+	else
+	{
+		*p_location = newlocation;
+	}
+	
+	newlocation->next = current;
+	newlocation->point = point;
+	newlocation->iradius = iradius;
+}
+
+/* freelocations */
+/** \fn void freelocations(location ** p_location)
+ * \brief Free locations from the location list.
+ * \param p_location Pointer Pointer to the location list.
+ */
+void freelocations(location ** p_location)
+{
+	location * head = *p_location;
+	location * tmp = NULL;
+	
+	while(head)
+	{
+		tmp = head->next;
+		free(head);
+		head = tmp;
+	}
+	
+	*p_location = NULL;
+}
+
+/* add_xmachine */
+/** \fn xmachine * add_xmachine()
+ * \brief Add an X-machine to the current being used X-machine list.
+ * \return Pointer to the added X-machine.
+ */
+xmachine * add_xmachine()
+{
+	xmachine * current = (xmachine *)malloc(sizeof(xmachine));
+<?foreach xagent?>	current->xmachine_$name = NULL;
+<?end foreach?>	current->next = *p_xmachine;
+	*p_xmachine = current;
+	
+	current_node->agent_total++;
+	
+	return current;
+}
+<?foreach xagent?>
+/** \fn void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>)
+ * \brief Add $name X-machine to the current being used X-machine list.
+<?foreach xagentvar?> * \param $name Variable for the X-machine memory.
+<?end foreach?> */
+void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>)
+{
+	xmachine * new_xmachine = add_xmachine();
+	xmachine_memory_$name * current = (xmachine_memory_$name *)malloc(sizeof(xmachine_memory_$name));
+	
+	new_xmachine->xmachine_$name = current;
+<?foreach xagentvar?><?if not_array?>	current->$name = $name;<?end if?><?if dynamic_array?>	current->$name = $name;<?end if?><?if static_array?>	memcpy(current->$name, $name, $arraylength*sizeof($type));<?end if?>
+<?end foreach?>}
+<?end foreach?>
+/** \fn void free_agent()
+ * \brief Free the currently being used X-machine.
+ */
+/* free_agent */
+void free_agent()
+{
+	xmachine * head = *p_xmachine;
+	xmachine * tmp = NULL;
+	
+	while(head)
+	{
+		if(head == current_xmachine)
+		{
+			if(tmp) tmp->next = head->next;
+			else *p_xmachine = head->next;
+<?foreach xagent?>			if(head->xmachine_$name)
+			{
+<?foreach xagentvar?><?if dynamic_array?>				free_$type(head->xmachine_$agent_name->$name);
+<?end if?><?end foreach?>				free(head->xmachine_$name);
+			}
+<?end foreach?>
+		free(head);
+		head = NULL;
+	}
+	else
+	{
+		tmp = head;
+		head = tmp->next;
+	}
+}
+	
+	current_node->agent_total--;
+}
+
+/* freexmachines */
+/** \fn void freexmachines()
+ * \brief Free the currently being used X-machine list.
+ */
+void freexmachines()
+{
+	xmachine * head = *p_xmachine;
+	xmachine * tmp = NULL;
+	
+	while(head)
+	{
+		tmp = head->next;
+<?foreach xagent?>		if(head->xmachine_$name)
+		{
+<?foreach xagentvar?><?if dynamic_array?>			free_$type(head->xmachine_$agent_name->$name);
+<?end if?><?end foreach?>			free(head->xmachine_$name);
+		}
+<?end foreach?>		free(head);
+		head = tmp;
+	}
+	
+	*p_xmachine = NULL;
+}
+
+<?foreach allvar?><?if not_array?>
+/** \fn void set_$name($type $name) 
+ * \brief Set $name memory variable for current X-machine.
+ * \param $name New value for variable.
+ */
+void set_$name($type $name)
+{
+<?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name) current_xmachine->xmachine_$name->$allvar_name = $allvar_name;
+<?end if?><?end foreach?>}
+
+/** \fn $type get_$name()
+ * \brief Get $name memory variable from current X-machine.
+ * \return Value for variable.
+ */
+$type get_$name()
+{
+<?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name) return current_xmachine->xmachine_$name->$allvar_name;
+<?end if?><?end foreach?>}
+<?end if?><?end foreach?>
+/** \fn void randomisexagent()
+ * \brief Randomise the current X-machine list.
+ */
+void randomisexagent()
+{
+	int length = current_node->agent_total;
+	int rano, remainder, i, done[length];
+	xmachine * address_list[length];
+	xmachine * current, * xprev, * xnext, * temp;
+	xmachine ** new_p_xmemory;
+	
+	/* initialise new linked agent list using temp */
+	temp = NULL;
+	new_p_xmemory = &temp;
+	
+	// Loop through agents putting their addresses into the address list
+	current = *p_xmachine;
+	i = 0;
+	while(current)
+	{
+		address_list[i] = current;
+		current = current->next;
+		address_list[i]->next = NULL;
+		i++;
+	}
+	
+	// Set array done to show no indices done so far
+	for (i = 0; i < length; i++) done[i] = 0;
+	
+	// Now generate random numbers to use as indices to create new randomised list
+	for(i = 0; i < length; i++)
+	{
+		rano = (double)length*rand()/(RAND_MAX+1.0);
+		if (done[rano] == 0)
+		{
+			current = *new_p_xmemory;
+			*new_p_xmemory = address_list[rano];
+			(*new_p_xmemory)->next = current;
+			done[rano] = 1;
+		}
+		else
+		{
+			i--;
+		}
+	}
+	/* make the empty orginal list point to newly randomised list */
+	*p_xmachine = *new_p_xmemory;
+}
+
+/** \fn void add_node(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz)
+ * \brief Add a node to the node list.
+ * \param node_id The node ID.
+ * \param minx The minumum value on the x-axis of the bounding volume.
+ * \param maxx The maximum value on the x-axis of the bounding volume.
+ * \param miny The minumum value on the y-axis of the bounding volume.
+ * \param maxy The maximum value on the y-axis of the bounding volume.
+ * \param minz The minumum value on the z-axis of the bounding volume.
+ * \param maxz The maximum value on the z-axis of the bounding volume.
+ */
+void add_node(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz)
+{
+	node_information * current = *p_node_info;
+	node_information * tmp = NULL;
+	
+	while(current)
+	{
+		tmp = current;
+		current = current->next;
+	}
+	
+	current = (node_information *)malloc(sizeof(node_information));
+<?if parallel?>	if(node_id == node_number) current_node = current;<?end if?>
+	if(tmp)
+	{
+		tmp->next = current;
+	}
+	else
+	{
+		*p_node_info = current;
+	}
+	
+	current->next = NULL;
+	current->node_id = node_id;
+	current->agents_in_halo = 0;
+	current->agent_total = 0;
+	current->agents = NULL;
+<?foreach message?>	current->$name_messages = NULL;
+<?end foreach?>
+<?if parallel?><?foreach message?>	current->$name_message_no = 0;
+<?end foreach?><?foreach xagent?>	current->$name_agents = NULL;
+	current->$name_agent_no = 0;
+<?end foreach?>
+<?end if?>
+	current->partition_data[0] = minx;
+	current->partition_data[1] = maxx;
+	current->partition_data[2] = miny;
+	current->partition_data[3] = maxy;
+	current->partition_data[4] = minz;
+	current->partition_data[5] = maxz;
+}
+
+/**\fn void free_node_info()
+ * \brief Free the node list.
+ */
+void free_node_info()
+{
+	node_information * tmp, * head;
+	head = *p_node_info;
+	
+	while(head)
+	{
+		tmp = head->next;
+		free(head);
+		head = tmp;
+	}
+	
+	*p_node_info = NULL;
+}
+
+/** \fn void clean_up(int code)
+ * \brief Add a node to the node list.
+ * \param code The error code (zero is no error).
+ */
+void clean_up(int code)
+{
+	FILE *file;
+	char data[100];
+	
+	
+	/* Free x-machine memory */
+<?if serial?>
+	current_node = *p_node_info;
+	while(current_node)
+	{
+		p_xmachine = &current_node->agents;
+<?end if?>
+	freexmachines();
+	current_node->agent_total = 0;
+<?if serial?>
+		current_node = current_node->next;
+	}
+<?end if?>
+	/* Free space partitions linked list */
+	free_node_info();
+	
+<?if parallel?>
+		/* MPI finalise routine */
+		MPI_Finalize();
+		
+		if(node_number == 0)
+		{
+<?end if?>
+	/* Write log file */
+	sprintf(data, "%slog.xml", outputpath);
+	file = fopen(data, "a");
+	fputs("<lastiteration>", file);
+	sprintf(data, "%i", iteration_loop);
+	fputs(data, file);
+	fputs("</lastiteration>", file);
+	fputs("<totaltime>", file);
+	sprintf(data, "%i", total_time);
+	fputs(data, file);
+	fputs("</totaltime>", file);
+	fputs("<totalmessages>", file);
+	sprintf(data, "%i", total_messages);
+	fputs(data, file);
+	fputs("</totalmessages>", file);
+	fputs("</model_run>", file);
+	fclose(file);
+<?if parallel?>	}<?end if?>
+	
+	if(code != 0)
+	{
+		printf("*** Error: ");
+		if(code == 100) printf("cannot handle specified number of space partitions");
+		if(code == 101) printf("could not find number of space partitions config in file");
+		
+		printf(" ***");
+		exit(0);
+	}
+}
+<?if parallel?>
+/** \fn void send_agent_pack(node_information * node_info, int buffersize)
+ * \brief Send a packed MPI message.
+ */
+void send_agent_pack(node_information * node_info, int buffersize)
+{
+	int data[$number_xagentsplusone];
+	int i, position = 0;
+	char buf[buffersize];
+	data[0] = buffersize;
+	xmachine * temp_xmachine;
+<?foreach xagent?>	data[$xagentcountplusone] = node_info->$name_agent_no;
+	xmachine_memory_$name $name_agent_list[node_info->$name_agent_no];
+<?end foreach?>
+	MPI_Send(&data, $number_xagentsplusone, MPI_INT, node_info->node_id, 36, MPI_COMM_WORLD);
+	
+	if(buffersize > 0)
+	{
+<?foreach xagent?>		i = 0;
+		temp_xmachine = node_info->$name_agents;
+		while(temp_xmachine)
+		{
+<?foreach xagentvar?>			$agent_name_agent_list[i].$name = temp_xmachine->xmachine_$agent_name->$name;
+<?end foreach?>			i++;
+			temp_xmachine = temp_xmachine->next;
+		}
+		MPI_Pack($name_agent_list, node_info->$name_agent_no, xmachine$nameType, buf, buffersize, &position, MPI_COMM_WORLD);
+		
+<?end foreach?>		MPI_Send(buf, position, MPI_PACKED, node_info->node_id, 44, MPI_COMM_WORLD);
+	}
+}
+
+/** \fn void receive_agent_pack(node_information * node_info, int buffersize,<?foreach xagent?> int $name_agent_no<?if notlast?>, <?end if?><?end foreach?>)
+ * \brief Receive a packed MPI message.
+ */
+void receive_agent_pack(node_information * node_info, int buffersize, <?foreach xagent?>int $name_agent_no<?if notlast?>, <?end if?><?end foreach?>)
+{
+	char buf[buffersize];
+	int checkbuffersize, i, position = 0;
+	xmachine * temp_xmachine;
+<?foreach xagent?>	xmachine_memory_$name $name_agent_list[$name_agent_no];
+<?end foreach?>	MPI_Recv(buf, buffersize, MPI_PACKED, node_info->node_id, 44, MPI_COMM_WORLD, &status);
+	MPI_Get_count(&status, MPI_PACKED, &checkbuffersize);<?foreach xagent?>
+	
+	MPI_Unpack(buf, checkbuffersize, &position, &$name_agent_list, $name_agent_no, xmachine$nameType, MPI_COMM_WORLD);
+	for(i=0; i<$name_agent_no; i++)
+	{
+		add_$name_agent(<?foreach xagentvar?>$agent_name_agent_list[i].$name<?if notlast?>, <?end if?><?end foreach?>);
+	}<?end foreach?>
+}
+<?end if?>
+/** \fn void propagate_agents()
+ * \brief Check agent positions to see if any need to be moved to a another node.
+ */
+void propagate_agents()
+{
+	int data[$number_xagentsplusone];
+	node_information * node_info;
+	xmachine * before_xmachine, * temp_xmachine;
+	xmachine ** p_temp_xmachine;
+	int count = 0;
+	double x_xmachine, y_xmachine, z_xmachine;
+<?if parallel?>	int agent_type;
+	int buffersize, packsize;
+<?end if?>	current_xmachine = *p_xmachine;
+	before_xmachine = NULL;
+	while(current_xmachine)
+	{
+<?foreach xagent?>		<?if notfirst?>else <?end if?>if(current_xmachine->xmachine_$name != NULL)
+		{
+			x_xmachine = current_xmachine->xmachine_$name->$xvar;
+			y_xmachine = current_xmachine->xmachine_$name->$yvar;
+<?if use_zvar?>			z_xmachine = current_xmachine->xmachine_$name->$zvar;<?end if?><?if no_zvar?>			z_xmachine = 0.0;<?end if?>
+<?if parallel?>			agent_type = $xagent_count;<?end if?>
+		}
+<?end foreach?>		
+		if(x_xmachine < current_node->partition_data[0] ||
+		   x_xmachine > current_node->partition_data[1] ||
+		   y_xmachine < current_node->partition_data[2] ||
+		   y_xmachine > current_node->partition_data[3] ||
+		   z_xmachine < current_node->partition_data[4] ||
+		   z_xmachine > current_node->partition_data[5])
+		{
+			node_info = *p_node_info;
+			while(node_info)
+			{
+				if(node_info->node_id != current_node->node_id &&
+				node_info->partition_data[0] < x_xmachine && node_info->partition_data[1] > x_xmachine &&
+				node_info->partition_data[2] < y_xmachine && node_info->partition_data[3] > y_xmachine &&
+				node_info->partition_data[4] < z_xmachine && node_info->partition_data[5] > z_xmachine)
+				{
+<?if serial?>
+		/* Remove agent */
+		if(before_xmachine) before_xmachine->next = current_xmachine->next;
+		else *p_xmachine = current_xmachine->next;
+		current_node->agent_total--;
+		/* Add agent */
+		p_temp_xmachine = &node_info->agents;
+		temp_xmachine = *p_temp_xmachine;
+		current_xmachine->next = temp_xmachine;
+		*p_temp_xmachine = current_xmachine;
+		node_info->agent_total++;
+<?end if?><?if parallel?>					// Remove agent
+					if(before_xmachine) before_xmachine->next = current_xmachine->next;
+					else *p_xmachine = current_xmachine->next;
+					current_node->agent_total--;
+					// Add agent
+<?foreach xagent?>					if(agent_type == $xagent_count)
+					{
+						node_info->$name_agent_no++;
+						p_temp_xmachine = &node_info->$name_agents;
+					}
+<?end foreach?>					
+					temp_xmachine = *p_temp_xmachine;
+					current_xmachine->next = temp_xmachine;
+					*p_temp_xmachine = current_xmachine;
+<?end if?>					node_info = NULL;
+				}
+				else node_info = node_info->next;
+				}
+			}
+			else before_xmachine = current_xmachine;
+			
+			if(before_xmachine) current_xmachine = before_xmachine->next;
+			else current_xmachine = NULL;
+			//current_xmachine = current_xmachine->next;
+		}
+<?if parallel?>		// send agent pack message
+		node_info = *p_node_info;
+		while(node_info)
+		{
+			if(node_number != node_info->node_id)
+		{
+		buffersize = 0;
+<?foreach xagent?>		MPI_Pack_size(node_info->$name_agent_no, xmachine$nameType, MPI_COMM_WORLD, &packsize);
+		buffersize += packsize;
+<?end foreach?>	
+		send_agent_pack(node_info, buffersize);
+	}
+	
+	node_info = node_info->next;
+	}
+	
+	// receive agent pack message
+	node_info = *p_node_info;
+	while(node_info)
+	{
+		if(node_number != node_info->node_id)
+		{
+			MPI_Recv(&data, $number_xagentsplusone, MPI_INT, node_info->node_id, 36, MPI_COMM_WORLD, &status);
+			//printf("%d> Recv data{%d,%d} to %d", node_number, data[0], data[1], node_info->node_id);
+			if(data[0] > 0) receive_agent_pack(node_info, data[0]<?foreach xagent?>, data[$xagentcountplusone]<?end foreach?>);
+<?foreach xagent?>			p_xmachine = &node_info->$name_agents;
+			freexmachines();
+			node_info->$name_agent_no = 0;
+<?end foreach?>
+			p_xmachine = &current_node->agents;
+		}
+		
+		node_info = node_info->next;
+	}
+<?end if?>
+}
+<?if parallel?>
+/** \fn void send_spacepartition(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz)
+ * \brief Broadcast a space partition data to other nodes.
+ */
+void send_spacepartition(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz)
+{
+	space_partition t_space_partition;
+	t_space_partition.node_id = node_id;
+	t_space_partition.partition_data[0] = minx;
+	t_space_partition.partition_data[1] = maxx;
+	t_space_partition.partition_data[2] = miny;
+	t_space_partition.partition_data[3] = maxy;
+	t_space_partition.partition_data[4] = minz;
+	t_space_partition.partition_data[5] = maxz;
+	MPI_Bcast(&t_space_partition, 1, spacePartitionType, 0, MPI_COMM_WORLD);
+}
+<?end if?>
+/** \fn void create_partitions(char * filename, int * itno)
+ * \brief Create space partitions.
+ * \param filename Path to the initial memories of the X-machines.
+ * \param itno Iteration number.
+ */
+void create_partitions(char * filename, int * itno)
+{
+<?if parallel?>	space_partition t_space_partition;
+<?end if?>
+	FILE *file;
+	char c = ' ';
+	char data[100];
+	char buffer[100];
+	node_information * temp_node;
+	int all_total, count, i, j, reading, number, nodeid, found = 0;
+	int in_tag, in_node, in_number, in_nodeid, in_partitions, in_minx, in_maxx, in_miny, in_maxy, in_minz, in_maxz;
+	int x_split, y_split, z_split;
+	int x_split_no, y_split_no, z_split_no;
+	double x_splits[7], y_splits[7], z_splits[7];
+	double x_total, x_min, x_max, x_mean, x_xmachine;
+	double y_total, y_min, y_max, y_mean, y_xmachine;
+	double z_total, z_min, z_max, z_mean, z_xmachine;
+	double temp_point;
+	location ** p_x_location;
+	location ** p_y_location;
+	location ** p_z_location;
+	location * temp_x_location = NULL;
+	location * temp_y_location = NULL;
+	location * temp_z_location = NULL;
+	location * current_location;
+	p_x_location = &temp_x_location;
+	p_y_location = &temp_y_location;
+	p_z_location = &temp_z_location;
+	
+<?if parallel?>
+	if(node_number == 0)
+	{
+<?end if?>
+	/* Look for space partitions xml file */
+	/* Open config file to read-only */
+	sprintf(data, "%sspace_partitions.xml", outputpath);
+	printf("Trying to read: %s ..", data);
+	if((file = fopen(data, "r")) != NULL)
+	{
+		printf(" found.\n");
+		/* File exists so read values for number of space partitions */
+		
+		reading = 1;
+		i = 0;
+		found = 0;
+		in_tag = 0;
+		in_number = 0;
+		in_nodeid = 0;
+		in_partitions = 0;
+		in_minx = 0;
+		in_maxx = 0;
+		in_miny = 0;
+		in_maxy = 0;
+		in_minz = 0;
+		in_maxz = 0;
+		/* Read file until end of xml */
+		while(reading==1)
+		{
+			/* Get the next char from the file */
+			c = fgetc(file);
+			
+			/* If the end of a tag */
+			if(c == '>')
+			{
+				/* Place 0 at end of buffer to make chars a string */
+				buffer[i] = 0;
+				
+				if(strcmp(buffer, "spacepartitions") == 0) reading = 1;
+				if(strcmp(buffer, "/spacepartitions") == 0) reading = 0;
+				if(strcmp(buffer, "partitions") == 0) in_partitions = 1;
+				if(strcmp(buffer, "/partitions") == 0)
+				{
+					in_partitions = 0;
+					if(found) reading = 0;
+				}
+				if(strcmp(buffer, "number") == 0) in_number = 1;
+				if(strcmp(buffer, "/number") == 0)
+				{
+					in_number = 0;
+					if(number == totalnodes) found = 1;
+				}
+				if(strcmp(buffer, "node") == 0) in_node = 1;
+				if(strcmp(buffer, "/node") == 0)
+				{
+					in_node = 0;
+					if(found) add_node(nodeid, x_min, x_max, y_min, y_max, z_min, z_max);
+				}
+				if(strcmp(buffer, "nodeid") == 0) in_nodeid = 1;
+				if(strcmp(buffer, "/nodeid") == 0) in_nodeid = 0;
+				if(strcmp(buffer, "xmin") == 0) in_minx = 1;
+				if(strcmp(buffer, "/xmin") == 0) in_minx = 0;
+				if(strcmp(buffer, "xmax") == 0) in_maxx = 1;
+				if(strcmp(buffer, "/xmax") == 0) in_maxx = 0;
+				if(strcmp(buffer, "ymin") == 0) in_miny = 1;
+				if(strcmp(buffer, "/ymin") == 0) in_miny = 0;
+				if(strcmp(buffer, "ymax") == 0) in_maxy = 1;
+				if(strcmp(buffer, "/ymax") == 0) in_maxy = 0;
+				if(strcmp(buffer, "zmin") == 0) in_minz = 1;
+				if(strcmp(buffer, "/zmin") == 0) in_minz = 0;
+				if(strcmp(buffer, "zmax") == 0) in_maxz = 1;
+				if(strcmp(buffer, "/zmax") == 0) in_maxz = 0;
+				
+				/* End of tag and reset buffer */
+				in_tag = 0;
+				i = 0;
+			}
+			/* If start of tag */
+			else if(c == '<')
+			{
+				/* Place /0 at end of buffer to end numbers */
+				buffer[i] = 0;
+				/* Flag in tag */
+				in_tag = 1;
+				
+				if(in_number) number = atoi(buffer);
+				if(found && in_nodeid) nodeid = atoi(buffer);
+				if(found && in_minx) { if(strcmp(buffer, "-SPINF") == 0) x_min = -SPINF; else x_min = atof(buffer); }
+				if(found && in_maxx) { if(strcmp(buffer, "SPINF") == 0) x_max = SPINF; else x_max = atof(buffer); }
+				if(found && in_miny) { if(strcmp(buffer, "-SPINF") == 0) y_min = -SPINF; else y_min = atof(buffer); }
+				if(found && in_maxy) { if(strcmp(buffer, "SPINF") == 0) y_max = SPINF; else y_max = atof(buffer); }
+				if(found && in_minz) { if(strcmp(buffer, "-SPINF") == 0) z_min = -SPINF; else z_min = atof(buffer); }
+				if(found && in_maxz) { if(strcmp(buffer, "SPINF") == 0) z_max = SPINF; else z_max = atof(buffer); }
+				
+				/* Reset buffer */
+				i = 0;
+			}
+			else
+			{
+				buffer[i] = c;
+				i++;
+			}
+		}
+		
+		fclose(file);
+	}
+	else { printf(" not found.\n"); }
+	
+	if(found == 0)
+	{
+		printf("Space partition information not found, will calculate...\n");
+		if(totalnodes != 1 && totalnodes != 2 &&totalnodes != 3 && totalnodes != 4 &&totalnodes != 8 && totalnodes != 9 &&totalnodes != 16) clean_up(100);
+		
+		x_total = 0.0;
+		y_total = 0.0;
+		z_total = 0.0;
+		
+		/* Read agent spacial data */
+		/* Create first node and use to hold data */
+		add_node(0, -SPINF, SPINF, -SPINF, SPINF, -SPINF, SPINF);
+		current_node = *p_node_info;
+		p_xmachine = &current_node->agents;
+		
+		readinitialstates(filename, itno, 0);
+		
+		current_node = *p_node_info;
+		p_xmachine = &current_node->agents;
+		current_xmachine = *p_xmachine;
+		all_total = 0;
+		while(current_xmachine)
+		{
+			<?foreach xagent?>
+			<?if notfirst?>else <?end if?>if(current_xmachine->xmachine_$name != NULL)
+			{
+				x_xmachine = current_xmachine->xmachine_$name->$xvar;
+				y_xmachine = current_xmachine->xmachine_$name->$yvar;
+<?if use_zvar?>				z_xmachine = current_xmachine->xmachine_$name->$zvar;
+<?end if?>
+				add_location(x_xmachine, current_xmachine->xmachine_$name->iradius, p_x_location);
+				x_total += x_xmachine;
+				add_location(y_xmachine, current_xmachine->xmachine_$name->iradius, p_y_location);
+				y_total += y_xmachine;
+<?if use_zvar?>				add_location(z_xmachine, current_xmachine->xmachine_$name->iradius, p_z_location);
+				z_total += z_xmachine;
+<?end if?>
+				if(all_total == 0)
+				{
+					x_min = x_xmachine;
+					x_max = x_xmachine;
+					y_min = y_xmachine;
+					y_max = y_xmachine;
+					<?if use_zvar?>					z_min = z_xmachine;
+					z_max = z_xmachine;
+<?end if?>
+				}
+				else
+				{
+					if(x_xmachine < x_min) x_min = x_xmachine;
+					if(x_xmachine > x_max) x_max = x_xmachine;
+					if(y_xmachine < y_min) y_min = y_xmachine;
+					if(y_xmachine > y_max) y_max = y_xmachine;
+					<?if use_zvar?>					if(z_xmachine < z_min) z_min = z_xmachine;
+					if(z_xmachine > z_max) z_max = z_xmachine;
+<?end if?>
+				}
+			}
+<?end foreach?>
+			
+			all_total++;
+			
+			current_xmachine = current_xmachine->next;
+		}
+		
+		<?if serial?>		printf("Number of space partitions: %d\n", totalnodes);<?end if?><?if parallel?>		printf("Number of nodes: %d", totalnodes);<?end if?>
+		if(totalnodes == 1)
+		{
+			/* No need to do anything */
+			<?if parallel?>send_spacepartition(0, -SPINF, SPINF, -SPINF, SPINF, -SPINF, SPINF);<?end if?>
+		}
+		else if(totalnodes == 2)
+		{
+			count = 0;
+			temp_point = 0.0;
+			current_location = *p_x_location;
+			while(current_location)
+			{
+				count++;
+				if(count > (all_total/2))
+				{
+					x_splits[0] = (current_location->point + temp_point)/2.0;
+					current_location = NULL;
+				}
+				else
+				{
+					temp_point = current_location->point;
+					current_location = current_location->next;
+				}
+			}
+			free_node_info();
+			add_node(0, x_splits[0], SPINF, -SPINF, SPINF, -SPINF, SPINF);
+			<?if parallel?>send_spacepartition(0, x_splits[0], SPINF, -SPINF, SPINF, -SPINF, SPINF);<?end if?>
+			add_node(1, -SPINF, x_splits[0], -SPINF, SPINF, -SPINF, SPINF);
+			<?if parallel?>send_spacepartition(1, -SPINF, x_splits[0], -SPINF, SPINF, -SPINF, SPINF);<?end if?>
+		}
+		else if(totalnodes == 3)
+		{
+			count = 0;
+			temp_point = 0.0;
+			x_split_no = 0;
+			current_location = *p_x_location;
+			while(current_location)
+			{
+				count++;
+				if(x_split_no == 0 && count > (all_total/3))
+				{
+					x_splits[0] = (current_location->point + temp_point)/2.0;
+					x_split_no++;
+					current_location = current_location->next;
+				}
+				else if(x_split_no == 1 && count > 2*(all_total/3))
+				{
+					x_splits[1] = (current_location->point + temp_point)/2.0;
+					current_location = NULL;
+				}
+				else
+				{
+					temp_point = current_location->point;
+					current_location = current_location->next;
+				}
+			}
+			free_node_info();
+			add_node(0, x_splits[0], SPINF, -SPINF, SPINF, -SPINF, SPINF);
+			<?if parallel?>send_spacepartition(0, x_splits[0], SPINF, -SPINF, SPINF, -SPINF, SPINF);<?end if?>
+			add_node(1, x_splits[1], x_splits[0], -SPINF, SPINF, -SPINF, SPINF);
+			<?if parallel?>send_spacepartition(1, x_splits[1], x_splits[0], -SPINF, SPINF, -SPINF, SPINF);<?end if?>
+			add_node(2, -SPINF, x_splits[1], -SPINF, SPINF, -SPINF, SPINF);
+			<?if parallel?>send_spacepartition(2, -SPINF, x_splits[1], -SPINF, SPINF, -SPINF, SPINF);<?end if?>
+		}
+		else if(totalnodes == 4)
+		{
+			/* Calculate x-axis half-way split */
+			count = 0;
+			temp_point = 0.0;
+			current_location = *p_x_location;
+			while(current_location)
+			{
+				count++;
+				if(count > (all_total/2))
+				{
+					x_splits[0] = (current_location->point + temp_point)/2.0;
+					current_location = NULL;
+				}
+				else
+				{
+					temp_point = current_location->point;
+					current_location = current_location->next;
+				}
+			}
+			/* Calculate y-axis split on first half of x */
+			freelocations(p_y_location);
+			current_xmachine = *p_xmachine;
+			all_total = 0;
+			while(current_xmachine)
+			{
+<?foreach xagent?>
+					<?if notfirst?>else <?end if?>if(current_xmachine->xmachine_$name != NULL)
+					{
+						if(current_xmachine->xmachine_$name->$xvar > x_splits[0])
+						{
+							add_location(current_xmachine->xmachine_$name->$yvar, current_xmachine->xmachine_$name->iradius, p_y_location); all_total++;
+						}
+					}
+<?end foreach?>
+				current_xmachine = current_xmachine->next;
+			}
+			count = 0;
+			temp_point = 0.0;
+			current_location = *p_y_location;
+			while(current_location)
+			{
+				count++;
+				if(count > (all_total/2))
+				{
+					y_splits[0] = (current_location->point + temp_point)/2.0;
+					current_location = NULL;
+				}
+				else
+				{
+					temp_point = current_location->point;
+					current_location = current_location->next;
+				}
+			}
+			/* Calculate y-axis split on second half of x */
+			freelocations(p_y_location);
+			current_xmachine = *p_xmachine;
+			all_total = 0;
+			while(current_xmachine)
+			{
+<?foreach xagent?>
+				<?if notfirst?>else <?end if?>if(current_xmachine->xmachine_$name != NULL)
+				{
+					if(current_xmachine->xmachine_$name->$xvar <= x_splits[0])
+					{
+						add_location(current_xmachine->xmachine_$name->$yvar, current_xmachine->xmachine_$name->iradius, p_y_location); all_total++;
+					}
+				}
+<?end foreach?>
+				current_xmachine = current_xmachine->next;
+			}
+			count = 0;
+			temp_point = 0.0;
+			current_location = *p_y_location;
+			while(current_location)
+			{
+				count++;
+				if(count > (all_total/2))
+				{
+					y_splits[1] = (current_location->point + temp_point)/2.0;
+					current_location = NULL;
+				}
+				else
+				{
+					temp_point = current_location->point;
+					current_location = current_location->next;
+				}
+			}
+			free_node_info();
+			add_node(0, x_splits[0], SPINF, y_splits[0], SPINF, -SPINF, SPINF);
+			add_node(1, x_splits[0], SPINF, -SPINF, y_splits[0], -SPINF, SPINF);
+			add_node(2, -SPINF, x_splits[0], y_splits[1], SPINF, -SPINF, SPINF);
+			add_node(3, -SPINF, x_splits[0], -SPINF, y_splits[1], -SPINF, SPINF);
+			<?if parallel?>send_spacepartition(0, x_splits[0], SPINF, y_splits[0], SPINF, -SPINF, SPINF);
+			send_spacepartition(1, x_splits[0], SPINF, -SPINF, y_splits[0], -SPINF, SPINF);
+			send_spacepartition(2, -SPINF, x_splits[0], y_splits[1], SPINF, -SPINF, SPINF);
+			send_spacepartition(3, -SPINF, x_splits[0], -SPINF, y_splits[1], -SPINF, SPINF);<?end if?>
+		}
+		else if(totalnodes == 8)
+		{
+			count = 0;
+			current_location = *p_x_location;
+			while(current_location)
+			{
+				count++;
+				if(count >= (all_total/2))
+				{
+					x_splits[0] = current_location->point;
+					current_location = NULL;
+				}
+				else current_location = current_location->next;
+			}
+			count = 0;
+			current_location = *p_y_location;
+			while(current_location)
+			{
+				count++;
+				if(count > (all_total/2))
+				{
+					y_splits[0] = current_location->point;
+					current_location = NULL;
+				}
+				else current_location = current_location->next;
+			}
+			count = 0;
+			current_location = *p_z_location;
+			while(current_location)
+			{
+				count++;
+				if(count > (all_total/2))
+				{
+					z_splits[0] = current_location->point;
+					current_location = NULL;
+				}
+				else current_location = current_location->next;
+			}
+			free_node_info();
+			add_node(0, x_splits[0], SPINF, y_splits[0], SPINF, z_splits[0], SPINF);
+			add_node(1, x_splits[0], SPINF, -SPINF, y_splits[0], z_splits[0], SPINF);
+			add_node(2, -SPINF, x_splits[0], y_splits[0], SPINF, z_splits[0], SPINF);
+			add_node(3, -SPINF, x_splits[0], -SPINF, y_splits[0], z_splits[0], SPINF);
+			add_node(4, x_splits[0], SPINF, y_splits[0], SPINF, -SPINF, z_splits[0]);
+			add_node(5, x_splits[0], SPINF, -SPINF, y_splits[0], -SPINF, z_splits[0]);
+			add_node(6, -SPINF, x_splits[0], y_splits[0], SPINF, -SPINF, z_splits[0]);
+			add_node(7, -SPINF, x_splits[0], -SPINF, y_splits[0], -SPINF, z_splits[0]);
+			<?if parallel?>send_spacepartition(0, x_splits[0], SPINF, y_splits[0], SPINF, z_splits[0], SPINF);
+			send_spacepartition(1, x_splits[0], SPINF, -SPINF, y_splits[0], z_splits[0], SPINF);
+			send_spacepartition(2, -SPINF, x_splits[0], y_splits[0], SPINF, z_splits[0], SPINF);
+			send_spacepartition(3, -SPINF, x_splits[0], -SPINF, y_splits[0], z_splits[0], SPINF);
+			send_spacepartition(4, x_splits[0], SPINF, y_splits[0], SPINF, -SPINF, z_splits[0]);
+			send_spacepartition(5, x_splits[0], SPINF, -SPINF, y_splits[0], -SPINF, z_splits[0]);
+			send_spacepartition(6, -SPINF, x_splits[0], y_splits[0], SPINF, -SPINF, z_splits[0]);
+			send_spacepartition(7, -SPINF, x_splits[0], -SPINF, y_splits[0], -SPINF, z_splits[0]);<?end if?>
+		}
+		else if(totalnodes == 9)
+		{
+			/* Calculate x-axis thirds splits */
+			count = 0;
+			temp_point = 0.0;
+			x_split_no = 0;
+			current_location = *p_x_location;
+			while(current_location)
+			{
+				count++;
+				if(x_split_no == 0 && count > (all_total/3))
+				{
+					x_splits[1] = (current_location->point + temp_point)/2.0;
+					x_split_no++;
+					current_location = current_location->next;
+				}
+				else if(x_split_no == 1 && count > 2*(all_total/3))
+				{
+					x_splits[0] = (current_location->point + temp_point)/2.0;
+					current_location = NULL;
+				}
+				else
+				{
+					temp_point = current_location->point;
+					current_location = current_location->next;
+				}
+			}
+			/* Calculate y-axis thirds splits */
+			count = 0;
+			temp_point = 0.0;
+			y_split_no = 0;
+			current_location = *p_y_location;
+			while(current_location)
+			{
+				count++;
+				if(y_split_no == 0 && count > (all_total/3))
+				{
+					y_splits[1] = (current_location->point + temp_point)/2.0;
+					y_split_no++;
+					current_location = current_location->next;
+				}
+				else if(y_split_no == 1 && count > 2*(all_total/3))
+				{
+					y_splits[0] = (current_location->point + temp_point)/2.0;
+					current_location = NULL;
+				}
+				else
+				{
+					temp_point = current_location->point;
+					current_location = current_location->next;
+				}
+			}
+			free_node_info();
+			add_node(0, -SPINF,      x_splits[0], -SPINF,      y_splits[0], -SPINF, SPINF);
+			add_node(1, x_splits[0], x_splits[1], -SPINF,      y_splits[0], -SPINF, SPINF);
+			add_node(2, x_splits[1], SPINF,       -SPINF,      y_splits[0], -SPINF, SPINF);
+			add_node(3, -SPINF,      x_splits[0], y_splits[0], y_splits[1], -SPINF, SPINF);
+			add_node(4, x_splits[0], x_splits[1], y_splits[0], y_splits[1], -SPINF, SPINF);
+			add_node(5, x_splits[1], SPINF,       y_splits[0], y_splits[1], -SPINF, SPINF);
+			add_node(6, -SPINF,      x_splits[0], y_splits[1], SPINF,       -SPINF, SPINF);
+			add_node(7, x_splits[0], x_splits[1], y_splits[1], SPINF,       -SPINF, SPINF);
+			add_node(8, x_splits[1], SPINF,       y_splits[1], SPINF,       -SPINF, SPINF);
+			<?if parallel?>send_spacepartition(0, -SPINF,      x_splits[0], -SPINF,      y_splits[0], -SPINF, SPINF);
+			send_spacepartition(1, x_splits[0], x_splits[1], -SPINF,      y_splits[0], -SPINF, SPINF);
+			send_spacepartition(2, x_splits[1], SPINF,       -SPINF,      y_splits[0], -SPINF, SPINF);
+			send_spacepartition(3, -SPINF,      x_splits[0], y_splits[0], y_splits[1], -SPINF, SPINF);
+			send_spacepartition(4, x_splits[0], x_splits[1], y_splits[0], y_splits[1], -SPINF, SPINF);
+			send_spacepartition(5, x_splits[1], SPINF,       y_splits[0], y_splits[1], -SPINF, SPINF);
+			send_spacepartition(6, -SPINF,      x_splits[0], y_splits[1], SPINF,       -SPINF, SPINF);
+			send_spacepartition(7, x_splits[0], x_splits[1], y_splits[1], SPINF,       -SPINF, SPINF);
+			send_spacepartition(8, x_splits[1], SPINF,       y_splits[1], SPINF,       -SPINF, SPINF);<?end if?>
+		}
+		else if(totalnodes == 16)
+		{
+			/* Calculate x-axis fourths splits */
+			count = 0;
+			temp_point = 0.0;
+			x_split_no = 0;
+			current_location = *p_x_location;
+			while(current_location)
+			{
+				count++;
+				if(x_split_no == 0 && count > (all_total/4))
+				{
+					x_splits[2] = (current_location->point + temp_point)/2.0;
+					x_split_no++;
+					current_location = current_location->next;
+				}
+				else if(x_split_no == 1 && count > 2*(all_total/4))
+				{
+					x_splits[1] = (current_location->point + temp_point)/2.0;
+					x_split_no++;
+				}
+				else if(x_split_no == 2 && count > 3*(all_total/4))
+				{
+					x_splits[0] = (current_location->point + temp_point)/2.0;
+					current_location = NULL;
+				}
+				else
+				{
+					temp_point = current_location->point;
+					current_location = current_location->next;
+				}
+			}
+			/* Calculate y-axis thirds splits */
+			count = 0;
+			temp_point = 0.0;
+			y_split_no = 0;
+			current_location = *p_y_location;
+			while(current_location)
+			{
+				count++;
+				if(y_split_no == 0 && count > (all_total/4))
+				{
+					y_splits[2] = (current_location->point + temp_point)/2.0;
+					y_split_no++;
+					current_location = current_location->next;
+				}
+				else if(y_split_no == 1 && count > 2*(all_total/4))
+				{
+					y_splits[1] = (current_location->point + temp_point)/2.0;
+					y_split_no++;
+				}
+				else if(y_split_no == 2 && count > 3*(all_total/4))
+				{
+					y_splits[0] = (current_location->point + temp_point)/2.0;
+					current_location = NULL;
+				}
+				else
+				{
+					temp_point = current_location->point;
+					current_location = current_location->next;
+				}
+			}
+			free_node_info();
+			add_node(0,  -SPINF,      x_splits[0], -SPINF,      y_splits[0], -SPINF, SPINF);
+			add_node(1,  x_splits[0], x_splits[1], -SPINF,      y_splits[0], -SPINF, SPINF);
+			add_node(2,  x_splits[1], x_splits[2], -SPINF,      y_splits[0], -SPINF, SPINF);
+			add_node(3,  x_splits[2], SPINF,       -SPINF,      y_splits[0], -SPINF, SPINF);
+			add_node(4,  -SPINF,      x_splits[0], y_splits[0], y_splits[1], -SPINF, SPINF);
+			add_node(5,  x_splits[0], x_splits[1], y_splits[0], y_splits[1], -SPINF, SPINF);
+			add_node(6,  x_splits[1], x_splits[2], y_splits[0], y_splits[1], -SPINF, SPINF);
+			add_node(7,  x_splits[2], SPINF,       y_splits[0], y_splits[1], -SPINF, SPINF);
+			add_node(8,  -SPINF,      x_splits[0], y_splits[1], y_splits[2], -SPINF, SPINF);
+			add_node(9,  x_splits[0], x_splits[1], y_splits[1], y_splits[2], -SPINF, SPINF);
+			add_node(10, x_splits[1], x_splits[2], y_splits[1], y_splits[2], -SPINF, SPINF);
+			add_node(11, x_splits[2], SPINF,       y_splits[1], y_splits[2], -SPINF, SPINF);
+			add_node(12, -SPINF     , x_splits[0], y_splits[2], SPINF,       -SPINF, SPINF);
+			add_node(13, x_splits[0], x_splits[1], y_splits[2], SPINF,       -SPINF, SPINF);
+			add_node(14, x_splits[1], x_splits[2], y_splits[2], SPINF,       -SPINF, SPINF);
+			add_node(15, x_splits[2], SPINF,       y_splits[2], SPINF,       -SPINF, SPINF);
+			<?if parallel?>send_spacepartition(0,  -SPINF,      x_splits[0], -SPINF,      y_splits[0], -SPINF, SPINF);
+			send_spacepartition(1,  x_splits[0], x_splits[1], -SPINF,      y_splits[0], -SPINF, SPINF);
+			send_spacepartition(2,  x_splits[1], x_splits[2], -SPINF,      y_splits[0], -SPINF, SPINF);
+			send_spacepartition(3,  x_splits[2], SPINF,       -SPINF,      y_splits[0], -SPINF, SPINF);
+			send_spacepartition(4,  -SPINF,      x_splits[0], y_splits[0], y_splits[1], -SPINF, SPINF);
+			send_spacepartition(5,  x_splits[0], x_splits[1], y_splits[0], y_splits[1], -SPINF, SPINF);
+			send_spacepartition(6,  x_splits[1], x_splits[2], y_splits[0], y_splits[1], -SPINF, SPINF);
+			send_spacepartition(7,  x_splits[2], SPINF,       y_splits[0], y_splits[1], -SPINF, SPINF);
+			send_spacepartition(8,  -SPINF,      x_splits[0], y_splits[1], y_splits[2], -SPINF, SPINF);
+			send_spacepartition(9,  x_splits[0], x_splits[1], y_splits[1], y_splits[2], -SPINF, SPINF);
+			send_spacepartition(10, x_splits[1], x_splits[2], y_splits[1], y_splits[2], -SPINF, SPINF);
+			send_spacepartition(11, x_splits[2], SPINF,       y_splits[1], y_splits[2], -SPINF, SPINF);
+			send_spacepartition(12, -SPINF     , x_splits[0], y_splits[2], SPINF,       -SPINF, SPINF);
+			send_spacepartition(13, x_splits[0], x_splits[1], y_splits[2], SPINF,       -SPINF, SPINF);
+			send_spacepartition(14, x_splits[1], x_splits[2], y_splits[2], SPINF,       -SPINF, SPINF);
+			send_spacepartition(15, x_splits[2], SPINF,       y_splits[2], SPINF,       -SPINF, SPINF);<?end if?>
+		}
+		else
+		{
+			//clean_up(100); /* Handled at start of function */
+		}
+	}
+<?if serial?>
+	/* Print info in space partitions list */
+	current_node = *p_node_info;
+	while(current_node)
+	{
+		printf("%d>\taxis\tmin\tmax\n", current_node->node_id);
+		printf("%d>\tx", current_node->node_id);
+		if(current_node->partition_data[0]==SPINF) printf("\tINF");
+		else if(current_node->partition_data[0]==-SPINF) printf("\t-INF");
+		else printf("\t%f", current_node->partition_data[0]);
+		if(current_node->partition_data[1]==SPINF) printf("\tINF\n");
+		else if(current_node->partition_data[1]==-SPINF) printf("\t-INF\n");
+		else printf("\t%f\n", current_node->partition_data[1]);
+		printf("%d>\ty", current_node->node_id);
+		if(current_node->partition_data[2]==SPINF) printf("\tINF");
+		else if(current_node->partition_data[2]==-SPINF) printf("\t-INF");
+		else printf("\t%f", current_node->partition_data[2]);
+		if(current_node->partition_data[3]==SPINF) printf("\tINF\n");
+		else if(current_node->partition_data[3]==-SPINF) printf("\t-INF\n");
+		else printf("\t%f\n", current_node->partition_data[3]);
+		printf("%d>\tz", current_node->node_id);
+		if(current_node->partition_data[4]==SPINF) printf("\tINF");
+		else if(current_node->partition_data[4]==-SPINF) printf("\t-INF");
+		else printf("\t%f", current_node->partition_data[4]);
+		if(current_node->partition_data[5]==SPINF) printf("\tINF\n");
+		else if(current_node->partition_data[5]==-SPINF) printf("\t-INF\n");
+		else printf("\t%f\n", current_node->partition_data[5]);
+		current_node = current_node->next;
+	}
+<?end if?>
+<?if parallel?>
+	}
+	else
+	{
+		for(i=0; i<totalnodes; i++)
+		{
+			MPI_Bcast(&t_space_partition, 1, spacePartitionType, 0, MPI_COMM_WORLD);
+			if(t_space_partition.node_id == -1) clean_up(101);
+			else //if(t_space_partition.node_id == node_number)
+			{
+			add_node(t_space_partition.node_id, t_space_partition.partition_data[0], t_space_partition.partition_data[1], t_space_partition.partition_data[2], t_space_partition.partition_data[3], t_space_partition.partition_data[4], t_space_partition.partition_data[5]);
+			}
+		}
+	}
+	/* Print info in space partitions list */
+	printf("%d> ", node_number);
+	printf("%d\taxis\tmin\tmax\n", node_number);
+	printf("%d> ", node_number);
+	printf("x\t%f\t%f\n", current_node->partition_data[0], current_node->partition_data[1]);
+	printf("%d> ", node_number);
+	printf("y\t%f\t%f\n", current_node->partition_data[2], current_node->partition_data[3]);
+	printf("%d> ", node_number);
+	printf("z\t%f\t%f\n", current_node->partition_data[4], current_node->partition_data[5]);
+<?end if?>
+	/* Write to space partitions xml file */
+<?if parallel?>
+	if(node_number == 0)
+	{
+<?end if?>
+	if(found == 0)
+	{
+		sprintf(data, "%sspace_partitions.xml", outputpath);
+		file = fopen(data, "w");
+		printf("Space partition xml saved to: %s\n", data);
+		fputs("<spacepartitions>" , file);
+		fputs("<partitions>" , file);
+		fputs("<number>" , file);
+		sprintf(data, "%d", totalnodes);
+		fputs(data, file);
+		fputs("</number>" , file);
+<?if parallel?>
+		fputs("<node>" , file);
+		fputs("<nodeid>0</nodeid>" , file);
+		fputs("<xmin>" , file);
+		if(current_node->partition_data[0] == SPINF) fputs("SPINF" , file);
+		else if(current_node->partition_data[0] == -SPINF) fputs("-SPINF" , file);
+		else{ sprintf(data, "%f",current_node->partition_data[0]); fputs(data, file); }
+		fputs("</xmin>" , file);
+		fputs("<xmax>" , file);
+		if(current_node->partition_data[1] == SPINF) fputs("SPINF" , file);
+		else if(current_node->partition_data[1] == -SPINF) fputs("-SPINF" , file);
+		else{ sprintf(data, "%f", current_node->partition_data[1]); fputs(data, file); }
+		fputs("</xmax>" , file);
+		fputs("<ymin>" , file);
+		if(current_node->partition_data[2] == SPINF) fputs("SPINF" , file);
+		else if(current_node->partition_data[2] == -SPINF) fputs("-SPINF" , file);
+		else{ sprintf(data, "%f", current_node->partition_data[2]); fputs(data, file); }
+		fputs("</ymin>" , file);
+		fputs("<ymax>" , file);
+		if(current_node->partition_data[3] == SPINF) fputs("SPINF" , file);
+		else if(current_node->partition_data[3] == -SPINF) fputs("-SPINF" , file);
+		else{ sprintf(data, "%f", current_node->partition_data[3]); fputs(data, file); }
+		fputs("</ymax>" , file);
+		fputs("<zmin>" , file);
+		if(current_node->partition_data[4] == SPINF) fputs("SPINF" , file);
+		else if(current_node->partition_data[4] == -SPINF) fputs("-SPINF" , file);
+		else{ sprintf(data, "%f", current_node->partition_data[4]); fputs(data, file); }
+		fputs("</zmin>" , file);
+		fputs("<zmax>" , file);
+		if(current_node->partition_data[5] == SPINF) fputs("SPINF" , file);
+		else if(current_node->partition_data[5] == -SPINF) fputs("-SPINF" , file);
+		else{ sprintf(data, "%f", current_node->partition_data[5]); fputs(data, file); }
+		fputs("</zmax>" , file);
+		fputs("</node>" , file);
+<?end if?>
+	temp_node = *p_node_info;
+	while(temp_node)
+	{
+	fputs("<node>" , file);
+	fputs("<nodeid>" , file);
+	sprintf(data, "%i", temp_node->node_id);
+	fputs(data, file);
+	fputs("</nodeid>" , file);
+	fputs("<xmin>" , file);
+	if(temp_node->partition_data[0] == SPINF) fputs("SPINF" , file);
+	else if(temp_node->partition_data[0] == -SPINF) fputs("-SPINF" , file);
+	else{ sprintf(data, "%f", temp_node->partition_data[0]); fputs(data, file); }
+	fputs("</xmin>" , file);
+	fputs("<xmax>" , file);
+	if(temp_node->partition_data[1] == SPINF) fputs("SPINF" , file);
+	else if(temp_node->partition_data[1] == -SPINF) fputs("-SPINF" , file);
+	else{ sprintf(data, "%f", temp_node->partition_data[1]); fputs(data, file); }
+	fputs("</xmax>" , file);
+	fputs("<ymin>" , file);
+	if(temp_node->partition_data[2] == SPINF) fputs("SPINF" , file);
+	else if(temp_node->partition_data[2] == -SPINF) fputs("-SPINF" , file);
+	else{ sprintf(data, "%f", temp_node->partition_data[2]); fputs(data, file); }
+	fputs("</ymin>" , file);
+	fputs("<ymax>" , file);
+	if(temp_node->partition_data[3] == SPINF) fputs("SPINF" , file);
+	else if(temp_node->partition_data[3] == -SPINF) fputs("-SPINF" , file);
+	else{ sprintf(data, "%f", temp_node->partition_data[3]); fputs(data, file); }
+	fputs("</ymax>" , file);
+	fputs("<zmin>" , file);
+	if(temp_node->partition_data[4] == SPINF) fputs("SPINF" , file);
+	else if(temp_node->partition_data[4] == -SPINF) fputs("-SPINF" , file);
+	else{ sprintf(data, "%f", temp_node->partition_data[4]); fputs(data, file); }
+	fputs("</zmin>" , file);
+	fputs("<zmax>" , file);
+	if(temp_node->partition_data[5] == SPINF) fputs("SPINF" , file);
+	else if(temp_node->partition_data[5] == -SPINF) fputs("-SPINF" , file);
+	else{ sprintf(data, "%f", temp_node->partition_data[5]); fputs(data, file); }
+	fputs("</zmax>" , file);
+	fputs("</node>" , file);
+	
+	temp_node = temp_node->next;
+	}
+	fputs("</partitions>" , file);
+	fputs("</spacepartitions>" , file);
+	fclose(file);
+<?if serial?>
+	current_node = *p_node_info;
+	p_xmachine = &current_node->agents;
+<?end if?>
+	freexmachines();
+	current_node->agent_total = 0;
+	freelocations(p_x_location);
+	freelocations(p_y_location);
+	freelocations(p_z_location);
+	}
+<?if parallel?>}<?end if?>
+}
+
+/** \fn int_array * init_int_array()
+ * \brief Allocate memory for a dynamic integer array.
+ * \return int_array Pointer to the new dynamic integer array.
+ */
+int_array * init_int_array()
+{
+	int_array * new_array = (int_array *)malloc(sizeof(int_array));
+	new_array->size = 0;
+	new_array->total_size = ARRAY_BLOCK_SIZE;
+	new_array->array = (int *)malloc(ARRAY_BLOCK_SIZE * sizeof(int));
+	
+	return new_array;
+}
+
+/** \fn void reset_int_array(int_array * array)
+* \brief Reset the int array to hold nothing.
+* \param array Pointer to the dynamic integer array.
+*/
+void reset_int_array(int_array * array)
+{
+	array->size = 0;
+}
+
+/** \fn void free_int_array(int_array * array)
+* \brief Free the memory of a dynamic integer array.
+* \param array Pointer to the dynamic integer array.
+*/
+void free_int_array(int_array * array)
+{
+	free(array->array);
+	free(array);
+}
+
+/** \fn void sort_int_array(int_array * array)
+* \brief Sort the elements of a dynamic integer array with smallest first.
+* \param array Pointer to the dynamic integer array.
+*/
+void sort_int_array(int_array * array)
+{
+	int i, j, temp;
+	/* Using bubble sorts nested loops */
+	for(i=0; i<(array->size-1); i++)
+	{
+		for(j=0; j<(array->size-1)-i; j++) 
+		{
+			/* Comparing the values between neighbours */
+			if(*(array->array+j+1) < *(array->array+j))
+			{
+				/* Check for end of list */
+				if(*(array->array+j+1) != 0)
+				{
+					/* Swap neighbours */
+					temp = *(array->array+j); 
+					*(array->array+j) = *(array->array+j+1);
+					*(array->array+j+1) = temp;
+				}
+			}
+		}
+	}
+}
+
+/** \fn void add_int(int_array * array, int new_int)
+* \brief Add an integer to the dynamic integer array.
+* \param array Pointer to the dynamic integer array.
+* \param new_int The integer to add
+*/
+void add_int(int_array * array, int new_int)
+{
+	if(array->size == array->total_size)
+	{
+		array->total_size = array->total_size + ARRAY_BLOCK_SIZE;
+		array->array = (int *)realloc(array->array, (array->total_size * sizeof(int)));
+	}
+	array->array[array->size] = new_int;
+	array->size++;
+}
+
+/** \fn void remove_int(int_array * array, int index)
+ * \brief Remove an integer from a dynamic integer array.
+ * \param array Pointer to the dynamic integer array.
+ * \param index The index of the integer to remove.
+ */
+void remove_int(int_array * array, int index)
+{
+	int i;
+	
+	if(index <= array->size)
+	{
+		// memcopy??
+		for(i = index; i < array->size; i++)
+		{
+			array->array[i] = array->array[i+1];
+		}
+		array->size--;
+	}
+}
+
+/** \fn void print_int_array(int_array * array)
+ * \brief Print the elements of a dynamic integer array.
+ * \param array Pointer to the dynamic integer array.
+ */
+void print_int_array(int_array * array)
+{
+	int i;
+	printf("");
+	for(i=0; i<array->size; i++)
+	{
+		printf("%d> %d", i, array->array[i]);
+	}
+}
+
+/** \fn double_array * init_double_array()
+ * \brief Allocate memory for a dynamic double array.
+ * \return double_array Pointer to the new dynamic double array.
+ */
+double_array * init_double_array()
+{
+	double_array * new_array = (double_array *)malloc(sizeof(double_array));
+	new_array->size = 0;
+	new_array->total_size = ARRAY_BLOCK_SIZE;
+	new_array->array = (double *)malloc(ARRAY_BLOCK_SIZE * sizeof(double));
+	return new_array;
+}
+
+/** \fn void reset_double_array(double_array * array)
+* \brief Reset the double array to hold nothing.
+* \param array Pointer to the dynamic double array.
+*/
+void reset_double_array(double_array * array)
+{
+	array->size = 0;
+}
+
+/** \fn void free_double_array(double_array * array)
+ * \brief Free the memory of a dynamic double array.
+ * \param array Pointer to the dynamic double array.
+ */
+void free_double_array(double_array * array)
+{
+	free(array->array);
+	free(array);
+}
+
+/** \fn void sort_double_array(double_array * array)
+ * \brief Sort the elements of a dynamic double array with smallest first.
+ * \param array Pointer to the dynamic double array.
+ */
+void sort_double_array(double_array * array)
+{
+	int i, j;
+	double temp;
+	
+	/* Using bubble sorts nested loops */
+	for(i=0; i<(array->size-1); i++)
+	{
+		for(j=0; j<(array->size-1)-i; j++) 
+		{
+			/* Comparing the values between neighbours */
+			if(*(array->array+j+1) < *(array->array+j))
+			{
+				/* Check for end of list */
+				if(*(array->array+j+1) != 0)
+				{
+					/* Swap neighbours */
+					temp = *(array->array+j); 
+					*(array->array+j) = *(array->array+j+1);
+					*(array->array+j+1) = temp;
+				}
+			}
+		}
+	}
+}
+
+/** \fn void add_double(double_array * array, double new_double)
+ * \brief Add an double to the dynamic double array.
+ * \param array Pointer to the dynamic double array.
+ * \param new_double The double to add
+ */
+void add_double(double_array * array, double new_double)
+{
+	if(array->size == array->total_size)
+	{
+		array->total_size = array->total_size + ARRAY_BLOCK_SIZE;
+		array->array = (double *)realloc(array->array, (array->total_size * sizeof(double)));
+	}
+	array->array[array->size] = new_double;
+	array->size++;
+}
+
+/** \fn void remove_double(double_array * array, int index)
+ * \brief Remove an double from a dynamic double array.
+ * \param array Pointer to the dynamic double array.
+ * \param index The index of the double to remove.
+ */
+void remove_double(double_array * array, int index)
+{
+	int i;
+	if(index <= array->size)
+	{
+		// memcopy??
+		for(i = index; i < array->size; i++)
+		{
+			array->array[i] = array->array[i+1];
+		}
+		array->size--;
+	}
+}
+
+/** \fn void print_double_array(double_array * array)
+ * \brief Print the elements of a dynamic double array.
+ * \param array Pointer to the dynamic double array.
+ */
+void print_double_array(double_array * array)
+{
+	int i;
+	printf("");
+	for(i=0; i<array->size; i++)
+	{
+		printf("%d> %f", i, array->array[i]);
+	}
+}
+
+/** \fn char_array * init_char_array()
+ * \brief Allocate memory for a dynamic char array.
+ * \return char_array Pointer to the new dynamic char array.
+ */
+char_array * init_char_array()
+{
+	char_array * new_array = (char_array *)malloc(sizeof(char_array));
+	new_array->size = 0;
+	new_array->total_size = ARRAY_BLOCK_SIZE;
+	new_array->array = (char *)malloc(ARRAY_BLOCK_SIZE * sizeof(char));
+	new_array->array[0] = '\0';
+	return new_array;
+}
+
+/** \fn void reset_char_array(char_array * array)
+* \brief Reset the char array to hold nothing.
+* \param array Pointer to the dynamic char array.
+*/
+void reset_char_array(char_array * array)
+{
+	array->size = 0;
+}
+
+/** \fn void free_char_array(char_array * array)
+ * \brief Free the memory of a dynamic char array.
+ * \param array Pointer to the dynamic char array.
+ */
+void free_char_array(char_array * array)
+{
+	free(array->array);
+	free(array);
+}
+
+/** \fn void add_char(char_array * array, char new_char)
+ * \brief Add an char to the dynamic char array.
+ * \param array Pointer to the dynamic char array.
+ * \param new_char The char to add
+ */
+void add_char(char_array * array, char new_char)
+{
+	if(array->size + 1 == array->total_size)
+	{
+		array->total_size = array->total_size + ARRAY_BLOCK_SIZE;
+		array->array = (char *)realloc(array->array, (array->total_size * sizeof(char)));
+	}
+	array->array[array->size] = new_char;
+	array->array[array->size + 1] = '\0';
+	array->size++;
+}
+
+/** \fn void remove_char(char_array * array, int index)
+ * \brief Remove an char from a dynamic char array.
+ * \param array Pointer to the dynamic char array.
+ * \param index The index of the char to remove.
+ */
+void remove_char(char_array * array, int index)
+{
+	int i;
+	if(index <= array->size)
+	{
+		// memcopy??
+		for(i = index; i < array->size; i++)
+		{
+			array->array[i] = array->array[i+1];
+		}
+		array->size--;
+	}
+}
+
+/** \fn char * copy_array_to_str(char_array * array)
+ * \brief Return pointer to string from a char_array.
+ * \param array Pointer to the dynamic integer array.
+ * \return char Pointer to the new string.
+ */
+char * copy_array_to_str(char_array * array)
+{
+	char * new_string = (char *)malloc( (array->size + 1) * sizeof(char));
+	return strcpy(new_string, array->array);
+}
+
+/** \fn void print_char_array(char_array * array)
+ * \brief Print the elements of a dynamic char array.
+ * \param array Pointer to the dynamic char array.
+ */
+void print_char_array(char_array * array)
+{
+	printf("\%s", array->array);
+}
