@@ -189,51 +189,55 @@ $type get_$name()
 /** \fn void randomisexagent()
  * \brief Randomise the current X-machine list.
  */
-void randomisexagent()
-{
-	int length = current_node->agent_total;
-	int rano, remainder, i, done[length];
-	xmachine * address_list[length];
-	xmachine * current, * xprev, * xnext, * temp;
-	xmachine ** new_p_xmemory;
-	
-	/* initialise new linked agent list using temp */
-	temp = NULL;
-	new_p_xmemory = &temp;
-	
-	// Loop through agents putting their addresses into the address list
-	current = *p_xmachine;
-	i = 0;
-	while(current)
-	{
-		address_list[i] = current;
-		current = current->next;
-		address_list[i]->next = NULL;
-		i++;
-	}
-	
-	// Set array done to show no indices done so far
-	for (i = 0; i < length; i++) done[i] = 0;
-	
-	// Now generate random numbers to use as indices to create new randomised list
-	for(i = 0; i < length; i++)
-	{
-		rano = (double)length*rand()/(RAND_MAX+1.0);
-		if (done[rano] == 0)
-		{
-			current = *new_p_xmemory;
-			*new_p_xmemory = address_list[rano];
-			(*new_p_xmemory)->next = current;
-			done[rano] = 1;
-		}
-		else
-		{
-			i--;
-		}
-	}
-	/* make the empty orginal list point to newly randomised list */
-	*p_xmachine = *new_p_xmemory;
+void randomisexagent() {
+
+    int i, rnd;
+    int xm_count;
+    xmachine *current;
+    xmachine **address_list;
+    
+    xm_count = current_node->agent_total;
+
+    /* allocate mem for dynamic temp array */
+    address_list = (xmachine **)malloc(sizeof(xmachine *) * xm_count);
+
+    p_xmachine = &current_node->agents;
+    
+    /* populate address list */
+    i = 0;
+    current = *p_xmachine;
+    while(current)
+    {
+        address_list[i] = current;
+        current = current->next;
+        i++;
+    }
+
+    /* randomise address list */
+    for (i = xm_count - 1; i > 0; i--)
+    {
+        /* get random number */
+        rnd = (int)((double)i * rand() / (RAND_MAX + 1.0));
+
+        if (rnd == i) continue;
+
+        /* use 'current' as temp var to swap addresses */
+        current = address_list[i];
+        address_list[i] = address_list[rnd];
+        address_list[rnd] = current;
+    }
+
+    /* build new xmachine list from randomised address list */
+    *p_xmachine = NULL;
+    for (i = 0; i < xm_count; i++)
+    {
+        address_list[i]->next = *p_xmachine;
+        *p_xmachine = address_list[i];
+    }
+
+    free(address_list);
 }
+
 
 /** \fn void add_node(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz)
  * \brief Add a node to the node list.
