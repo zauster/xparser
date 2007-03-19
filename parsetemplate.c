@@ -35,6 +35,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	char_array * buffer = init_char_array();
 	char_array * buffer3 = init_char_array();
 	char_array * filebuffer = init_char_array();
+	char * previous_name;
 
 	/* pointers to model datatypes */
 	xmachine * current_xmachine;
@@ -210,6 +211,21 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (strcmp(allvar->type, "double_array") != 0)
 						write = 0;
 				}
+				else if (strcmp(buffer->array, "<?if first?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif first\n", numtag);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if (strcmp(lastloop, "foreach xagent") == 0)
+					if (current_xmachine != * modeldata->p_xmachines)
+						write = 0;
+					if (strcmp(lastloop, "foreach message") == 0)
+					if (current_message != * modeldata->p_xmessages)
+						write = 0;
+				}
 				else if (strcmp(buffer->array, "<?if notfirst?>") == 0)
 				{
 					if (log)
@@ -218,7 +234,11 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (write == 1)
 						lastiftag = numtag;
 					numtag++;
+					if (strcmp(lastloop, "foreach xagent") == 0)
 					if (current_xmachine == * modeldata->p_xmachines)
+						write = 0;
+					if (strcmp(lastloop, "foreach message") == 0)
+					if (current_message == * modeldata->p_xmessages)
 						write = 0;
 				}
 				else if (strcmp(buffer->array, "<?if notlast?>") == 0)
@@ -353,6 +373,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					}
 					else if (strcmp("foreach xagent", &chartag[numtag][0]) == 0)
 					{
+						previous_name = current_xmachine->name;
+						
 						if (current_xmachine != NULL)
 							current_xmachine = current_xmachine->next;
 						if (current_xmachine == NULL)
@@ -379,6 +401,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					}
 					else if (strcmp("foreach message", &chartag[numtag][0]) == 0)
 					{
+						previous_name = current_message->name;
+						
 						if (current_message != NULL)
 							current_message = current_message->next;
 						if (current_message == NULL)
@@ -521,6 +545,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					numtag++;
 					xagent_count = 0;
 					lastwrite = write;
+					previous_name = NULL;
 
 					current_xmachine = * modeldata->p_xmachines;
 					if (current_xmachine == NULL)
@@ -551,6 +576,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					numtag++;
 					message_count = 0;
 					lastwrite = write;
+					previous_name = NULL;
 
 					current_message = * modeldata->p_xmessages;
 					if (current_message == NULL)
@@ -746,7 +772,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 				}
 				else if (strcmp("foreach xagent", lastloop) == 0)
 				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$xvar") != 0 && strcmp(buffer3->array, "$yvar") != 0 && strcmp(buffer3->array, "$zvar") != 0 && strcmp(buffer3->array, "$var_number") != 0 && strcmp(buffer3->array, "$allvar_name") != 0 && strcmp(buffer3->array, "$xagentcountplusone") != 0 && strcmp(buffer3->array, "$xagent_count") != 0 && pos <= (pos1 + 22))
+					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$xvar") != 0 && strcmp(buffer3->array, "$yvar") != 0 && strcmp(buffer3->array, "$zvar") != 0 && strcmp(buffer3->array, "$var_number") != 0 && strcmp(buffer3->array, "$allvar_name") != 0 && strcmp(buffer3->array, "$xagentcountplusone") != 0 && strcmp(buffer3->array, "$xagent_count") != 0 && strcmp(buffer3->array, "$previous_name") != 0 && pos <= (pos1 + 22))
 					{
 						add_char(buffer3, c);
 						pos++;
@@ -777,6 +803,14 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					{
 						sprintf(data, "%i", xagent_count);
 						fputs(data, file);
+					}
+					else if (strcmp(buffer3->array, "$previous_name") == 0)
+					{
+						if(previous_name != NULL)
+						{
+							sprintf(data, "%s", previous_name);
+							fputs(data, file);
+						}
 					}
 					else
 					{
@@ -821,7 +855,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 				}
 				else if (strcmp("foreach message", lastloop) == 0)
 				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$var_number") != 0 && strcmp(buffer3->array, "$message_countplusone") != 0 && pos <= (pos1 + 22))
+					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$var_number") != 0 && strcmp(buffer3->array, "$message_countplusone") != 0 && strcmp(buffer3->array, "$previous_name") != 0 && pos <= (pos1 + 22))
 					{
 						add_char(buffer3, c);
 						pos++;
@@ -839,6 +873,14 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					{
 						sprintf(data, "%i", message_count + 1);
 						fputs(data, file);
+					}
+					else if (strcmp(buffer3->array, "$previous_name") == 0)
+					{
+						if(previous_name != NULL)
+						{
+							sprintf(data, "%s", previous_name);
+							fputs(data, file);
+						}
 					}
 					else
 					{
