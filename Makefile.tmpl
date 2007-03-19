@@ -3,7 +3,7 @@
 CC=gcc
 CFLAGS=-c
 <?if serial?>LIBS=-lm<?end if?><?if parallel?>LIBS=-lm -lmpi<?end if?>
-SOURCES=main.c memory.c xml.c messageboards.c<?foreach functionfiles?> $filepath<?end foreach?>
+SOURCES=main.c memory.c xml.c messageboards.c partitioning.c<?foreach functionfiles?> $filepath<?end foreach?>
 
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=main
