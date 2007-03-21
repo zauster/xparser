@@ -13,8 +13,8 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	FILE *file;
 	/* Pointer to possible code file */
 	FILE *filecode;
-    	/* Comment variable */
-    	int xmlcomment = 0;
+	/* Comment variable */
+	int xmlcomment = 0;
 	/* Variables for handling files for function code */
 	int j, k;
 	/* Variable to see if function defined, if not look in functions file */
@@ -332,34 +332,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 				
 				current_xmachine->var_number = variable_count;
 				
-				/* Check for iradius variable */
-				//printf("checking iradius\n");
-				found = 0;
-				current_memory = current_xmachine->memory;
-				while(current_memory)
-				{
-					current_variable = current_memory->vars;
-					while(current_variable)
-					{
-						//copycharlist(&current_variable->name, &chardata[0]);
-						if(strcmp(current_variable->name, "iradius") == 0) found = 1;
-						
-						current_variable = current_variable->next;
-					}
-					
-					current_memory = current_memory->next;
-				}
-				
-				if(found == 0)
-				{
-					printf("ERROR: No 'iradius' memory variable in '");
-					//copycharlist(&current_xmachine->name, &chardata[0]);
-					printf(current_xmachine->name);
-					printf("'\n");
-					printf("Exit xparser\n\n");
-					exit(1);
-				}
-				
 				modeldata->number_xmachines++;
 			}
 			if(strcmp(current_string->array, "memory") == 0)
@@ -603,13 +575,25 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 				message = 0;
 				current_message->vars = *p_variable;
 				
+				/* Count number of variables */
 				variable_count = 0;
+				/* Find 'range' variable */
+				found = 0;
 				current_variable = current_message->vars;
 				while(current_variable)
 				{
 					variable_count++;
+					if(strcmp(current_variable->name, "range") == 0) found = 1;
+					
 					current_variable = current_variable->next;
 				}
+				
+				if(found == 0)
+				{
+					printf("Error: No 'range' variable in %s message\n", current_message->name);
+					exit(1);
+				}
+				
 				current_message->var_number = variable_count;
 			}
 			if(strcmp(current_string->array, "code") == 0)

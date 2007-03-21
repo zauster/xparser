@@ -25,7 +25,7 @@ void initialise_pointers()
  * \param iradius Interaction radius.
  * \param p_location Pointer Pointer to the location list.
  */
-void add_location(double point, double iradius, location ** p_location)
+void add_location(double point, location ** p_location)
 {
 	location * current = *p_location;
 	location * tmp = NULL;
@@ -56,7 +56,6 @@ void add_location(double point, double iradius, location ** p_location)
 	
 	newlocation->next = current;
 	newlocation->point = point;
-	newlocation->iradius = iradius;
 }
 
 /* freelocations */

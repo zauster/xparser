@@ -92,6 +92,9 @@ struct xmachine
 struct xmachine_message_$name
 {<?foreach messagevar?>
 	$type $name;	/**< Message memory variable $name of type $type. */<?end foreach?>
+	double x;
+	double y;
+	double z;
 	
 	struct xmachine_message_$name * next;	/**< Pointer to next message in the list. */
 };
@@ -102,6 +105,9 @@ struct xmachine_message_$name
 struct xmachine_message_$name_data
 {<?foreach messagevar?>
 	$type $name;	/**< Message memory variable $name of type $type. */<?end foreach?>
+	double x;
+	double y;
+	double z;
 };<?end if?>
 <?end foreach?>
 /** \typedef struct xmachine xmachine
@@ -129,7 +135,6 @@ int $name();<?end foreach?><?end foreach?>
 struct location
 {
 	double point;		/**< Point on an axis. */
-	double iradius;	/**< Interaction Radius. */
 	
 	struct location * next;	/**< Pointer to next location on the list. */
 };
@@ -259,7 +264,7 @@ int next_avaliable_id;
 #define kill_me_now return 1
 
 void initialise_pointers();
-void add_location(double point, double iradius, location ** p_location);
+void add_location(double point, location ** p_location);
 void freelocations(location ** p_location);
 void add_node(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz);
 void clean_up(int code);

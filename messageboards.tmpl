@@ -33,14 +33,11 @@ void process_$name_message(xmachine_message_$name * current)
 	int in_halo_region = 0;
 	node_information * node_info;
 	xmachine_message_$name * temp_send_message;
-	<?foreach xagent?>
-	if(current_xmachine->xmachine_$name)
-	{
-		max_mess_dist = current_xmachine->xmachine_$name->iradius;
-		x = (double)current_xmachine->xmachine_$name->$xvar;
-		y = (double)current_xmachine->xmachine_$name->$yvar;
-<?if use_zvar?>		z = (double)current_xmachine->xmachine_$name->$zvar;<?end if?><?if no_zvar?>		z = 0.0;<?end if?>
-	}<?end foreach?>
+	
+	max_mess_dist = (double)current->range;
+	x = current->x;
+	y = current->y;
+	z = current->z;
 	
 	/* Check x-axis halo region */
 	if((current_node->partition_data[0] != -SPINF && x <= (current_node->partition_data[0]+max_mess_dist)) ||
@@ -50,8 +47,8 @@ void process_$name_message(xmachine_message_$name * current)
 	if((current_node->partition_data[2] != -SPINF && y <= (current_node->partition_data[2]+max_mess_dist)) ||
 	   (current_node->partition_data[3] !=  SPINF && y >= (current_node->partition_data[3]-max_mess_dist)))
 	{ in_halo_region = 1; }
-	/* Check z-axis halo region */
-<?foreach xagent?><?if use_zvar?>	if(current_xmachine->xmachine_$name)
+	/* Check z-axis halo region (if used) */
+	<?foreach xagent?><?if use_zvar?>if(current_xmachine->xmachine_$name)
 	{
 		if(current_node->partition_data[4] != -SPINF && z <= current_node->partition_data[4]+max_mess_dist)
 		{ in_halo_region = 1; }
@@ -88,9 +85,36 @@ void add_$name_message(<?foreach messagevar?>$type $name<?if notlast?>, <?end if
 {
 	xmachine_message_$name * tmp = add_$name_message_internal();
 <?foreach messagevar?>	tmp->$name = $name;
-<?end foreach?>
+<?end foreach?><?foreach xagent?>
+	if(current_xmachine->xmachine_$name)
+	{
+		tmp->x = (double)current_xmachine->xmachine_$name->$xvar;
+		tmp->y = (double)current_xmachine->xmachine_$name->$yvar;
+<?if use_zvar?>		tmp->z = (double)current_xmachine->xmachine_$name->$zvar;<?end if?><?if no_zvar?>		tmp->z = 0.0;<?end if?>
+	}<?end foreach?>
 	/* Check if agent in halo region */
 	process_$name_message(tmp);
+}
+
+xmachine_message_$name * get_next_message_$name_in_range(xmachine_message_$name * current)
+{
+	double x, y, z;
+	
+	<?foreach xagent?>
+	if(current_xmachine->xmachine_$name)
+	{
+		x = (double)current_xmachine->xmachine_$name->$xvar;
+		y = (double)current_xmachine->xmachine_$name->$yvar;
+<?if use_zvar?>		z = (double)current_xmachine->xmachine_$name->$zvar;<?end if?><?if no_zvar?>		z = 0.0;<?end if?>
+	}<?end foreach?>
+	
+	while(current)
+	{
+		if( ((x - current->x)*(x - current->x)+(y - current->y)*(y - current->y)) <= current->range*current->range ) return current;
+		else current = current->next;
+	}
+	
+	return current;
 }
 
 /** \fn xmachine_message_$name * get_first_$name_message()
@@ -99,7 +123,7 @@ void add_$name_message(<?foreach messagevar?>$type $name<?if notlast?>, <?end if
  */
 xmachine_message_$name * get_first_$name_message()
 {
-	return *p_$name_message;
+	return get_next_message_$name_in_range(*p_$name_message);
 }
 
 /** \fn xmachine_message_$name * get_next_$name_message(xmachine_message_$name * current)
@@ -109,7 +133,7 @@ xmachine_message_$name * get_first_$name_message()
  */
 xmachine_message_$name * get_next_$name_message(xmachine_message_$name * current)
 {
-	return  current->next;
+	return get_next_message_$name_in_range(current->next);
 }
 
 /** \fn void free$namemessages()

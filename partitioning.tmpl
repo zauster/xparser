@@ -194,11 +194,11 @@ void create_partitions(char * filename, int * itno)
 				y_xmachine = current_xmachine->xmachine_$name->$yvar;
 <?if use_zvar?>				z_xmachine = current_xmachine->xmachine_$name->$zvar;
 <?end if?>
-				add_location(x_xmachine, current_xmachine->xmachine_$name->iradius, p_x_location);
+				add_location(x_xmachine, p_x_location);
 				x_total += x_xmachine;
-				add_location(y_xmachine, current_xmachine->xmachine_$name->iradius, p_y_location);
+				add_location(y_xmachine, p_y_location);
 				y_total += y_xmachine;
-<?if use_zvar?>				add_location(z_xmachine, current_xmachine->xmachine_$name->iradius, p_z_location);
+<?if use_zvar?>				add_location(z_xmachine, p_z_location);
 				z_total += z_xmachine;
 <?end if?>
 				if(all_total == 0)
@@ -325,7 +325,7 @@ void create_partitions(char * filename, int * itno)
 					{
 						if(current_xmachine->xmachine_$name->$xvar > x_splits[0])
 						{
-							add_location(current_xmachine->xmachine_$name->$yvar, current_xmachine->xmachine_$name->iradius, p_y_location); all_total++;
+							add_location(current_xmachine->xmachine_$name->$yvar, p_y_location); all_total++;
 						}
 					}
 <?end foreach?>
@@ -359,7 +359,7 @@ void create_partitions(char * filename, int * itno)
 				{
 					if(current_xmachine->xmachine_$name->$xvar <= x_splits[0])
 					{
-						add_location(current_xmachine->xmachine_$name->$yvar, current_xmachine->xmachine_$name->iradius, p_y_location); all_total++;
+						add_location(current_xmachine->xmachine_$name->$yvar, p_y_location); all_total++;
 					}
 				}
 <?end foreach?>
