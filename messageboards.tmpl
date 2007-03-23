@@ -85,13 +85,7 @@ void add_$name_message(<?foreach messagevar?>$type $name<?if notlast?>, <?end if
 {
 	xmachine_message_$name * tmp = add_$name_message_internal();
 <?foreach messagevar?>	tmp->$name = $name;
-<?end foreach?><?foreach xagent?>
-	if(current_xmachine->xmachine_$name)
-	{
-		tmp->x = (double)current_xmachine->xmachine_$name->$xvar;
-		tmp->y = (double)current_xmachine->xmachine_$name->$yvar;
-<?if use_zvar?>		tmp->z = (double)current_xmachine->xmachine_$name->$zvar;<?end if?><?if no_zvar?>		tmp->z = 0.0;<?end if?>
-	}<?end foreach?>
+<?end foreach?>
 	/* Check if agent in halo region */
 	process_$name_message(tmp);
 }

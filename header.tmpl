@@ -92,9 +92,6 @@ struct xmachine
 struct xmachine_message_$name
 {<?foreach messagevar?>
 	$type $name;	/**< Message memory variable $name of type $type. */<?end foreach?>
-	double x;
-	double y;
-	double z;
 	
 	struct xmachine_message_$name * next;	/**< Pointer to next message in the list. */
 };
@@ -105,9 +102,6 @@ struct xmachine_message_$name
 struct xmachine_message_$name_data
 {<?foreach messagevar?>
 	$type $name;	/**< Message memory variable $name of type $type. */<?end foreach?>
-	double x;
-	double y;
-	double z;
 };<?end if?>
 <?end foreach?>
 /** \typedef struct xmachine xmachine
