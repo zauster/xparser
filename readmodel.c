@@ -816,7 +816,8 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					}
 					
 					if(strcmp(current_variable->type, "char") == 0 ||
-						strcmp(current_variable->type, "unsigned char") == 0)
+						strcmp(current_variable->type, "unsigned char") == 0 ||
+						strcmp(current_variable->type, "char_array") == 0)
 					{
 						strcpy(current_variable->defaultvalue, "' '");
 						strcpy(current_variable->c_type, "c");
