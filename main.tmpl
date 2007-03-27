@@ -25,6 +25,10 @@ int main(int argc, char ** argv)
 	int iteration_total;
 	int * p_iteration_number;
 	xmachine * temp_free_xmachine;
+	xmachine **agent_list;
+	xmachine *temp_agent;
+	/* Particle cloud data */
+	double cloud_data[6];
 <?if parallel?>	int err; /* MPI errors */
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
 	int processor_name_length;
@@ -158,26 +162,45 @@ int main(int argc, char ** argv)
 		i++;
 	}
 	
-	/* Create space partitions */
-	create_partitions(inputpath, p_iteration_number);
+	/* Read initial data into p_xmachine <?if parallel?>on the master node<?end if?> */
 <?if parallel?>
-	
-	p_xmachine = &current_node->agents;
-<?foreach message?>	p_$name_message = &current_node->$name_messages;
-<?end foreach?>	
+    if (node_number == 0)
+    {
 <?end if?>
-	/* Read initial x-agent states */
+       agent_list = p_xmachine;
+       readinitialstates(inputpath, p_iteration_number, agent_list, cloud_data, 0);
+       /* Generate partitions */
+       generate_partitions(cloud_data,totalnodes,p_node_info);
+       save_partition_data(p_node_info);
+<?if parallel?>
+    }
+<?end if?> 
+
+
+<?if parallel?>
+    /* Broadcast node data */
+    broadcast_node_data(totalnodes, node_number);
+
+    /* Set up current_node global variable ready for partitioning*/
+/*    current_node = *p_node_info;
+    while (current_node)
+    {
+        if (current_node->node_id == node_number) break;
+        else current_node = current_node->next;
+    }*/
+<?end if?>
+
 <?if serial?>
-	current_node = *p_node_info;
-	while(current_node)
-	{
-		p_xmachine = &current_node->agents;
+    /* Partition data */
+    partition_data(totalnodes, agent_list, cloud_data);
 <?end if?>
-	readinitialstates(inputpath, p_iteration_number, 1);
-<?if serial?>
-		current_node = current_node->next;
-	}
+<?if parallel?>
+    /* Partition the data by reading it in. Partitions are known so get the read function
+     * to do the partitioning for us.
+     */
+    readinitialstates(inputpath, p_iteration_number, agent_list, cloud_data, 1);
 <?end if?>
+
 	
 <?if serial?>
 		i = 0;

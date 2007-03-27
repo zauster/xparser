@@ -185,6 +185,40 @@ $type get_$name()
 <?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name) return current_xmachine->xmachine_$name->$allvar_name;
 <?end if?><?end foreach?>}
 <?end if?><?end foreach?>
+
+/** \fn double agent_get_x()
+ * \brief Fixed routine to get the x coordinate from current X-machine
+  * \return Value of x coordinate
+  */
+double agent_get_x()
+{
+    double value = 0.0;
+<?foreach xagent?>    if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$xvar;
+<?end foreach?>
+    return value;
+}
+/** \fn double agent_get_y()
+ * \brief Fixed routine to get the y coordinate from current X-machine
+  * \return Value of y coordinate
+  */
+double agent_get_y()
+{
+    double value = 0.0;
+<?foreach xagent?>    if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$yvar; 
+<?end foreach?>
+    return value;
+}
+/** \fn double agent_get_z()
+ * \brief Fixed routine to get the z coordinate from current X-machine
+  * \return Value of z coordinate
+  */
+double agent_get_z()
+{
+    double value = 0.0;
+<?foreach xagent?><?if use_zvar?>    if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$zvar; 
+<?end if?><?end foreach?>
+    return value;
+}
 /** \fn void randomisexagent()
  * \brief Randomise the current X-machine list.
  */
