@@ -378,18 +378,14 @@ void clean_up(int code)
 	/* Write log file */
 	sprintf(data, "%slog.xml", outputpath);
 	file = fopen(data, "a");
-	fputs("<lastiteration>", file);
-	sprintf(data, "%i", iteration_loop);
-	fputs(data, file);
-	fputs("</lastiteration>", file);
 	fputs("<totaltime>", file);
-	sprintf(data, "%i", total_time);
+	sprintf(data, "%ld", total_time);
 	fputs(data, file);
-	fputs("</totaltime>", file);
-	fputs("<totalmessages>", file);
+	fputs("</totaltime>\n", file);
+	/*fputs("<totalmessages>", file);
 	sprintf(data, "%i", total_messages);
 	fputs(data, file);
-	fputs("</totalmessages>", file);
+	fputs("</totalmessages>", file);*/
 	fputs("</model_run>", file);
 	fclose(file);
 <?if parallel?>	}<?end if?>
