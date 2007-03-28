@@ -181,6 +181,8 @@ int main(int argc, char ** argv)
 	parseTemplate(filename, templatename, modeldata);
 	strcpy(filename, directory); strcat(filename, "Doxyfile"); strcpy(templatename, "Doxyfile.tmpl");
 	parseTemplate(filename, templatename, modeldata);
+	strcpy(filename, directory); strcat(filename, "low_primes.h"); strcpy(templatename, "low_primes.h");
+	parseTemplate(filename, templatename, modeldata);
 	
 	freexmachines(modeldata->p_xmachines);
 	freexmessages(modeldata->p_xmessages);
