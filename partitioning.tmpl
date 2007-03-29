@@ -80,11 +80,11 @@ void generate_partitions(double cloud_data[6], int partitions, node_information 
     node_information *current;
 	int xdiv=1,ydiv=1;
 	int i,j,id;
-	float xmax,xmin,ymax,ymin;
-	float dx,dy,px,py;
+	double xmax,xmin,ymax,ymin;
+	double dx,dy,px,py;
 	/* Limits in x and y of partition to be created */
-	float xlo, xhi, ylo, yhi;
-	float margin=0.25; /* small extension of region */
+	double xlo, xhi, ylo, yhi;
+	double margin=0.25; /* small extension of region */
 		
 	xmax=cloud_data[1]; //+SPINF;
 	xmin=cloud_data[0]; //-SPINF;
