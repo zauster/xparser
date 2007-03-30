@@ -183,7 +183,12 @@ void set_$name($type $name)
 $type get_$name()
 {
 <?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name) return current_xmachine->xmachine_$name->$allvar_name;
-<?end if?><?end foreach?>}
+<?end if?><?end foreach?>
+    /* suppress compiler warning by returning dummy value */
+    /* this statement should rightfully NEVER be reached */
+    return ($type)0;
+}
+
 <?end if?><?end foreach?>
 
 /** \fn double agent_get_x()
@@ -567,7 +572,7 @@ void remove_int(int_array * array, int index)
 void print_int_array(int_array * array)
 {
 	int i;
-	printf("");
+	/* printf(""); // compiler does not like empty prints */
 	for(i=0; i<array->size; i++)
 	{
 		printf("%d> %d", i, array->array[i]);
@@ -678,7 +683,7 @@ void remove_double(double_array * array, int index)
 void print_double_array(double_array * array)
 {
 	int i;
-	printf("");
+	/* printf(""); // compiler does not like empty prints */
 	for(i=0; i<array->size; i++)
 	{
 		printf("%d> %f", i, array->array[i]);

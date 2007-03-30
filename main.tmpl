@@ -18,7 +18,6 @@ int main(int argc, char ** argv)
 	char data[100];
 	char logfilepath[100];
 	char inputpath[100];
-	int position = 0;
 	int lastd = 0;
 	int i;
 	int iteration_number;
@@ -26,7 +25,6 @@ int main(int argc, char ** argv)
 	int * p_iteration_number;
 	xmachine * temp_free_xmachine;
 	xmachine **agent_list;
-	xmachine *temp_agent;
 	/* Ratio for calculating time in milliseconds */
 	long time_ratio = 1000/CLOCKS_PER_SEC;
 	/* Particle cloud data */
@@ -34,7 +32,7 @@ int main(int argc, char ** argv)
 <?if parallel?>	int err; /* MPI errors */
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
 	int processor_name_length;
-	MPI_Aint extent, baseaddress;
+	MPI_Aint baseaddress;
 	/* Variables needed to construct spacePartitionType */
 	space_partition tmp_space_partition;
 	int array_of_block_lengths[2] = {1, 6};
@@ -77,9 +75,6 @@ int main(int argc, char ** argv)
 		MPI_Comm_size(MPI_COMM_WORLD, &totalnodes);
 		MPI_Comm_rank(MPI_COMM_WORLD, &node_number);
 		/* Initialise spacePartitionType */
-		//array_of_displacements[0] = 0;
-		//MPI_Type_extent(MPI_INT, &extent);
-		//array_of_displacements[1] = extent;
 		MPI_Address(&tmp_space_partition, &baseaddress);
 		MPI_Address(&tmp_space_partition.node_id, &array_of_displacements[0]);
 		array_of_displacements[0] -= baseaddress;
@@ -323,7 +318,7 @@ int main(int argc, char ** argv)
 	/* Stop timing and print total time */
 	stop = clock();
 	total_time = ((long)stop*time_ratio) - ((long)start*time_ratio);
-<?if serial?>	<?end if?><?if parallel?>	if(node_number == 0) <?end if?>printf("Execution time - %d:%02d:%ld [mins:secs:msecs]\n", total_time/60000, ((total_time/1000)%60), total_time%1000);
+<?if serial?>	<?end if?><?if parallel?>	if(node_number == 0) <?end if?>printf("Execution time - %ld:%02ld:%ld [mins:secs:msecs]\n", total_time/60000, ((total_time/1000)%60), total_time%1000);
 	
 	clean_up(0);
 	

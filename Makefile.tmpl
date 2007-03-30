@@ -1,7 +1,7 @@
 # Makefile
 
 <?if serial?>CC=gcc<?end if?><?if parallel?>CC=mpicc<?end if?>
-CFLAGS=-c
+CFLAGS=-c -std=c99 -Wall
 LIBS=-lm
 SOURCES=main.c memory.c xml.c messageboards.c partitioning.c <?if parallel?>propagate_messages.c propagate_agents.c<?end if?><?foreach functionfiles?> $filepath<?end foreach?>
 
