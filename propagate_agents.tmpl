@@ -1,0 +1,382 @@
+/* $Id$ */
+/**
+ * \file propagate_agents.c
+ * \brief Propagate agents that require migration across nodes.
+ *
+ * \note  
+ *       Modified version of propagate_agents(). Uses non-blocking 
+ *       communication to avoid deadlocks, and customised buffering 
+ *       strategies to reduce memory requirements. 
+ *
+ *       While not implemented here, routine can be easily split up into
+ *       propagate_agents_init() and propagate_agents_complete() to allow
+ *       for overlapping of computation with agent propagation.
+ *
+ *       Algorithm for moving agents from main list to outbound list has
+ *       also been modified (simplified?) 
+ */
+ 
+ 
+#include "header.h"
+
+/* ========== Declaration of required constants =================== */
+
+/** Enumerated identifier for each agent type */
+enum { \<?foreach xagent?>
+    AGENT_$name, \<?end foreach?>
+    AGENT_TYPE_COUNT
+};
+
+/** message tag used for propagating agents */
+#define TAG 11
+
+
+
+/* ========== Begin implementation code =========================== */
+
+/** \fn void propagate_agents()
+ * \brief Check agent positions and migrate agents that are to be moved to 
+ *        different nodes.
+ */
+void propagate_agents() {
+    /* Author: L.S. Chin (CCLRC, March 2007) */
+
+    /* ------------ Begin Variable declarations -------------- */
+
+	int agent_type;
+    int remove_agent;
+    int sender, outcount;
+    int *agent_count_list;
+    int probed, i, j, bufsize;
+    node_information *node_info;
+	xmachine *prev_xmachine, *next_xmachine;
+	double x_xmachine, y_xmachine, z_xmachine;
+    
+    
+    /* variables used for MPI calls */
+    MPI_Status  status;
+    MPI_Request * in_req;
+    MPI_Request * out_req;
+    
+    /* buffer space for packed agents from/to each PE */
+    void ** inbuf;
+    void ** outbuf;
+
+    /* pointers to temporary agents */
+<?foreach xagent?>
+    xmachine_memory_$name *agent_$name_list; 
+<?end foreach?>
+
+
+
+    /* ---- determine which agents should be moved ---------------- */
+    
+    /* loop through agent list */
+    prev_xmachine = NULL;
+    remove_agent = 0;
+    current_xmachine = current_node->agents;
+    while(current_xmachine)
+    {
+        next_xmachine = current_xmachine->next;
+<?foreach xagent?>        
+        <?if notfirst?>else <?end if?>if(current_xmachine->xmachine_$name != NULL)
+		{
+			x_xmachine = current_xmachine->xmachine_$name->$xvar;
+			y_xmachine = current_xmachine->xmachine_$name->$yvar;
+            <?if use_zvar?>z_xmachine = current_xmachine->xmachine_$name->$zvar;<?end if?>
+            <?if no_zvar?>z_xmachine = 0.0;<?end if?>
+
+			agent_type = AGENT_$name;
+		}
+<?end foreach?>
+
+        /* if any agent is located beyond our partition data, move it */
+        if ( 
+           x_xmachine < current_node->partition_data[0] ||
+		   x_xmachine > current_node->partition_data[1] ||
+		   y_xmachine < current_node->partition_data[2] ||
+		   y_xmachine > current_node->partition_data[3] ||
+		   z_xmachine < current_node->partition_data[4] ||
+		   z_xmachine > current_node->partition_data[5] )
+        {
+            /* determine which node we should move agent to */
+            
+            /* loop through node list */
+            node_info = *p_node_info;
+            while(node_info)
+            {
+                if (node_info->node_id == node_number)
+                { /* skip my own node */
+                    node_info = node_info->next;
+                    continue;
+                }
+                
+                /* should agent be in this node? */
+                if (
+                    x_xmachine > node_info->partition_data[0] &&
+                    x_xmachine < node_info->partition_data[1] &&
+                    y_xmachine > node_info->partition_data[2] &&
+		            y_xmachine < node_info->partition_data[3] &&
+		            z_xmachine > node_info->partition_data[4] &&
+		            z_xmachine < node_info->partition_data[5] )
+                {
+                    /* move agent to target node */
+<?foreach xagent?>
+                    <?if notfirst?>else <?end if?>if (agent_type == AGENT_$name)
+                    {
+                        node_info->$name_agent_no ++;
+                        current_xmachine->next = node_info->$name_agents;
+                        node_info->$name_agents = current_xmachine;
+                    }
+<?end foreach?>
+                    
+                    /* flag agent for removal from current node */
+                    remove_agent = 1;
+                    
+                    /* no need to traverse the node list further */
+                    node_info = NULL;
+                }
+                else
+                {  /* continue searching */
+                    node_info = node_info->next;
+                }
+            }   
+
+        }
+
+        /* remove agent from current node if necessary */
+        if (remove_agent) 
+        {
+            remove_agent = 0; /* reset value */
+            
+            /* decrement agent count */
+            current_node->agent_total --;
+            
+            /* if first agent is removed */
+            if (prev_xmachine == NULL)
+            {  
+                current_node->agents = next_xmachine;
+            }
+            else
+            {
+                prev_xmachine->next = next_xmachine;
+            }
+        }
+        else
+        {
+            prev_xmachine = current_xmachine;
+        }
+
+        /* move on to next agent in list */
+        current_xmachine = next_xmachine;
+    }
+    
+   
+    
+    /* ------------ Allocate Required Memory ----------------- */
+    
+    /* MPI related dynamic memory requirements */
+    in_req  = (MPI_Request *)malloc(sizeof(MPI_Request) * totalnodes);
+    out_req = (MPI_Request *)malloc(sizeof(MPI_Request) * totalnodes);
+
+    /* Memory for buffer arrays */
+    inbuf  = (void **)malloc(sizeof(void *) * totalnodes);
+    outbuf = (void **)malloc(sizeof(void *) * totalnodes);
+
+
+    /* ------ fill send buffers and post non-blocking sends ------ */
+    node_info = *p_node_info;
+    while(node_info)
+    {
+        i = node_info->node_id;
+        if (i == node_number)
+        {
+            outbuf[i] = NULL;
+            out_req[i] = MPI_REQUEST_NULL;
+            node_info = node_info->next;
+            continue;
+        }
+        
+        bufsize = 0;
+        outcount = 0;
+
+        /* for each agent type */
+<?foreach xagent?>
+        outcount += node_info->$name_agent_no;
+<?end foreach?>
+
+        /* build output buffer */
+        if (outcount > 0)
+        {
+            /* mem requirements for agent_count_list array */
+            bufsize += sizeof(int) * AGENT_TYPE_COUNT;
+
+            /* for each message type */
+<?foreach xagent?>
+            /* mem requirements for $name agents */
+            bufsize += sizeof(xmachine_memory_$name) * \
+                       node_info->$name_agent_no;
+<?end foreach?>
+
+            /* allocate required memory */
+            outbuf[i] = (void *) malloc(bufsize);
+
+            /* assign array pointers to relevant points in buffer */
+            agent_count_list = (int *) outbuf[i];
+<?foreach xagent?>
+    <?if first?>
+            agent_count_list[AGENT_$name]  = node_info->$name_agent_no;
+            agent_$name_list = (xmachine_memory_$name *) \
+                 &agent_count_list[AGENT_TYPE_COUNT];
+    <?end if?><?if notfirst?>    
+            agent_count_list[AGENT_$name] = node_info->$name_agent_no;
+            agent_$name_list = (xmachine_memory_$name *) \
+                 &agent_$previous_name_list[agent_count_list[AGENT_$previous_name]];
+    <?end if?>
+<?end foreach?>
+
+            /* traverse agent list and populate buffer */
+<?foreach xagent?>
+            j = 0;
+            temp_xmachine = node_info->$name_agents;
+            while (temp_xmachine)
+            {
+    <?foreach xagentvar?>
+                agent_$agent_name_list[j].$name = temp_xmachine->xmachine_$agent_name->$name;
+    <?end foreach?>
+
+                temp_xmachine = temp_xmachine->next;
+                j++;
+            }
+            /* free list early to conserve memory */
+            p_xmachine = &node_info->$name_agents;
+            freexmachines();
+            node_info->$name_agent_no = 0;
+
+<?end foreach?>
+            
+            /* Reset xmachine pointer */
+            p_xmachine = &current_node->agents;
+
+        }
+        else
+        {
+            outbuf[i] = NULL;
+        }
+        
+        /* post non-blocking send */
+        MPI_Issend(outbuf[i], bufsize, MPI_BYTE, i, TAG, \
+                MPI_COMM_WORLD, &out_req[i]);
+
+        /* select next node */
+        node_info = node_info->next;
+    }
+    
+    
+    
+    /* ----- Prepare and post non-blocking receives ------------ */
+    
+    /* we expect (totalnodes - 1) incoming messages */
+    probed = 0;
+    inbuf[node_number] = NULL;
+    in_req[node_number] = MPI_REQUEST_NULL;
+    
+    while (probed < (totalnodes - 1))
+    {
+        /* probe incoming messages for bufsize */
+        MPI_Probe(MPI_ANY_SOURCE, TAG, MPI_COMM_WORLD, &status);
+
+        /* get sender's id */
+        i = status.MPI_SOURCE;
+
+        /* get bufsize */
+        MPI_Get_count(&status, MPI_BYTE, &bufsize);
+
+        if (bufsize > 0)
+        {
+            inbuf[i] = (void *)malloc(bufsize);
+        }
+        else
+        {
+            inbuf[i]  = NULL;
+        }
+        
+        /* post non-blocking receive */
+        MPI_Irecv(inbuf[i], bufsize, MPI_BYTE, i, TAG, \
+                MPI_COMM_WORLD, &in_req[i]);
+        
+        probed ++;
+    }
+
+    
+    /* NOTE: routine can be split up here if we want to separate 
+     *       into _init() and _complete(). Some of the variables
+     *       would have to be declared as global within this file.
+     *       (as implemenented in propagate_messages.c)
+     */
+    
+    
+    /* ----- Complete and process pending receives ------------------ */
+
+    /* process received messages */
+    /* instead of a Waitall, use Waitany so that we may overlap data 
+       handling time with other pending receives */
+    for (j = 0; j < totalnodes - 1; j++)
+    {
+        /* wait for any receive to complete */
+        MPI_Waitany(totalnodes, in_req, &sender, &status);
+
+        /* determine size of message */
+        MPI_Get_count(&status, MPI_BYTE, &bufsize);
+
+        /* if size = 0, there's nothing for us to do */
+        if (bufsize == 0) continue;
+
+        /* Assign array pointers to apropriate locations in buffer */
+        agent_count_list = (int *) inbuf[sender];
+        /* for each message type */
+<?foreach xagent?>
+    <?if first?>
+        agent_$name_list = (xmachine_memory_$name *) \
+             &agent_count_list[AGENT_TYPE_COUNT];
+    <?end if?><?if notfirst?>
+        agent_$name_list = (xmachine_memory_$name *) \
+             &agent_$previous_name_list[agent_count_list[AGENT_$previous_name]];
+    <?end if?>
+<?end foreach?>
+        
+        /* process received messages */
+<?foreach xagent?>
+        for (i = 0; i < agent_count_list[AGENT_$name]; i++)
+        {
+            add_$name_agent( \
+    <?foreach xagentvar?>
+                    agent_$agent_name_list[i].$name<?if notlast?>,<?end if?> \
+    <?end foreach?>
+                    );
+
+        }
+<?end foreach?>
+        
+        free(inbuf[sender]);
+    }
+    
+    free(inbuf);
+    free(in_req);
+    
+    
+    
+    /* ------- Complete non-blocking sends ----------------------- */
+    
+    /* wait for all non-blocking sends to complete */
+    MPI_Waitall(totalnodes, out_req, MPI_STATUSES_IGNORE);
+    
+    /* free allocated send buffers */
+    for(i = 0; i < totalnodes; i++)
+    {
+        if (outbuf[i]) free(outbuf[i]);
+    }
+    free(outbuf);
+    free(out_req);
+
+}

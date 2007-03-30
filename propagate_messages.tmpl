@@ -1,0 +1,306 @@
+/* $Id$ */
+/**
+ * \file propagate_messages.c
+ * \brief Propagate messages across nodes.
+ *
+ * \note  
+ *       Modified version of propagate_messages(). Uses non-blocking 
+ *       communication to avoid deadlocks, and customised buffering 
+ *       strategies to reduce memory requirements. 
+ *
+ *       Routine is split into propagate_messages_init() and
+ *       propagate_messages_complete() so that non-dependent computation  
+ *       may be overlapped with the communication.
+ */
+ 
+#include "header.h"
+
+/* ========== Declaration of required constants =================== */
+
+/** Enumerated identifier for each message type */
+enum { \<?foreach message?>
+    MESSAGE_$name, \<?end foreach?>
+    MESSAGE_TYPE_COUNT \
+};
+
+/** message tag used for propagating messages */
+#define TAG 12
+
+
+/* ========== Declaration of file level global vars ================ */
+
+/** buffer space for packed message received from each node */
+void ** inbuf;
+/** buffer space for packed message sent to each node */
+void ** outbuf;
+
+/** Input MPI_Request array */
+MPI_Request *in_req;
+/** Output MPI_Request array */
+MPI_Request *out_req;
+
+
+/* ========== Begin function implementation ======================== */
+
+/** \fn void propagate_messages_init()
+ *  \brief Initiate propagation of messages between nodes using 
+ *      non-blocking communication routines.
+ */
+void propagate_messages_init() {
+    /* Author: L.S. Chin (CCLRC, March 2007) */
+
+    /** \note This routine uses the following external global variables 
+     * - #totalnodes   
+     *   Result of MPI_Comm_size
+     * - #node_number  
+     *    Result of MPI_Comm_rank<?foreach message?>     
+     * - #p_$name_message 
+     *   Pointer to message struct for looping through $name message list<?end foreach?>
+     * - #p_node_info 
+     *   Pointer to head of node list
+     */
+    
+    /* ------------ Begin Variable declarations -------------- */
+    int i, j, outcount, bufsize;
+    int *message_count_list;
+    int probed;
+
+    MPI_Status status;
+    node_information * node_info;
+
+
+<?foreach message?>
+    /* pointers to temp element and array for $name message */
+    xmachine_message_$name *message_$name_temp;
+    xmachine_message_$name_data *message_$name_list;
+<?end foreach?>
+
+    /* ------------ Allocate Required Memory ----------------- */
+    
+    /* Memory for MPI send/receive requests */
+    in_req  = (MPI_Request *)malloc(sizeof(MPI_Request) * totalnodes);
+    out_req = (MPI_Request *)malloc(sizeof(MPI_Request) * totalnodes);
+
+    /* Memory for buffer arrays */
+    inbuf  = (void **)malloc(sizeof(void *) * totalnodes);
+    outbuf = (void **)malloc(sizeof(void *) * totalnodes);
+    
+
+    /* -------- Fill send buffers and post non-blocking sends ---- */
+    
+    /* iterate through node list */
+    node_info = *p_node_info;
+    while(node_info)
+    {
+        i = node_info->node_id;
+        /* don't send messages to self */
+        if (i == node_number)
+        {
+            outbuf[i] = NULL;
+            out_req[i] = MPI_REQUEST_NULL;
+            node_info = node_info->next;
+            continue;
+        }
+        
+        bufsize = 0;
+        outcount = 0;
+
+        /* accumulate message count of all messages */
+<?foreach message?>
+        outcount += node_info->$name_message_no;
+<?end foreach?>
+
+        
+        /* build output buffer */
+        if (outcount > 0)
+        {
+            /* mem requirements for message_count_list array */
+            bufsize += sizeof(int) * MESSAGE_TYPE_COUNT;
+
+            /* get total mem requirements for all messages */
+<?foreach message?>
+            bufsize += sizeof(xmachine_message_$name_data) * \
+                       node_info->$name_message_no;
+<?end foreach?>
+
+            /* allocate required memory */
+            outbuf[i] = (void *) malloc(bufsize);
+
+            /* -- assign array pointers to relevant points in buffer -- */
+
+            /* for message count list */
+            message_count_list = (int *) outbuf[i];
+
+<?foreach message?>
+            <?if first?>/* For $name message list */
+            message_count_list[MESSAGE_$name] = node_info->$name_message_no;
+            message_$name_list = (xmachine_message_$name_data *)\
+                           &message_count_list[MESSAGE_TYPE_COUNT];
+            <?end if?><?if notfirst?>/* For $name message list */
+            message_count_list[MESSAGE_$name] = node_info->$name_message_no;
+            message_$name_list = (xmachine_message_$name_data *)\
+                    &message_$previous_name_list[message_count_list[MESSAGE_$previous_name]];
+            <?end if?>
+<?end foreach?>
+
+            
+            /* -- traverse message list and populate buffer -- */
+<?foreach message?>
+                /* for $name message */            
+                message_$name_temp = node_info->$name_messages;
+                j = 0;
+                while (message_$name_temp)
+                {
+                    <?foreach messagevar?>
+                    message_$messagename_list[j].$name = message_$messagename_temp->$name;<?end foreach?>
+
+                    message_$name_temp = message_$name_temp->next;
+                    j++;
+                }
+                p_$name_message = &node_info->$name_messages;
+                free$namemessages();
+                node_info->$name_message_no = 0;
+                p_$name_message = &current_node->$name_messages;
+
+<?end foreach?>
+        }
+        else /* nothing to send */
+        {
+            outbuf[i] = NULL;
+        }
+        
+        /* post non-blocking send */
+        MPI_Issend(outbuf[i], bufsize, MPI_BYTE, i, TAG, \
+                MPI_COMM_WORLD, &out_req[i]);
+        
+        /* select next node */
+        node_info = node_info->next;
+    }
+    
+
+    
+    /* ----- Prepare and post non-blocking receives ------------ */
+    
+    /* we expect (totalnodes - 1) incoming messages */
+    probed = 0;
+    inbuf[node_number] = NULL;
+    in_req[node_number] = MPI_REQUEST_NULL;
+    while (probed < (totalnodes - 1))
+    {
+        /* probe incoming messages for bufsize */
+        MPI_Probe(MPI_ANY_SOURCE, TAG, MPI_COMM_WORLD, &status);
+
+        /* get sender's id */
+        i = status.MPI_SOURCE;
+
+        /* get bufsize */
+        MPI_Get_count(&status, MPI_BYTE, &bufsize);
+
+        /* allocate memory for recv buffer */
+        if (bufsize > 0)
+        {
+            inbuf[i] = (void *)malloc(bufsize); 
+        }
+        else
+        {
+            inbuf[i] = NULL;
+        }
+
+        /* post non-blocking receive */
+        MPI_Irecv(inbuf[i], bufsize, MPI_BYTE, i, TAG, \
+                MPI_COMM_WORLD, &in_req[i]);
+
+        probed ++;
+    }
+    
+}
+
+
+/** \fn void propagate_messages_complete()
+ * \brief Complete propagation of messages between nodes
+ */
+void propagate_messages_complete() {
+    /* Author: L.S. Chin (CCLRC, March 2007) */
+    
+    /** \note This routine uses the following external global variables 
+     * - #p_node_info 
+     *   Pointer to head of node list
+     * - #totalnodes  
+     *   Result of MPI_Comm_size
+     */
+    
+    /* ------------ Begin Variable declarations -------------- */
+    int i, j, bufsize, sender;
+    int *message_count_list;
+    MPI_Status status;
+    
+    /* pointers to temporary messages. One set for each message type  */
+<?foreach message?>
+    xmachine_message_$name *message_$name_temp;
+    xmachine_message_$name_data *message_$name_list; 
+<?end foreach?>
+
+    
+    
+    /* ----- Complete and process pending receives ------------------ */
+
+    /* process received messages */
+    /* instead of a Waitall, use Waitany so that we may overlap data 
+       handling time with other pending receives */
+    for (j = 0; j < totalnodes - 1; j++)
+    {
+        /* wait for any receive to complete */
+        MPI_Waitany(totalnodes, in_req, &sender, &status);
+
+        /* determine size of message */
+        MPI_Get_count(&status, MPI_BYTE, &bufsize);
+
+        /* if size = 0, there's nothing for us to do */
+        if (bufsize == 0) continue;
+
+        /* Assign array pointers to apropriate locations in buffer */
+        message_count_list = (int *)inbuf[sender];
+
+<?foreach message?>
+        <?if first?>/* For $name message list */
+        message_$name_list = (xmachine_message_$name_data *)\
+               &message_count_list[MESSAGE_TYPE_COUNT];
+        <?end if?><?if notfirst?>/* For $name message list */
+        message_$name_list = (xmachine_message_$name_data *)\
+               &message_$previous_name_list[message_count_list[MESSAGE_$previous_name]];
+        <?end if?>
+<?end foreach?>
+        
+        /* process received messages */
+<?foreach message?>
+        for (i = 0; i < message_count_list[MESSAGE_$name]; i++)
+        {
+            message_$name_temp = (xmachine_message_$name *)add_$name_message_internal();
+<?foreach messagevar?>
+            message_$messagename_temp->$name = message_$messagename_list[i].$name;
+<?end foreach?>
+        }
+<?end foreach?>
+        
+        free(inbuf[sender]);
+    }
+    
+    free(inbuf);
+    free(in_req);
+    
+    
+    
+    /* ------- Complete non-blocking sends ----------------------- */
+    
+    /* wait for all non-blocking sends to complete */
+    MPI_Waitall(totalnodes, out_req, MPI_STATUSES_IGNORE);
+    
+    /* free allocated send buffers */
+    for(i = 0; i < totalnodes; i++)
+    {
+        if (outbuf[i]) free(outbuf[i]);
+    }
+    free(outbuf);
+    free(out_req);
+
+}
