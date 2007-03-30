@@ -400,57 +400,8 @@ void clean_up(int code)
 		exit(0);
 	}
 }
-<?if parallel?>
-/** \fn void send_agent_pack(node_information * node_info, int buffersize)
- * \brief Send a packed MPI message.
- */
-void send_agent_pack(node_information * node_info, int buffersize)
-{
-	int data[$number_xagentsplusone];
-	int i, position = 0;
-	char buf[buffersize];
-	data[0] = buffersize;
-	xmachine * temp_xmachine;
-<?foreach xagent?>	data[$xagentcountplusone] = node_info->$name_agent_no;
-	xmachine_memory_$name $name_agent_list[node_info->$name_agent_no];
-<?end foreach?>
-	MPI_Send(&data, $number_xagentsplusone, MPI_INT, node_info->node_id, 36, MPI_COMM_WORLD);
-	
-	if(buffersize > 0)
-	{
-<?foreach xagent?>		i = 0;
-		temp_xmachine = node_info->$name_agents;
-		while(temp_xmachine)
-		{
-<?foreach xagentvar?>			$agent_name_agent_list[i].$name = temp_xmachine->xmachine_$agent_name->$name;
-<?end foreach?>			i++;
-			temp_xmachine = temp_xmachine->next;
-		}
-		MPI_Pack($name_agent_list, node_info->$name_agent_no, xmachine$nameType, buf, buffersize, &position, MPI_COMM_WORLD);
-		
-<?end foreach?>		MPI_Send(buf, position, MPI_PACKED, node_info->node_id, 44, MPI_COMM_WORLD);
-	}
-}
 
-/** \fn void receive_agent_pack(node_information * node_info, int buffersize,<?foreach xagent?> int $name_agent_no<?if notlast?>, <?end if?><?end foreach?>)
- * \brief Receive a packed MPI message.
- */
-void receive_agent_pack(node_information * node_info, int buffersize, <?foreach xagent?>int $name_agent_no<?if notlast?>, <?end if?><?end foreach?>)
-{
-	char buf[buffersize];
-	int checkbuffersize, i, position = 0;
-	xmachine * temp_xmachine;
-<?foreach xagent?>	xmachine_memory_$name $name_agent_list[$name_agent_no];
-<?end foreach?>	MPI_Recv(buf, buffersize, MPI_PACKED, node_info->node_id, 44, MPI_COMM_WORLD, &status);
-	MPI_Get_count(&status, MPI_PACKED, &checkbuffersize);<?foreach xagent?>
-	
-	MPI_Unpack(buf, checkbuffersize, &position, &$name_agent_list, $name_agent_no, xmachine$nameType, MPI_COMM_WORLD);
-	for(i=0; i<$name_agent_no; i++)
-	{
-		add_$name_agent(<?foreach xagentvar?>$agent_name_agent_list[i].$name<?if notlast?>, <?end if?><?end foreach?>);
-	}<?end foreach?>
-}
-<?end if?>
+<?if serial?>
 /** \fn void propagate_agents()
  * \brief Check agent positions to see if any need to be moved to a another node.
  */
@@ -462,9 +413,7 @@ void propagate_agents()
 	xmachine ** p_temp_xmachine;
 	int count = 0;
 	double x_xmachine, y_xmachine, z_xmachine;
-<?if parallel?>	int agent_type;
-	int buffersize, packsize;
-<?end if?>	current_xmachine = *p_xmachine;
+	current_xmachine = *p_xmachine;
 	before_xmachine = NULL;
 	while(current_xmachine)
 	{
@@ -473,7 +422,6 @@ void propagate_agents()
 			x_xmachine = current_xmachine->xmachine_$name->$xvar;
 			y_xmachine = current_xmachine->xmachine_$name->$yvar;
 <?if use_zvar?>			z_xmachine = current_xmachine->xmachine_$name->$zvar;<?end if?><?if no_zvar?>			z_xmachine = 0.0;<?end if?>
-<?if parallel?>			agent_type = $xagent_count;<?end if?>
 		}
 <?end foreach?>		
 		if(x_xmachine < current_node->partition_data[0] ||
@@ -491,32 +439,17 @@ void propagate_agents()
 				node_info->partition_data[2] < y_xmachine && node_info->partition_data[3] > y_xmachine &&
 				node_info->partition_data[4] < z_xmachine && node_info->partition_data[5] > z_xmachine)
 				{
-<?if serial?>
-		/* Remove agent */
-		if(before_xmachine) before_xmachine->next = current_xmachine->next;
-		else *p_xmachine = current_xmachine->next;
-		current_node->agent_total--;
-		/* Add agent */
-		p_temp_xmachine = &node_info->agents;
-		temp_xmachine = *p_temp_xmachine;
-		current_xmachine->next = temp_xmachine;
-		*p_temp_xmachine = current_xmachine;
-		node_info->agent_total++;
-<?end if?><?if parallel?>					// Remove agent
-					if(before_xmachine) before_xmachine->next = current_xmachine->next;
-					else *p_xmachine = current_xmachine->next;
-					current_node->agent_total--;
-					// Add agent
-<?foreach xagent?>					if(agent_type == $xagent_count)
-					{
-						node_info->$name_agent_no++;
-						p_temp_xmachine = &node_info->$name_agents;
-					}
-<?end foreach?>					
-					temp_xmachine = *p_temp_xmachine;
-					current_xmachine->next = temp_xmachine;
-					*p_temp_xmachine = current_xmachine;
-<?end if?>					node_info = NULL;
+                    /* Remove agent */
+                    if(before_xmachine) before_xmachine->next = current_xmachine->next;
+                    else *p_xmachine = current_xmachine->next;
+                    current_node->agent_total--;
+                    /* Add agent */
+                    p_temp_xmachine = &node_info->agents;
+                    temp_xmachine = *p_temp_xmachine;
+                    current_xmachine->next = temp_xmachine;
+                    *p_temp_xmachine = current_xmachine;
+                    node_info->agent_total++;
+                    node_info = NULL;
 				}
 				else node_info = node_info->next;
 				}
@@ -527,43 +460,8 @@ void propagate_agents()
 			else current_xmachine = NULL;
 			//current_xmachine = current_xmachine->next;
 		}
-<?if parallel?>		// send agent pack message
-		node_info = *p_node_info;
-		while(node_info)
-		{
-			if(node_number != node_info->node_id)
-		{
-		buffersize = 0;
-<?foreach xagent?>		MPI_Pack_size(node_info->$name_agent_no, xmachine$nameType, MPI_COMM_WORLD, &packsize);
-		buffersize += packsize;
-<?end foreach?>	
-		send_agent_pack(node_info, buffersize);
-	}
-	
-	node_info = node_info->next;
-	}
-	
-	// receive agent pack message
-	node_info = *p_node_info;
-	while(node_info)
-	{
-		if(node_number != node_info->node_id)
-		{
-			MPI_Recv(&data, $number_xagentsplusone, MPI_INT, node_info->node_id, 36, MPI_COMM_WORLD, &status);
-			//printf("%d> Recv data{%d,%d} to %d", node_number, data[0], data[1], node_info->node_id);
-			if(data[0] > 0) receive_agent_pack(node_info, data[0]<?foreach xagent?>, data[$xagentcountplusone]<?end foreach?>);
-<?foreach xagent?>			p_xmachine = &node_info->$name_agents;
-			freexmachines();
-			node_info->$name_agent_no = 0;
-<?end foreach?>
-			p_xmachine = &current_node->agents;
-		}
-		
-		node_info = node_info->next;
-	}
-<?end if?>
 }
-
+<?end if?>
 
 /** \fn int_array * init_int_array()
  * \brief Allocate memory for a dynamic integer array.

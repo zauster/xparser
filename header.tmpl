@@ -231,7 +231,8 @@ MPI_Datatype xmachine$nameType;
 * \brief MPI ", $name message */
 MPI_Datatype message$nameType;
 <?end foreach?>
-/** \var int node_number\n * \brief Node number (identifier for node) */
+/** \var int node_number\n 
+ * \brief Node number (identifier for node) */
 int node_number;
 <?end if?>
 /** \var int iteration_loop
@@ -263,6 +264,8 @@ void freelocations(location ** p_location);
 void add_node(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz);
 void clean_up(int code);
 void propagate_agents();
+void propagate_messages_init();
+void propagate_messages_complete();
 void create_partitions(char * filename, int * itno);
 void free_node_info();
 void randomisexagent();
@@ -298,6 +301,7 @@ void saveiterationdata(int iteration_number);
 void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>);<?end foreach?>
 <?foreach message?>
 void add_$name_message(<?foreach messagevar?>$type $name<?if notlast?>, <?end if?><?end foreach?>);
+xmachine_message_$name * add_$name_message_internal();
 xmachine_message_$name * get_first_$name_message();
 xmachine_message_$name * get_next_$name_message(xmachine_message_$name * current);
 void free$namemessages();<?end foreach?>

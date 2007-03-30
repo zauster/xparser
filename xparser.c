@@ -175,13 +175,17 @@ int main(int argc, char ** argv)
 	parseTemplate(filename, templatename, modeldata);
 	strcpy(filename, directory); strcat(filename, "memory.c"); strcpy(templatename, "memory.tmpl");
 	parseTemplate(filename, templatename, modeldata);
+	strcpy(filename, directory); strcat(filename, "low_primes.h"); strcpy(templatename, "low_primes.tmpl");
+	parseTemplate(filename, templatename, modeldata);
 	strcpy(filename, directory); strcat(filename, "messageboards.c"); strcpy(templatename, "messageboards.tmpl");
 	parseTemplate(filename, templatename, modeldata);
 	strcpy(filename, directory); strcat(filename, "partitioning.c"); strcpy(templatename, "partitioning.tmpl");
 	parseTemplate(filename, templatename, modeldata);
-	strcpy(filename, directory); strcat(filename, "Doxyfile"); strcpy(templatename, "Doxyfile.tmpl");
+	strcpy(filename, directory); strcat(filename, "propagate_messages.c"); strcpy(templatename, "propagate_messages.tmpl");
 	parseTemplate(filename, templatename, modeldata);
-	strcpy(filename, directory); strcat(filename, "low_primes.h"); strcpy(templatename, "low_primes.h");
+	strcpy(filename, directory); strcat(filename, "propagate_agents.c"); strcpy(templatename, "propagate_agents.tmpl");
+	parseTemplate(filename, templatename, modeldata);
+	strcpy(filename, directory); strcat(filename, "Doxyfile"); strcpy(templatename, "Doxyfile.tmpl");
 	parseTemplate(filename, templatename, modeldata);
 	
 	freexmachines(modeldata->p_xmachines);
