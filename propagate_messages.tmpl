@@ -43,22 +43,13 @@ MPI_Request *out_req;
 /* ========== Begin function implementation ======================== */
 
 /** \fn void propagate_messages_init()
- *  \brief Initiate propagation of messages between nodes using 
- *      non-blocking communication routines.
+ * \brief Initiate propagation of messages between nodes using non-blocking communication routines.
+ *
+ * \author LS Chin (CCLRC)
+ * \date March 2007
  */
+ 
 void propagate_messages_init() {
-    /* Author: L.S. Chin (CCLRC, March 2007) */
-
-    /** \note This routine uses the following external global variables 
-     * - #totalnodes   
-     *   Result of MPI_Comm_size
-     * - #node_number  
-     *    Result of MPI_Comm_rank<?foreach message?>     
-     * - #p_$name_message 
-     *   Pointer to message struct for looping through $name message list<?end foreach?>
-     * - #p_node_info 
-     *   Pointer to head of node list
-     */
     
     /* ------------ Begin Variable declarations -------------- */
     int i, j, outcount, bufsize;
@@ -218,17 +209,12 @@ void propagate_messages_init() {
 
 /** \fn void propagate_messages_complete()
  * \brief Complete propagation of messages between nodes
+ *
+ * \author LS Chin (CCLRC)
+ * \date March 2007
  */
 void propagate_messages_complete() {
-    /* Author: L.S. Chin (CCLRC, March 2007) */
-    
-    /** \note This routine uses the following external global variables 
-     * - #p_node_info 
-     *   Pointer to head of node list
-     * - #totalnodes  
-     *   Result of MPI_Comm_size
-     */
-    
+
     /* ------------ Begin Variable declarations -------------- */
     int i, j, bufsize, sender;
     int *message_count_list;
