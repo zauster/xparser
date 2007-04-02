@@ -26,7 +26,10 @@ int main(int argc, char ** argv)
 	xmachine * temp_free_xmachine;
 	xmachine **agent_list;
 	/* Ratio for calculating time in milliseconds */
-	long time_ratio = 1000/CLOCKS_PER_SEC;
+    /* (lsc) changed from long to double
+     * if "long", time_ratio == 0 when CLOCKS_PER_SEC > 1000
+     */
+	double time_ratio = 1000.0/CLOCKS_PER_SEC;
 	/* Particle cloud data */
 	double cloud_data[6];
 <?if parallel?>	int err; /* MPI errors */
@@ -308,7 +311,12 @@ int main(int argc, char ** argv)
 		sprintf(data, "%i", iteration_loop);
 		fputs(data, file);
 		fputs("</no><time>", file);
-		sprintf(data, "%ld", ((long)clock()*time_ratio)-((long)interval*time_ratio));
+        /* (lsc) Changed casting from "long" to "double"
+         * In different systems, clock_t can be either integer or floating point. Casting to 
+         * double ensures that arithmetic and printing operations work properly on all systems
+         * regardless of underlying representation 
+         */
+		sprintf(data, "%ld", (long)(((double)clock()*time_ratio)-((double)interval*time_ratio)));
 		fputs(data, file);
 		fputs("</time></iteration>\n", file);
 		fclose(file);
@@ -317,7 +325,12 @@ int main(int argc, char ** argv)
 	
 	/* Stop timing and print total time */
 	stop = clock();
-	total_time = ((long)stop*time_ratio) - ((long)start*time_ratio);
+    /* (lsc) Changed casting from "long" to "double"
+     * In different systems, clock_t can be either integer or floating point. Casting to 
+     * double ensures that arithmetic and printing operations work properly on all systems
+     * regardless of underlying representation 
+     */
+	total_time = ((double)stop*time_ratio) - ((double)start*time_ratio);
 <?if serial?>	<?end if?><?if parallel?>	if(node_number == 0) <?end if?>printf("Execution time - %ld:%02ld:%ld [mins:secs:msecs]\n", total_time/60000, ((total_time/1000)%60), total_time%1000);
 	
 	clean_up(0);
