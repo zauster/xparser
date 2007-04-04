@@ -219,6 +219,9 @@ int main(int argc, char ** argv)
 <?if parallel?>	}<?end if?>
 	/* Start timing */
 	start = clock();
+<?if serial?>
+	current_node = *p_node_info;
+<?end if?>
     /* pre-randomise agents for first iteration */
     randomisexagent();
 	
