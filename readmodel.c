@@ -32,6 +32,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	int found;
 	int linenumber = 1;
 	int variable_count;
+	int ii;
 	/* Variable to keep reading file */
 	int reading;
 	/* Variable for buffer position */
@@ -136,7 +137,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	while(reading == 1)
 	{
 		/* Get the next char from the file */
-		c = fgetc(file);
+		c = (char)fgetc(file);
 		
 		/* Print char */
 		/*printf("%c\n", c);*/
@@ -482,7 +483,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 							while(c != EOF)
 							{
 								/* Get the next char from the file */
-								c = fgetc(filecode);
+								c = (char)fgetc(filecode);
 								
 								if(c == '\n')
 								{
@@ -501,13 +502,13 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 											printf(": found in %s\n", chardata);
 											foundfunctioninfile = 1;
 											// number of open brackets
-											while(c != '{') c = fgetc(filecode);
+											while(c != '{') c = (char)fgetc(filecode);
 											j = 1;
 											//charlist = NULL;
 											reset_char_array(current_string);
 											while(j>0)
 											{
-												c = fgetc(filecode);
+												c = (char)fgetc(filecode);
 												if(c == '{') j++;
 												if(c == '}') j--;
 												
@@ -759,7 +760,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 						while(c != EOF)
 						{
 							/* Get the next char from the file */
-							c = fgetc(filecode);
+							c = (char)fgetc(filecode);
 							
 							if(c != EOF)
 							{
@@ -856,19 +857,24 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 				{
 					current_variable->name = copy_array_to_str(current_string);
 					
-					int i = 0;
-					while(current_variable->name[i] != '\0')
+					/* (lsc)declaring new var as such is non standard */
+					/* int i = 0 */
+					/*  redeclaring i in this scope is also confusing as it
+                                            hides the value of i in parent scope */
+					/* replaced this with new var ii to ensure similar outcome */
+					ii = 0;
+					while(current_variable->name[ii] != '\0')
 					{
-						if(current_variable->name[i] == '[')
+						if(current_variable->name[ii] == '[')
 						{
-							current_variable->name[i] = '\0';
+							current_variable->name[ii] = '\0';
 							j = 0;
-							i++;
-							while(current_variable->name[i] != ']')
+							ii++;
+							while(current_variable->name[ii] != ']')
 							{
-								buffer[j] = current_variable->name[i];
+								buffer[j] = current_variable->name[ii];
 								j++;
-								i++;
+								ii++;
 							}
 							
 							buffer[j] = '\0';
@@ -881,7 +887,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 							}
 						}
 						
-						i++;
+						ii++;
 					}
 				}
 			}
@@ -950,7 +956,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					while(c != EOF)
 					{
 						/* Get the next char from the file */
-						c = fgetc(filecode);
+						c = (char)fgetc(filecode);
 						
 						if(c != EOF)
 						{

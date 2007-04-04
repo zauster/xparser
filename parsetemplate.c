@@ -58,7 +58,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	/* Read the template file into memory */
 	while (c != EOF)
 	{
-		c = fgetc(tmplfile);
+		c = (char)fgetc(tmplfile);
 		if (c != EOF)
 			add_char(filebuffer, c);
 	}

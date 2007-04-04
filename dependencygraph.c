@@ -1,4 +1,4 @@
-#include "header.h"
+ #include "header.h"
 
 /** \fn char * copystr(char * string)
  * \brief Copy a string into new memory.
@@ -10,6 +10,7 @@ char * copystr(char * string)
 	char * new_string = (char *)malloc( (strlen(string) + 1) * sizeof(char));
 	return strcpy(new_string, string);
 }
+
 
 /** \fn void create_dependency_graph(char * filepath, model_data * modeldata)
  * \brief Calculate agent functions dependency graph and produce a dot graph description output.
@@ -25,8 +26,6 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 	f_code * current_code;
 	s_trans * current_trans;
 	layer * current_layer;
-	char_list ** p_charlist;
-	char_list * charlist;
 	
 	/* Holds all the function names */
 	char functions[100][100]; 
@@ -68,9 +67,6 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 	int layer = 0;
 	/* File to write dgraph.dot to */
 	FILE *file;
-	
-	/* Initialise variables */
-	p_charlist = &charlist;
 	
 	printf("Creating dependency graph\n");
 	
@@ -323,12 +319,7 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 					funclayer[i] = layer;
 					
 					current_function = addxfunction(&current_layer->functions);
-					//freechars(p_charlist);
-					//charlist = NULL;
-					//makecharlist(functions[i], p_charlist);
 					current_function->name = copystr(functions[i]);
-					//charlist = NULL;
-					//makecharlist(funcxagent[i], p_charlist);
 					current_function->note = copystr(funcxagent[i]);
 				}
 			}
@@ -461,3 +452,4 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 	/* Close the file */
 	fclose(file);
 }
+

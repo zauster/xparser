@@ -637,7 +637,7 @@ void freelayers(layer ** p_layers)
  * \brief Allocate memory for a dynamic integer array.
  * \return int_array Pointer to the new dynamic integer array.
  */
-int_array * init_int_array()
+int_array * init_int_array(void)
 {
 	int_array * new_array = (int_array *)malloc(sizeof(int_array));
 	new_array->size = 0;
@@ -673,14 +673,10 @@ void sort_int_array(int_array * array)
 			/* Comparing the values between neighbours */
 			if(*(array->array+j+1) < *(array->array+j))
 			{
-				/* Check for end of list */
-				if(*(array->array+j+1) != 0)
-				{
-					/* Swap neighbours */
-					temp = *(array->array+j); 
-					*(array->array+j) = *(array->array+j+1);
-					*(array->array+j+1) = temp;
-				}
+				/* Swap neighbours */
+				temp = *(array->array+j); 
+				*(array->array+j) = *(array->array+j+1);
+				*(array->array+j+1) = temp;
 			}
 		}
 	}
@@ -779,14 +775,10 @@ void sort_double_array(double_array * array)
 			/* Comparing the values between neighbours */
 			if(*(array->array+j+1) < *(array->array+j))
 			{
-				/* Check for end of list */
-				if(*(array->array+j+1) != 0)
-				{
-					/* Swap neighbours */
-					temp = *(array->array+j); 
-					*(array->array+j) = *(array->array+j+1);
-					*(array->array+j+1) = temp;
-				}
+				/* Swap neighbours */
+				temp = *(array->array+j); 
+				*(array->array+j) = *(array->array+j+1);
+				*(array->array+j+1) = temp;
 			}
 		}
 	}

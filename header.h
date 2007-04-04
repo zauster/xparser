@@ -342,16 +342,29 @@ void writecharlist(char_list ** p_charlist, FILE * file);
 void copycharlist(char_list ** p_charlist, char * chardata);
 void makecharlist(char * chardata, char_list ** p_charlist);
 /* dynamicarray.c */
-char_array * init_char_array();
+char_array * init_char_array(void);
+int_array * init_int_array(void);
 void reset_char_array(char_array * array);
 void free_char_array(char_array * array);
+void free_int_array(int_array * array);
 void add_char(char_array * array, char new_char);
 char * copy_array_to_str(char_array * array);
 void remove_char(char_array * array, int index);
 void print_char_array(char_array * array);
+void sort_int_array(int_array * array);
+void add_int(int_array * array, int new_int);
+void remove_int(int_array * array, int index);
+void print_int_array(int_array * array);
+double_array * init_double_array(void);
+void free_double_array(double_array * array);
+void sort_double_array(double_array * array);
+void print_double_array(double_array * array);
+void add_double(double_array * array, double new_double);
+void remove_double(double_array * array, int index);
 /* readmodel.c */
 void readModel(char * inputfile, char * directory, model_data * modeldata);
 /* dependencygraph.c */
+char * copystr(char * string);
 void create_dependency_graph(char * filepath, model_data * modeldata);
 /* parsetemplate.c */
 void parseTemplate(char * filename, char * templatename, model_data * modeldata);
