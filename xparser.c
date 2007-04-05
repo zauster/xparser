@@ -53,11 +53,8 @@ int main(int argc, char ** argv)
 	/* Hold model data */
 	xmachine * xmachines;
 	/*xmachine_memory * xmemory;*/
-	/*xmachine_memory * xmemory;*/
 	xmachine_message * xmessage;
 	/*xmachine_state * xstates;*/
-	/*xmachine_state * xstates;*/
-	/*xmachine_function * xfunctions;*/
 	/*xmachine_function * xfunctions;*/
 	variable * envvar;
 	env_func * envfunc;
@@ -70,18 +67,12 @@ int main(int argc, char ** argv)
 	modeldata->p_xmachines = &xmachines;
 	xmachines = NULL;
 	/*modeldata->p_xmemory = &xmemory;*/
-	/*modeldata->p_xmemory = &xmemory;*/
-	/*xmemory = NULL;*/
 	/*xmemory = NULL;*/
 	modeldata->p_xmessages = &xmessage;
 	xmessage = NULL;
 	/*modeldata->p_xstates = &xstates;*/
-	/*modeldata->p_xstates = &xstates;*/
-	/*xstates = NULL;*/
 	/*xstates = NULL;*/
 	/*modeldata->p_xfunctions = &xfunctions;*/
-	/*modeldata->p_xfunctions = &xfunctions;*/
-	/*xfunctions = NULL;*/
 	/*xfunctions = NULL;*/
 	modeldata->p_envvars = &envvar;
 	envvar = NULL;
@@ -168,16 +159,11 @@ int main(int argc, char ** argv)
 	}
 	
 	/*writeSourceMain(directory, code_type, p_xmachines, p_xmessage, p_envvar, p_envdefine, p_envfunc, p_allvars, p_it_end_code, p_layers);*/
-	/*writeSourceMain(directory, code_type, p_xmachines, p_xmessage, p_envvar, p_envdefine, p_envfunc, p_allvars, p_it_end_code, p_layers);*/
-	/*writeSourceMemory(directory, code_type, p_xmachines, p_xmessage, p_envvar, p_envdefine, p_envfunc, p_allvars, p_it_end_code);*/
 	/*writeSourceMemory(directory, code_type, p_xmachines, p_xmessage, p_envvar, p_envdefine, p_envfunc, p_allvars, p_it_end_code);*/
 	/*writeSourceXML(directory, code_type, p_xmachines, p_xmessage, p_envvar, p_envdefine, p_envfunc, p_allvars, p_it_end_code);*/
-	/*writeSourceXML(directory, code_type, p_xmachines, p_xmessage, p_envvar, p_envdefine, p_envfunc, p_allvars, p_it_end_code);*/
-	/*writeSourceHeader(directory, code_type, p_xmachines, p_xmessage, p_envvar, p_envdefine, p_envfunc, p_allvars, p_it_end_code);*/
 	/*writeSourceHeader(directory, code_type, p_xmachines, p_xmessage, p_envvar, p_envdefine, p_envfunc, p_allvars, p_it_end_code);*/
 	/* writeSourceXmachine */
 	
-	/*writeScript(directory, code_type, p_envfunc);*/
 	/*writeScript(directory, code_type, p_envfunc);*/
 	strcpy(filename, directory); strcat(filename, "Makefile"); strcpy(templatename, "Makefile.tmpl");
 	parseTemplate(filename, templatename, modeldata);

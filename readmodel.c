@@ -28,7 +28,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	char buffer[50];
 	char chardata[100];
 	/*char chardata2[100];*/
-	/*char chardata2[100];*/
 	char findfunction[1000];
 	int found;
 	int linenumber = 1;
@@ -60,10 +59,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	variable * tvariable;
 	variable * current_variable;
 	/*char_list ** p_charlist;*/
-	/*char_list ** p_charlist;*/
 	/*char_list * charlist;*/
-	/*char_list * charlist;*/
-	/*char_list * current_charlist;*/
 	/*char_list * current_charlist;*/
 	s_attrib ** p_attrib;
 	s_attrib * attrib;
@@ -80,7 +76,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	
 	/* check var name for array */
 	/*char_list * charcheck;*/
-	/*char_list * charcheck;*/
 	modeldata->number_messages = 0;
 	modeldata->number_xmachines = 0;
 	
@@ -93,7 +88,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	else { printf("reading xmml: %s\n", inputfile); }
 	
 	/* Initialise variables */
-	/*p_charlist = &charlist;*/
 	/*p_charlist = &charlist;*/
 	p_attrib = &attrib;
 	p_trans = &trans;
@@ -136,7 +130,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	depends = 0;
 	
 	/*printf("%i> ", linenumber);*/
-	/*printf("%i> ", linenumber);*/
 	
 	/* Read characters until the end of the file */
 	/*while(c != EOF)*/
@@ -150,9 +143,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 		/*printf("%c\n", c);*/
 		if(c == '\n' || c == '\r') linenumber++;
 		/*printf("%i> ", linenumber);*/
-		/*printf("%i> ", linenumber);*/
 		
-		/*printf("xmlcomment: %d\t%c\n", xmlcomment, c);*/
 		/*printf("xmlcomment: %d\t%c\n", xmlcomment, c);*/
 		
 		/* If in cdata then don't parse as xml */
@@ -196,16 +187,12 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					if(xmlcode == 1)
 					{
 						/*current_charlist = addchar(p_charlist);*/
-						/*current_charlist = addchar(p_charlist);*/
-						/*current_charlist->character = ']';*/
 						/*current_charlist->character = ']';*/
 						add_char(current_string, ']');
 					}
 					else if(xmlcode == 11)
 					{
 						/*current_charlist = addchar(p_charlist);*/
-						/*current_charlist = addchar(p_charlist);*/
-						/*current_charlist->character = '<';*/
 						/*current_charlist->character = '<';*/
 						add_char(current_string, '<');
 					}
@@ -217,8 +204,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			if(xmlcode == 0)
 			{
 				/*current_charlist = addchar(p_charlist);*/
-				/*current_charlist = addchar(p_charlist);*/
-				/*current_charlist->character = c;*/
 				/*current_charlist->character = c;*/
 				add_char(current_string, c);
 			}
@@ -238,17 +223,12 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 		else if(c == '>')
 		{
 			/*printf("in c == >\n");*/
-			/*printf("in c == >\n");*/
 			
 			/* Place 0 at end of buffer to make chars a string */
 			/*buffer[i] = 0;*/
-			/*buffer[i] = 0;*/
 			
 			/*printf("buffer = %s\n", buffer);*/
-			/*printf("buffer = %s\n", buffer);*/
 			/*printf("string = ");*/
-			/*printf("string = ");*/
-			/*print_char_array(current_string);*/
 			/*print_char_array(current_string);*/
 			
 			/* Handle XML nested tag errors */
@@ -285,7 +265,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "notes") == 0) { notes = 1; cdata = 1;}
 			if(strcmp(current_string->array, "/notes") == 0) { notes = 0; }
 			if(strcmp(current_string->array, "name") == 0) { name = 1; }/*reset_char_array(current_string); }*/
-			if(strcmp(current_string->array, "name") == 0) { name = 1; }/*reset_char_array(current_string); }*/
 			if(strcmp(current_string->array, "/name") == 0) { name = 0; }
 			if(strcmp(current_string->array, "environment") == 0) { environment = 1; }
 			if(strcmp(current_string->array, "/environment") == 0) { environment = 0; }
@@ -295,7 +274,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 				current_envdefine = addvariable(modeldata->p_envdefines);
 			}
 			if(strcmp(current_string->array, "/define") == 0) { define = 0; }
-			if(strcmp(current_string->array, "value") == 0) { value = 1; }/* charlist = NULL; }*/
 			if(strcmp(current_string->array, "value") == 0) { value = 1; }/* charlist = NULL; }*/
 			if(strcmp(current_string->array, "/value") == 0) { value = 0; }
 			if(strcmp(current_string->array, "xmachine") == 0)
@@ -317,7 +295,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					while(current_variable)
 					{
 						/*copycharlist(&current_variable->name, &chardata[0]);*/
-						/*copycharlist(&current_variable->name, &chardata[0]);*/
 						if(strcmp(current_variable->name, "x") == 0)    strcpy(current_xmachine->xvar, "x");
 						if(strcmp(current_variable->name, "px") == 0)   strcpy(current_xmachine->xvar, "px");
 						if(strcmp(current_variable->name, "posx") == 0) strcpy(current_xmachine->xvar, "posx");
@@ -332,7 +309,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 						allvar = * modeldata->p_allvars;
 						while(allvar)
 						{
-							/*copycharlist(&allvar->name, &chardata2[0]);*/
 							/*copycharlist(&allvar->name, &chardata2[0]);*/
 							if(strcmp(current_variable->name, allvar->name) == 0) found = 1;
 							
@@ -364,7 +340,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			{
 				memory = 1;
 				/*current_memory = addxmemory(p_xmemory);*/
-				/*current_memory = addxmemory(p_xmemory);*/
 				current_memory = addxmemory(&current_xmachine->memory);
 				tvariable = NULL;
 			}
@@ -381,14 +356,12 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			}
 			if(strcmp(current_string->array, "/var") == 0) { var = 0; }
 			if(strcmp(current_string->array, "type") == 0) { type = 1; }/*charlist = NULL; }*/
-			if(strcmp(current_string->array, "type") == 0) { type = 1; }/*charlist = NULL; }*/
 			if(strcmp(current_string->array, "/type") == 0) { type = 0; }
 			if(strcmp(current_string->array, "states") == 0) { states = 1; }
 			if(strcmp(current_string->array, "/states") == 0) { states = 0; }
 			if(strcmp(current_string->array, "state") == 0)
 			{
 				state = 1;
-				/*current_state = addxstate(p_xstates);*/
 				/*current_state = addxstate(p_xstates);*/
 				current_state = addxstate(&current_xmachine->states);
 				attrib = NULL;
@@ -405,7 +378,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 				attribute = 1;
 				current_attrib = addsattrib(p_attrib);
 				/*charlist = NULL;*/
-				/*charlist = NULL;*/
 				reset_char_array(current_string);
 			}
 			if(strcmp(current_string->array, "/attribute") == 0) { attribute = 0; }
@@ -414,17 +386,13 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 				transition = 1;
 				current_trans = addtrans(p_trans);
 				/*charlist = NULL;*/
-				/*charlist = NULL;*/
 				reset_char_array(current_string);
 			}
 			if(strcmp(current_string->array, "/trans") == 0) { transition = 0; }
 			if(strcmp(current_string->array, "func") == 0) { func = 1; }/*charlist = NULL; }*/
-			if(strcmp(current_string->array, "func") == 0) { func = 1; }/*charlist = NULL; }*/
 			if(strcmp(current_string->array, "/func") == 0) { func = 0; }
 			if(strcmp(current_string->array, "dest") == 0) { dest = 1; }/*charlist = NULL; }*/
-			if(strcmp(current_string->array, "dest") == 0) { dest = 1; }/*charlist = NULL; }*/
 			if(strcmp(current_string->array, "/dest") == 0) { dest = 0; }
-			if(strcmp(current_string->array, "functions") == 0) { functions = 1; }/*charlist = NULL; }*/
 			if(strcmp(current_string->array, "functions") == 0) { functions = 1; }/*charlist = NULL; }*/
 			if(strcmp(current_string->array, "/functions") == 0) { functions = 0; }
 			if(strcmp(current_string->array, "function") == 0)
@@ -440,10 +408,8 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 				else
 				{
 					/*current_function = addxfunction(p_xfunctions);*/
-					/*current_function = addxfunction(p_xfunctions);*/
 					current_function = addxfunction(&current_xmachine->functions);
 					fcode = NULL;
-					/*current_trans = addtrans(&current_function->depends);*/
 					/*current_trans = addtrans(&current_function->depends);*/
 				}
 			}
@@ -457,13 +423,10 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					printf("Function ");
 					printf(current_function->name);
 					/*printf(" function not found, look in functions file\n");*/
-					/*printf(" function not found, look in functions file\n");*/
 					
-					/*charlist = NULL;*/
 					/*charlist = NULL;*/
 					reset_char_array(current_string);
 					current_fcode = addfcode(p_fcode);
-					current_fcode->code = copy_array_to_str(current_string);/*charlist;*/
 					current_fcode->code = copy_array_to_str(current_string);/*charlist;*/
 					current_function->code = *p_fcode;
 					
@@ -500,7 +463,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 							}
 							chardata[j] = 0;*/
 							/*printf("01\t%s\n", chardata);*/
-							/*printf("01\t%s\n", chardata);*/
 							
 							strcpy(chardata, directory);
 							strcat(chardata, current_envfunc->filepath);
@@ -513,11 +475,8 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 								exit(0);
 							}
 							/*else printf("reading file: %s\n", chardata);*/
-							/*else printf("reading file: %s\n", chardata);*/
 							
 							/*charlist = NULL;*/
-							/*charlist = NULL;*/
-							/*i = 0;*/
 							/*i = 0;*/
 							reset_char_array(current_string);
 							
@@ -536,10 +495,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 									{
 										findfunction[i-2] = 0;
 										/*printf("ff: %s\n", findfunction+4);*/
-										/*printf("ff: %s\n", findfunction+4);*/
 										/*copycharlist(&current_function->name, chardata2);*/
-										/*copycharlist(&current_function->name, chardata2);*/
-										/*printf("chardata: %s\n", chardata);*/
 										/*printf("chardata: %s\n", chardata);*/
 										
 										if(strcmp(findfunction+4, current_function->name) == 0)
@@ -547,10 +503,8 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 											printf(": found in %s\n", chardata);
 											foundfunctioninfile = 1;
 											/* number of open brackets*/
-											/* number of open brackets*/
 											while(c != '{') c = (char)fgetc(filecode);
 											j = 1;
-											/*charlist = NULL;*/
 											/*charlist = NULL;*/
 											reset_char_array(current_string);
 											while(j>0)
@@ -562,8 +516,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 												if(j != 0)
 												{
 													/*current_charlist = addchar(p_charlist);*/
-													/*current_charlist = addchar(p_charlist);*/
-													/*current_charlist->character = c;*/
 													/*current_charlist->character = c;*/
 													add_char(current_string, c);
 												}
@@ -582,8 +534,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 								if(c != (char)EOF)
 								{
 									/*current_charlist = addchar(p_charlist);*/
-									/*current_charlist = addchar(p_charlist);*/
-									/*current_charlist->character = c;*/
 									/*current_charlist->character = c;*/
 								}
 							}
@@ -596,15 +546,11 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					}
 					
 					current_fcode->code = copy_array_to_str(current_string);/**p_charlist;*/
-					current_fcode->code = copy_array_to_str(current_string);/**p_charlist;*/
 					
 					if(foundfunctioninfile == 0) printf(": not found in function file(s)\n");
 					
 					/*printf("code: ");*/
-					/*printf("code: ");*/
 					/*printcharlist(&current_fcode->code);*/
-					/*printcharlist(&current_fcode->code);*/
-					/*printf("\n");*/
 					/*printf("\n");*/
 				}
 				
@@ -615,7 +561,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			}
 			if(strcmp(current_string->array, "header") == 0) { header = 1; current_envfunc = addenvfunc(modeldata->p_envfuncs); }
 			if(strcmp(current_string->array, "/header") == 0) { header = 0; }
-			if(strcmp(current_string->array, "note") == 0) { note = 1; }/*charlist = NULL; }*/
 			if(strcmp(current_string->array, "note") == 0) { note = 1; }/*charlist = NULL; }*/
 			if(strcmp(current_string->array, "/note") == 0) { note = 0; }
 			if(strcmp(current_string->array, "messages") == 0) { messages = 1; }
@@ -656,11 +601,9 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "code") == 0)
 			{
 				/*printf("in code == 0\n");*/
-				/*printf("in code == 0\n");*/
 				
 				code = 1;
 				cdata = 1;
-				/*charlist = NULL;*/
 				/*charlist = NULL;*/
 				reset_char_array(current_string);
 				if(environment == 0 && iteration_end_code == 0)
@@ -676,7 +619,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "depends") == 0)
 			{
 				depends = 1;
-				/*charlist = NULL;*/
 				/*charlist = NULL;*/
 				current_trans = addtrans(&current_function->depends);
 			}
@@ -695,7 +637,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			/* End of tag and reset buffer */
 			intag = 0;
 			/*i = 0;*/
-			/*i = 0;*/
 			reset_char_array(current_string);
 			/* Reset xml code char list */
 			xmlcode = 0;
@@ -704,7 +645,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 		else if(c == '<')
 		{
 			/* Place /0 at end of buffer to end numbers or string*/
-			/*buffer[i] = 0;*/
 			/*buffer[i] = 0;*/
 			/* Flag in tag */
 			intag = 1;
@@ -785,7 +725,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					
 					current_envfunc->filepath = copy_array_to_str(current_string);
 					/*printf("file: %s\n", current_envfunc->filepath);*/
-					/*printf("file: %s\n", current_envfunc->filepath);*/
 					
 					/* Add file name to chardata on end of directory */
 					/*current_charlist = *p_charlist;
@@ -799,7 +738,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					chardata[j] = 0;*/
 					strcat(chardata, current_envfunc->filepath);
 					/*printf("01\t%s\n", chardata);*/
-					/*printf("01\t%s\n", chardata);*/
 					
 					/* Open code file read-only */
 					if((filecode = fopen(chardata, "r"))==NULL)
@@ -810,7 +748,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					}
 					else printf("reading file: %s\n", chardata);
 					
-					/*charlist = NULL;*/
 					/*charlist = NULL;*/
 					reset_char_array(current_string);
 					
@@ -829,8 +766,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 							if(c != (char)EOF)
 							{
 								/*current_charlist = addchar(p_charlist);*/
-								/*current_charlist = addchar(p_charlist);*/
-								/*current_charlist->character = c;*/
 								/*current_charlist->character = c;*/
 								add_char(current_string, c);
 							}
@@ -893,7 +828,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					}
 					
 					/*copycharlist(&current_variable->type, &chardata[0]);*/
-					/*copycharlist(&current_variable->type, &chardata[0]);*/
 					/* These are C to MPI datatype mappings */
 					if(strcmp(current_variable->type, "int") == 0) strcpy(current_variable->mpi_type, "MPI_INT");
 					if(strcmp(current_variable->type, "double") == 0) strcpy(current_variable->mpi_type, "MPI_DOUBLE");
@@ -948,7 +882,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 							
 							buffer[j] = '\0';
 							
-							/* If no number*/
 							/* If no number*/
 							if(j == 0) current_variable->arraylength = -1;
 							else
@@ -1006,7 +939,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					}
 					chardata[j] = 0;*/
 					/*printf("01\t%s\n", chardata);*/
-					/*printf("01\t%s\n", chardata);*/
 					
 					strcpy(chardata, directory);
 					strcat(chardata, copy_array_to_str(current_string));
@@ -1021,7 +953,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					else printf("reading file: %s\n", chardata);
 					
 					/*charlist = NULL;*/
-					/*charlist = NULL;*/
 					reset_char_array(current_string);
 					
 					/* Read characters until the end of the file */
@@ -1033,16 +964,12 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 						if(c != (char)EOF)
 						{
 							/*current_charlist = addchar(p_charlist);*/
-							/*current_charlist = addchar(p_charlist);*/
-							/*current_charlist->character = c;*/
 							/*current_charlist->character = c;*/
 							add_char(current_string, c);
 						}
 					}
 					
 					/*if(environment == 1) current_envfunc->code = *p_charlist;*/
-					/*if(environment == 1) current_envfunc->code = *p_charlist;*/
-					/*else current_fcode->code = *p_charlist;*/
 					/*else current_fcode->code = *p_charlist;*/
 					
 					/* Close the file */
@@ -1088,7 +1015,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			
 			/* Reset buffer */
 			/*i = 0;*/
-			/*i = 0;*/
 			reset_char_array(current_string);
 		}
 		/* If in tag put read char into buffer */
@@ -1115,8 +1041,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			else
 			{
 				/*buffer[i] = c;*/
-				/*buffer[i] = c;*/
-				/*i++;*/
 				/*i++;*/
 				add_char(current_string, c);
 			}
@@ -1129,8 +1053,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 							|| (define && (name || value)))
 		{
 			/*current_charlist = addchar(p_charlist);*/
-			/*current_charlist = addchar(p_charlist);*/
-			/*current_charlist->character = c;*/
 			/*current_charlist->character = c;*/
 			add_char(current_string, c);
 		}

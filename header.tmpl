@@ -319,6 +319,7 @@ void save_partition_data(void);
 void generate_partitions(double cloud_data[6], int partitions);
 
 /* messageboard.c */
-xmachine_message_location * get_next_message_location_in_range(xmachine_message_location * current);
+<?foreach message?>xmachine_message_$name * get_next_message_$name_in_range(xmachine_message_$name * current);
+<?end foreach?>
 /* memory.c */
 xmachine * add_xmachine(void);
