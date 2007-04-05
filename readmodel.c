@@ -480,14 +480,14 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 							reset_char_array(current_string);
 							
 							/* Read characters until the end of the file */
-							while(c != EOF)
+							while(c != (char)EOF)
 							{
 								/* Get the next char from the file */
 								c = (char)fgetc(filecode);
 								
 								if(c == '\n')
 								{
-									if(findfunction[i-1] == ')' &&
+									if((i > 0) && findfunction[i-1] == ')' &&
 										findfunction[0] == 'i' &&
 										findfunction[1] == 'n' &&
 										findfunction[2] == 't')
@@ -530,7 +530,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 									i++;
 								}
 								
-								if(c != EOF)
+								if(c != (char)EOF)
 								{
 									//current_charlist = addchar(p_charlist);
 									//current_charlist->character = c;
@@ -757,12 +757,12 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					else
 					{
 						/* Read characters until the end of the file */
-						while(c != EOF)
+						while(c != (char)EOF)
 						{
 							/* Get the next char from the file */
 							c = (char)fgetc(filecode);
 							
-							if(c != EOF)
+							if(c != (char)EOF)
 							{
 								//current_charlist = addchar(p_charlist);
 								//current_charlist->character = c;
@@ -953,12 +953,12 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					reset_char_array(current_string);
 					
 					/* Read characters until the end of the file */
-					while(c != EOF)
+					while(c != (char)EOF)
 					{
 						/* Get the next char from the file */
 						c = (char)fgetc(filecode);
 						
-						if(c != EOF)
+						if(c != (char)EOF)
 						{
 							//current_charlist = addchar(p_charlist);
 							//current_charlist->character = c;

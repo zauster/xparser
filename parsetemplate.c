@@ -56,10 +56,10 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	tmplfile = fopen(templatename, "r");
 
 	/* Read the template file into memory */
-	while (c != EOF)
+	while (c != (char)EOF)
 	{
 		c = (char)fgetc(tmplfile);
-		if (c != EOF)
+		if (c != (char)EOF)
 			add_char(filebuffer, c);
 	}
 	/* Record the position reached in the template */
