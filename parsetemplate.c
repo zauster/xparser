@@ -318,7 +318,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 
 					if (log)
 						printf("finish:%d\tif", numtag);
-					// if cooresponds with first if
+					/* if cooresponds with first if*/
+					/* if cooresponds with first if*/
 					if (log)
 						printf("\tnumtag:%d\tlastiftag:%d\twrite:%d\tpos:%d\n", numtag, lastiftag, write, pos);
 					if (numtag == lastiftag)

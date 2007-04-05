@@ -89,12 +89,10 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 			copycharlist(&current_function->name, buffer);
 			strcat(funcname, buffer);*/
 			
-			//copycharlist(&current_function->name, funcname);
 			strcpy(funcname, current_function->name);
 			
 			nofunctions++;
 			strcpy(functions[nofunctions], funcname);
-			//copycharlist(&current_xmachine->name, funcxagent[nofunctions]);
 			strcpy(funcxagent[nofunctions], current_xmachine->name);
 			funclayer[nofunctions] = -1;
 			
@@ -103,7 +101,6 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 			while(current_code)
 			{
 				/* Copy the source code (in charlist data structure) into a char array */
-				//copycharlist(&current_code->code, funcchar);
 				strcpy(funcchar, current_code->code);
 				
 				/* Count the number of lines */
@@ -123,7 +120,6 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 				while(current_message)
 				{
 					/* Copy message name to messagen */
-					//copycharlist(&current_message->name, messagen);
 					strcpy(messagen, current_message->name);
 					/* Create strings used when sending and receiving messages */
 					/* messager for reading */
@@ -162,7 +158,6 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 			while(current_trans)
 			{
 				/*strcpy(actionfname[i], funcname);
-				//copycharlist(&current_trans->func, buffer);
 				strcpy(buffer, current_trans->func);*/
 				/* actionmname here holds the internal dependency function name */
 				/*strcpy(actionmname[i], buffer);
@@ -379,7 +374,7 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 				/* Save the height of the tallest box */
 				if(boxheight > tallestbox) tallestbox = boxheight;
 				/* Calculate the x-axis position of the box depending on the no of functions in this layer */
-				x = layerwidth;//20 + i*(boxwidth+10);
+				x = layerwidth;/*20 + i*(boxwidth+10);*/
 				/* Specify the y-axis position of the box */
 				y = layerheight;
 				/* Calculate boxwidth from function name */

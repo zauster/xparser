@@ -49,7 +49,8 @@ void freefcode(f_code ** p_code)
 	{
 		temp = head->next;
 		/* Free the cell memory */
-		//freechars(&head->code);
+		/*freechars(&head->code);*/
+		/*freechars(&head->code);*/
 		free(head);
 		head = temp;
 	}
@@ -102,8 +103,10 @@ void freetrans(s_trans ** p_transitions)
 	{
 		temp = head->next;
 		/* Free the cell memory */
-		//freechars(&head->func);
-		//freechars(&head->dest);
+		/*freechars(&head->func);*/
+		/*freechars(&head->func);*/
+		/*freechars(&head->dest);*/
+		/*freechars(&head->dest);*/
 		free(head);
 		head = temp;
 	}
@@ -155,7 +158,8 @@ void freeattribute(s_attrib ** p_attrib)
 	{
 		temp = head->next;
 		/* Free the cell memory */
-		//freechars(&head->attrib);
+		/*freechars(&head->attrib);*/
+		/*freechars(&head->attrib);*/
 		free(head);
 		head = temp;
 	}
@@ -210,9 +214,12 @@ void freevariables(variable ** p_vars)
 	{
 		temp = head->next;
 		/* Free the cell memory */
-		//freechars(&head->name);
-		//freechars(&head->type);
-		//freechars(&head->value);
+		/*freechars(&head->name);*/
+		/*freechars(&head->name);*/
+		/*freechars(&head->type);*/
+		/*freechars(&head->type);*/
+		/*freechars(&head->value);*/
+		/*freechars(&head->value);*/
 		free(head);
 		head = temp;
 	}
@@ -327,7 +334,8 @@ void freeenvfunc(env_func ** p_env_funcs)
 	{
 		temp = head->next;
 		/* Free the cell memory */
-		//freechars(&head->code);
+		/*freechars(&head->code);*/
+		/*freechars(&head->code);*/
 		free(head);
 		head = temp;
 	}
@@ -386,7 +394,8 @@ void freexmessages(xmachine_message ** p_xmessage)
 	{
 		temp = head->next;
 		/* Free the cell memory */
-		//freechars(&head->name);
+		/*freechars(&head->name);*/
+		/*freechars(&head->name);*/
 		freevariables(&head->vars);
 		freeenvfunc(&head->functions);
 		free(head);
@@ -446,7 +455,8 @@ void freexstates(xmachine_state ** p_xstates)
 	{
 		temp = head->next;
 		/* Free the cell memory */
-		//freechars(&head->name);
+		/*freechars(&head->name);*/
+		/*freechars(&head->name);*/
 		freeattribute(&head->attributes);
 		freetrans(&head->transitions);
 		free(head);
@@ -507,8 +517,10 @@ void freexfunctions(xmachine_function ** p_xfunctions)
 	{
 		temp = head->next;
 		/* Free the cell memory */
-		//freechars(&head->name);
-		//freechars(&head->note);
+		/*freechars(&head->name);*/
+		/*freechars(&head->name);*/
+		/*freechars(&head->note);*/
+		/*freechars(&head->note);*/
 		freefcode(&head->code);
 		freetrans(&head->depends);
 		free(head);
@@ -529,7 +541,8 @@ xmachine * addxmachine(xmachine ** p_xmachines)
 	xmachine * current = *p_xmachines;
 	xmachine * temp = NULL;
 	
-	//printf("addxmachine\n");
+	/*printf("addxmachine\n");*/
+	/*printf("addxmachine\n");*/
 	
 	while(current)
 	{
@@ -577,7 +590,8 @@ void freexmachines(xmachine ** p_xmachines)
 	{
 		temp = head->next;
 		/* Free the cell memory */
-		//freechars(&head->name);
+		/*freechars(&head->name);*/
+		/*freechars(&head->name);*/
 		freexmemory(&head->memory);
 		freexstates(&head->states);
 		freexfunctions(&head->functions);
@@ -710,7 +724,8 @@ void remove_int(int_array * array, int index)
 	
 	if(index <= array->size)
 	{
-		// memcopy??
+		/* memcopy??*/
+		/* memcopy??*/
 		for(i = index; i < array->size; i++)
 		{
 			array->array[i] = array->array[i+1];
@@ -812,7 +827,8 @@ void remove_double(double_array * array, int index)
 	
 	if(index <= array->size)
 	{
-		// memcopy??
+		/* memcopy??*/
+		/* memcopy??*/
 		for(i = index; i < array->size; i++)
 		{
 			array->array[i] = array->array[i+1];
@@ -907,7 +923,8 @@ void remove_char(char_array * array, int index)
 	
 	if(index <= array->size)
 	{
-		// memcopy??
+		/* memcopy??*/
+		/* memcopy??*/
 		for(i = index; i < array->size + 1; i++)
 		{
 			array->array[i] = array->array[i+1];
