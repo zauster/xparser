@@ -82,7 +82,7 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 	while(reading==1)
 	{
 		/* Get the next char from the file */
-		c = fgetc(file);
+		c = (char)fgetc(file);
 		
 		/* If the end of a tag */
 		if(c == '>')

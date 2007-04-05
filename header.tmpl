@@ -121,7 +121,7 @@ typedef struct xmachine_message_$name xmachine_message_$name;
  */
 typedef struct xmachine_message_$name_data xmachine_message_$name_data;<?end if?><?end foreach?>
 <?foreach xagent?><?foreach function?>
-int $name();<?end foreach?><?end foreach?>
+int $name(void);<?end foreach?><?end foreach?>
 
 /** \struct location
  * \brief Holds location for calculating space partitioning .
@@ -258,35 +258,35 @@ int next_avaliable_id;
 * \brief Used to kill an agent via 'kill_me_now'. */
 #define kill_me_now return 1
 
-void initialise_pointers();
+void initialise_pointers(void);
 void add_location(double point, location ** p_location);
 void freelocations(location ** p_location);
 void add_node(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz);
 void clean_up(int code);
-void propagate_agents();
-void propagate_messages_init();
-void propagate_messages_complete();
+void propagate_agents(void);
+void propagate_messages_init(void);
+void propagate_messages_complete(void);
 void create_partitions(char * filename, int * itno);
-void free_node_info();
-void randomisexagent();
-void free_agent();
-void freexmachines();
+void free_node_info(void);
+void randomisexagent(void);
+void free_agent(void);
+void freexmachines(void);
 
-int_array * init_int_array();
+int_array * init_int_array(void);
 void reset_int_array(int_array * array);
 void free_int_array(int_array * array);
 void sort_int_array(int_array * array);
 void add_int(int_array * array, int new_int);
 void remove_int(int_array * array, int index);
 void print_int_array(int_array * array);
-double_array * init_double_array();
+double_array * init_double_array(void);
 void reset_double_array(double_array * array);
 void free_double_array(double_array * array);
 void sort_double_array(double_array * array);
 void add_double(double_array * array, double new_double);
 void remove_double(double_array * array, int index);
 void print_double_array(double_array * array);
-char_array * init_char_array();
+char_array * init_char_array(void);
 void reset_char_array(char_array * array);
 void free_char_array(char_array * array);
 void add_char(char_array * array, char new_char);
@@ -301,19 +301,24 @@ void saveiterationdata(int iteration_number);
 void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>);<?end foreach?>
 <?foreach message?>
 void add_$name_message(<?foreach messagevar?>$type $name<?if notlast?>, <?end if?><?end foreach?>);
-xmachine_message_$name * add_$name_message_internal();
-xmachine_message_$name * get_first_$name_message();
+xmachine_message_$name * add_$name_message_internal(void);
+xmachine_message_$name * get_first_$name_message(void);
 xmachine_message_$name * get_next_$name_message(xmachine_message_$name * current);
-void free$namemessages();<?end foreach?>
+void free$namemessages(void);<?end foreach?>
 <?foreach allvar?>
 void set_$name($type $name);
-$type get_$name();<?end foreach?>
-double agent_get_x();
-double agent_get_y();
-double agent_get_z();
+$type get_$name(void);<?end foreach?>
+double agent_get_x(void);
+double agent_get_y(void);
+double agent_get_z(void);
 /* partitioning.c */
 <?if serial?>void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6]);<?end if?>
 <?if parallel?>void send_spacepartition(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz);<?end if?>
 <?if parallel?>void broadcast_node_data(int totalnodes, int node_number);<?end if?>
-void save_partition_data(node_information ** node_list);
-void generate_partitions(double cloud_data[6], int partitions, node_information ** node_list);
+void save_partition_data(void);
+void generate_partitions(double cloud_data[6], int partitions);
+
+/* messageboard.c */
+xmachine_message_location * get_next_message_location_in_range(xmachine_message_location * current);
+/* memory.c */
+xmachine * add_xmachine(void);

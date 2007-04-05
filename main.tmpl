@@ -143,8 +143,8 @@ int main(int argc, char ** argv)
        agent_list = p_xmachine;
        readinitialstates(inputpath, p_iteration_number, agent_list, cloud_data, 0);
        /* Generate partitions */
-       generate_partitions(cloud_data,totalnodes,p_node_info);
-       save_partition_data(p_node_info);
+       generate_partitions(cloud_data,totalnodes);
+       save_partition_data();
 <?if parallel?>
     }
 <?end if?> 
@@ -219,9 +219,11 @@ int main(int argc, char ** argv)
 <?if parallel?>	}<?end if?>
 	/* Start timing */
 	start = clock();
-<?if serial?>
-	current_node = *p_node_info;
-<?end if?>
+
+ <?if serial?>
+     current_node = *p_node_info;
+ <?end if?>
+
     /* pre-randomise agents for first iteration */
     randomisexagent();
 	

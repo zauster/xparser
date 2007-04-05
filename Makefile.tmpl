@@ -4,6 +4,7 @@
 CFLAGS=-c -std=c99 -Wall
 LIBS=-lm
 SOURCES=main.c memory.c xml.c messageboards.c partitioning.c <?if parallel?>propagate_messages.c propagate_agents.c<?end if?><?foreach functionfiles?> $filepath<?end foreach?>
+DEPS=Makefile header.h low_primes.h
 
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=main
@@ -13,6 +14,8 @@ all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS) 
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@ $(LIBS)
+
+$(OBJECTS): $(DEPS)
 
 .c.o:
 	$(CC) $(CFLAGS) $< -o $@
