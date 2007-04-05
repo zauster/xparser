@@ -136,10 +136,14 @@ void generate_partitions(double cloud_data[6], int partitions)
 	double xlo, xhi, ylo, yhi;
 	double margin=0.25; /* small extension of region */
 		
-	xmax=cloud_data[1]; //+SPINF;
-	xmin=cloud_data[0]; //-SPINF;
-	ymax=cloud_data[3]; //+SPINF;
-	ymin=cloud_data[2]; //-SPINF;
+	xmax=cloud_data[1]; /*+SPINF;*/
+	xmax=cloud_data[1]; /*+SPINF;*/
+	xmin=cloud_data[0]; /*-SPINF;*/
+	xmin=cloud_data[0]; /*-SPINF;*/
+	ymax=cloud_data[3]; /*+SPINF;*/
+	ymax=cloud_data[3]; /*+SPINF;*/
+	ymin=cloud_data[2]; /*-SPINF;*/
+	ymin=cloud_data[2]; /*-SPINF;*/
 
     /* factor number of partitions */
 	factor((long) partitions);
@@ -147,7 +151,8 @@ void generate_partitions(double cloud_data[6], int partitions)
     /* build divisions for x and y axes */
 
 	for ( i=nfactor-1; i >= 0; --i){
-		// printf("%d : %d \n",factors[i],powers[i]);
+		/* printf("%d : %d \n",factors[i],powers[i]);*/
+		/* printf("%d : %d \n",factors[i],powers[i]);*/
 		for( j=1; j <=powers[i] ; ++j){
 			if(xdiv<=ydiv) {
 				xdiv=xdiv*factors[i];
@@ -210,11 +215,14 @@ void generate_partitions(double cloud_data[6], int partitions)
  */
 void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6])
 {
-    // Data to loop through agents and copy data into nodes
+    /* Data to loop through agents and copy data into nodes*/
+    /* Data to loop through agents and copy data into nodes*/
     xmachine * current_xmemory, *next_agent;
-    // Data to loop through nodes
+    /* Data to loop through nodes*/
+    /* Data to loop through nodes*/
     node_information* current_partition;
-    // Limits of this space partition
+    /* Limits of this space partition*/
+    /* Limits of this space partition*/
 	double xmin,xmax,ymin,ymax;
 	
     current_xmachine = *agent_list;
@@ -229,7 +237,8 @@ void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6]
     		xmax=current_partition->partition_data[1];
     		ymin=current_partition->partition_data[2];
     		ymax=current_partition->partition_data[3];
-            // Use get_ methods since current_agent global variable is set
+            /* Use get_ methods since current_agent global variable is set*/
+            /* Use get_ methods since current_agent global variable is set*/
 	    	if((agent_get_x() >= xmin) && (agent_get_x() < xmax) &&
 	    	   (agent_get_y() >= ymin) && (agent_get_y() < ymax))
             {
@@ -238,7 +247,8 @@ void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6]
                 next_agent = current_xmachine->next;
                 current_xmachine->next = current_xmemory;
                 current_partition->agent_total++;
-                // Stop the loop over nodes
+                /* Stop the loop over nodes*/
+                /* Stop the loop over nodes*/
                 current_partition = NULL;
             }
             else {
@@ -268,11 +278,13 @@ void broadcast_node_data(int totalnodes, int node_number)
     
     if (node_number == 0) node_data = *p_node_info;
     
-    // Can't use while (temp_node_info) because it's NULL when worker processes get here
+    /* Can't use while (temp_node_info) because it's NULL when worker processes get here*/
+    /* Can't use while (temp_node_info) because it's NULL when worker processes get here*/
     for (i = 0; i < totalnodes; i++) { 
         space_partition t_space_partition;
 
-        // Master node has partition extents so packs them up and broadcasts them one by one
+        /* Master node has partition extents so packs them up and broadcasts them one by one*/
+        /* Master node has partition extents so packs them up and broadcasts them one by one*/
 	    if (node_number == 0) {
             t_space_partition.node_id = node_data->node_id;
             int j;

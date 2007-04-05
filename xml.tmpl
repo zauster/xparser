@@ -32,7 +32,8 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 	node_information temp_node;
 
 	/* Pointer to x-memory for initial state data */
-	//xmachine * current_xmachine;
+	/*xmachine * current_xmachine;*/
+	/*xmachine * current_xmachine;*/
 	/* Variables for checking tags */
 	int reading, i;
 	<?if char_array?>int array_k, j, arraycount;<?end if?>
@@ -75,7 +76,8 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
      * Will be set to agent list for specific node is space partitions are already known (flag=1)
      */ 
     p_xmachine = agent_list;
-    // If we're reading without knowing partitions already then use the dummy current node (it's not in the list of nodes)
+    /* If we're reading without knowing partitions already then use the dummy current node (it's not in the list of nodes)*/
+    /* If we're reading without knowing partitions already then use the dummy current node (it's not in the list of nodes)*/
     if (flag == 0) current_node = &temp_node;
     
 	/* Read file until end of xml */
@@ -231,9 +233,11 @@ void saveiterationdata_binary(int iteration_number)
 <?end if?><?end foreach?>
 <?if serial?>	sprintf(data, "%s%i.binary", outputpath, iteration_number);<?end if?><?if parallel?>	sprintf(data, "%snode%i-%i.binary", outputpath, node_number, iteration_number);<?end if?>
 	file = fopen(data, "wb");
-	// iteration number
+	/* iteration number*/
+	/* iteration number*/
 	fwrite(&iteration_number ,sizeof(int), 1, file);
-	// number of xagent memories written (update at end)
+	/* number of xagent memories written (update at end)*/
+	/* number of xagent memories written (update at end)*/
 	fwrite(&i ,sizeof(int), 1, file);
 	
 <?if parallel?>	if(node_number == 0)
@@ -256,7 +260,8 @@ void saveiterationdata_binary(int iteration_number)
 <?if serial?>		current_node = current_node->next;
 	}<?end if?>
 	
-	// update agent count\n", file);
+	/* update agent count\n", file);*/
+	/* update agent count\n", file);*/
 	fseek(file,sizeof(int)*1,SEEK_SET);
 	fwrite(&agentcount,sizeof(int),1,file);
 	

@@ -466,7 +466,6 @@ void propagate_agents()
 			
 			if(before_xmachine) current_xmachine = before_xmachine->next;
 			else current_xmachine = NULL;
-			//current_xmachine = current_xmachine->next;
 		}
 }
 <?end if?>
@@ -555,7 +554,7 @@ void remove_int(int_array * array, int index)
 	
 	if(index <= array->size)
 	{
-		// memcopy??
+		/* memcopy?? */
 		for(i = index; i < array->size; i++)
 		{
 			array->array[i] = array->array[i+1];
@@ -662,7 +661,7 @@ void remove_double(double_array * array, int index)
 	int i;
 	if(index <= array->size)
 	{
-		// memcopy??
+		/* memcopy?? */
 		for(i = index; i < array->size; i++)
 		{
 			array->array[i] = array->array[i+1];
@@ -745,7 +744,7 @@ void remove_char(char_array * array, int index)
 	int i;
 	if(index <= array->size)
 	{
-		// memcopy??
+		/* memcopy?? */
 		for(i = index; i < array->size; i++)
 		{
 			array->array[i] = array->array[i+1];
