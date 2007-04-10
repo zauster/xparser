@@ -263,7 +263,7 @@ void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6]
  */
 void broadcast_node_data(int totalnodes, int node_number)
 {
-    node_information *node_data;
+    node_information *node_data = NULL;
     int i;
     
     if (node_number == 0) node_data = *p_node_info;

@@ -21,7 +21,7 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 	char c = ' ';
 	char buffer[10000];
 	char agentname[1000];
-	<?if char_array?>char arraydata[10000];<?end if?>
+	char arraydata[10000];
 
 	/* Cloud data array initialisation */
 	cloud_data[0] = SPINF; cloud_data[1] = -SPINF;
@@ -35,7 +35,7 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 	/*xmachine * current_xmachine;*/
 	/* Variables for checking tags */
 	int reading, i;
-	<?if char_array?>int array_k, j, arraycount;<?end if?>
+	int array_k=0, j=0, arraycount=0;
 	int in_tag, in_itno, in_agent, in_name, in_environment;
 <?foreach allvar?>	int in_$name;
 <?end foreach?>
@@ -224,7 +224,7 @@ void saveiterationdata_binary(int iteration_number)
 	/* Pointer to file */
 	FILE *file;
 	char data[100];
-	int i;
+    int i;
 	int agentcount = 0;
 <?foreach xagent?>	xmachine_memory_$name * current_$name;
 <?end foreach?><?foreach allvar?><?if static_array?>	$type * $name;
@@ -273,7 +273,7 @@ void saveiterationdata(int iteration_number)
 	/* Pointer to file */
 	FILE *file;
 	char data[100];
-	int i;
+    int i;
 <?foreach xagent?>	xmachine_memory_$name * current_$name;
 <?end foreach?><?foreach allvar?><?if array?>	$type * $name;
 <?end if?><?end foreach?>	

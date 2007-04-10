@@ -415,11 +415,9 @@ void clean_up(int code)
  */
 void propagate_agents()
 {
-	int data[$number_xagentsplusone];
 	node_information * node_info;
 	xmachine * before_xmachine, * temp_xmachine;
 	xmachine ** p_temp_xmachine;
-	int count = 0;
 	double x_xmachine, y_xmachine, z_xmachine;
 	current_xmachine = *p_xmachine;
 	before_xmachine = NULL;

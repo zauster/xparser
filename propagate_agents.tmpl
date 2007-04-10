@@ -45,14 +45,14 @@ void propagate_agents() {
 
     /* ------------ Begin Variable declarations -------------- */
 
-	int agent_type;
+	int agent_type = 0;
     int remove_agent;
     int sender, outcount;
     int *agent_count_list;
     int probed, i, j, bufsize;
     node_information *node_info;
 	xmachine *prev_xmachine, *next_xmachine;
-	double x_xmachine, y_xmachine, z_xmachine;
+	double x_xmachine = 0.0, y_xmachine = 0.0, z_xmachine = 0.0;
     
     
     /* variables used for MPI calls */

@@ -1,7 +1,7 @@
 # Makefile for xparser
 
 CC         = gcc
-CFLAGS     = -c -std=c99 -Wall
+CFLAGS     = -c -std=c99 -Wall -pedantic
 LDFLAGS    =
 SOURCES    = xparser.c memory.c readmodel.c dependencygraph.c parsetemplate.c
 OBJECTS    = $(SOURCES:.c=.o)

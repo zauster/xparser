@@ -91,7 +91,7 @@ void add_$name_message(<?foreach messagevar?>$type $name<?if notlast?>, <?end if
 
 xmachine_message_$name * get_next_message_$name_in_range(xmachine_message_$name * current)
 {
-	double x, y, z;
+	double x = 0.0, y = 0.0, z = 0.0;
 	
 	<?foreach xagent?>
 	if(current_xmachine->xmachine_$name)
