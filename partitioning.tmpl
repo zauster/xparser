@@ -258,47 +258,72 @@ void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6]
  * \param totalnodes The number of partitions
  * \param node_number This node's id from MPI
  *
- * \author  DJ Worth CCLRC
+ * \author  LS Chin (CCLRC)
  * \date    2007
  */
 void broadcast_node_data(int totalnodes, int node_number)
 {
+    int i, offset;
+    
+    /* datatype used to store each partition data */
+    typedef double part_datatype;
+    MPI_Datatype part_datatype_mpi = MPI_DOUBLE; /* mpi equivalent */
+    
+    /* Pointer to head of "node" linked list */
     node_information *node_data = NULL;
-    int i;
-    
-    if (node_number == 0) node_data = *p_node_info;
-    
-    /* Can't use while (temp_node_info) because it's NULL when worker processes get here*/
-    for (i = 0; i < totalnodes; i++) { 
-        space_partition t_space_partition;
 
-        /* Master node has partition extents so packs them up and broadcasts them one by one*/
-	    if (node_number == 0) {
-            t_space_partition.node_id = node_data->node_id;
-            int j;
-            for (j = 0; j < 6; j++) {
-                t_space_partition.partition_data[j] = node_data->partition_data[j];
+    /* array of partition data 
+     * - store in blocks of 6 (xmin,xmay,ymin,ymax,zmin,zmax) for each node
+     */
+    part_datatype *pdata;
+    pdata = malloc(sizeof(part_datatype) * (totalnodes * 6));
+
+    /* master node (node_number == 0) sends partition info to all */
+    if (0 == node_number)
+    {
+        /* iterate through node info list and populate pdata array */
+        node_data = *p_node_info;
+        while (node_data)
+        {
+            offset = 6 * node_data->node_id;
+            for (i = 0; i < 6; i++)
+            {
+                pdata[offset + i] = node_data->partition_data[i];
             }
-            if (node_data->next) node_data = node_data->next;
-        }
-        MPI_Bcast(&t_space_partition, 1, spacePartitionType, 0, MPI_COMM_WORLD);
-        /* Add this new node */
-        if (node_number != 0) {
-            if (node_number == t_space_partition.node_id) {
-                 printf("Node %d found its partition data : %f, %f, %f, %f\n",t_space_partition.node_id,
-                        t_space_partition.partition_data[0],t_space_partition.partition_data[1],
-                        t_space_partition.partition_data[2],t_space_partition.partition_data[3]);
-            }
-            add_node(t_space_partition.node_id, 
-                     t_space_partition.partition_data[0],t_space_partition.partition_data[1],
-                     t_space_partition.partition_data[2],t_space_partition.partition_data[3],
-                     t_space_partition.partition_data[4],t_space_partition.partition_data[5]);
-                     
+            
+            node_data = node_data->next;
         }
     }
 
-}
+    /* master node sends, other nodes receive */
+    MPI_Bcast(pdata, totalnodes * 6, part_datatype_mpi, 0, MPI_COMM_WORLD);
+    
+    /* other nodes (node_number != 0) adds partition data to node list */
+    if (0 != node_number)
+    {
+        for (i = 0; i < totalnodes; i++)
+        {
+            offset = i * 6;
+            add_node(i,                 /* id */
+                    pdata[offset + 0],  /* x min */
+                    pdata[offset + 1],  /* x max */
+                    pdata[offset + 2],  /* y min */
+                    pdata[offset + 3],  /* y max */
+                    pdata[offset + 4],  /* z min */
+                    pdata[offset + 5]   /* z max */
+                    );
+        }
+    }
+    
+    printf("Node %d found its partition data :  %f, %f, %f, %f\n", node_number, 
+            pdata[(node_number * 6) + 0],  /* x min */
+            pdata[(node_number * 6) + 1],  /* x min */
+            pdata[(node_number * 6) + 2],  /* x min */
+            pdata[(node_number * 6) + 3]   /* x min */
+          );
 
+    free(pdata);
+}
 <?end if?>
 
 /** \fn void save_partition_data()
