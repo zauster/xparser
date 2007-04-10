@@ -150,7 +150,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 		if(cdata)
 		{
 			/*printf("in cdata\n");*/
-			/*printf("in cdata\n");*/
 			
 			/* Handle CDATA tags */
 			if(xmlcode != 0)
@@ -772,8 +771,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 						}
 						
 						/*if(environment == 1) current_envfunc->code = *p_charlist;*/
-						/*if(environment == 1) current_envfunc->code = *p_charlist;*/
-						/*else current_fcode->code = *p_charlist;*/
 						/*else current_fcode->code = *p_charlist;*/
 					}
 					
@@ -982,8 +979,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 				if(depends)
 				{
 					if(name) { current_trans->func = copy_array_to_str(current_string); }/*charlist = NULL; }*/
-					if(name) { current_trans->func = copy_array_to_str(current_string); }/*charlist = NULL; }*/
-					if(type) { current_trans->dest = copy_array_to_str(current_string); }/*charlist = NULL; }*/
 					if(type) { current_trans->dest = copy_array_to_str(current_string); }/*charlist = NULL; }*/
 				}
 			}
