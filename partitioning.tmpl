@@ -301,8 +301,24 @@ void broadcast_node_data(int totalnodes, int node_number)
     /* other nodes (node_number != 0) adds partition data to node list */
     if (0 != node_number)
     {
+        /* assumptions are made all over the program that the current node
+         * info is at the head of the list. So, we add the current node first,
+         */
+        offset = node_number * 6;
+        add_node(node_number,       /* id */
+                pdata[offset + 0],  /* x min */
+                pdata[offset + 1],  /* x max */
+                pdata[offset + 2],  /* y min */
+                pdata[offset + 3],  /* y max */
+                pdata[offset + 4],  /* z min */
+                pdata[offset + 5]   /* z max */
+                );
+
         for (i = 0; i < totalnodes; i++)
         {
+            /* current node already added */
+            if (i == node_number) continue;
+            
             offset = i * 6;
             add_node(i,                 /* id */
                     pdata[offset + 0],  /* x min */
@@ -323,6 +339,9 @@ void broadcast_node_data(int totalnodes, int node_number)
           );
 
     free(pdata);
+
+    /* initialise current_node pointer */
+    current_node = *p_node_info;
 }
 <?end if?>
 

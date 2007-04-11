@@ -153,14 +153,6 @@ int main(int argc, char ** argv)
 <?if parallel?>
     /* Broadcast node data */
     broadcast_node_data(totalnodes, node_number);
-
-    /* Set up current_node global variable ready for partitioning*/
-    current_node = *p_node_info;
-    while (current_node)
-    {
-        if (current_node->node_id == node_number) break;
-        else current_node = current_node->next;
-    }
 <?end if?>
 
 <?if serial?>
@@ -184,6 +176,9 @@ int main(int argc, char ** argv)
 			current_node = current_node->next;
 		}
 		printf("Agent total check: %d\n", i);
+
+        /* restore current_node pointer */
+		current_node = *p_node_info;
 <?end if?>
 <?if parallel?>
 		/* Print processor name */
@@ -219,10 +214,6 @@ int main(int argc, char ** argv)
 <?if parallel?>	}<?end if?>
 	/* Start timing */
 	start = clock();
-
- <?if serial?>
-     current_node = *p_node_info;
- <?end if?>
 
     /* pre-randomise agents for first iteration */
     randomisexagent();
