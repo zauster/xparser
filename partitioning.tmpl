@@ -301,24 +301,8 @@ void broadcast_node_data(int totalnodes, int node_number)
     /* other nodes (node_number != 0) adds partition data to node list */
     if (0 != node_number)
     {
-        /* assumptions are made all over the program that the current node
-         * info is at the head of the list. So, we add the current node first,
-         */
-        offset = node_number * 6;
-        add_node(node_number,       /* id */
-                pdata[offset + 0],  /* x min */
-                pdata[offset + 1],  /* x max */
-                pdata[offset + 2],  /* y min */
-                pdata[offset + 3],  /* y max */
-                pdata[offset + 4],  /* z min */
-                pdata[offset + 5]   /* z max */
-                );
-
         for (i = 0; i < totalnodes; i++)
         {
-            /* current node already added */
-            if (i == node_number) continue;
-            
             offset = i * 6;
             add_node(i,                 /* id */
                     pdata[offset + 0],  /* x min */
@@ -340,8 +324,6 @@ void broadcast_node_data(int totalnodes, int node_number)
 
     free(pdata);
 
-    /* initialise current_node pointer */
-    current_node = *p_node_info;
 }
 <?end if?>
 
@@ -354,6 +336,7 @@ void save_partition_data()
 {
     FILE *file;
     char data[100];
+    node_information *node_info;
 
     sprintf(data, "%sspace_partitions.xml", outputpath);
 	file = fopen(data, "w");
@@ -363,46 +346,46 @@ void save_partition_data()
 	sprintf(data, "%d", totalnodes);
 	fputs(data, file);
 	fputs("</number>\n" , file);
-	current_node = *p_node_info;
-	while(current_node) {
+	node_info = *p_node_info;
+	while(node_info) {
 		fputs("<node>\n" , file);
 		fputs("<nodeid>" , file);
-		sprintf(data, "%i", current_node->node_id);
+		sprintf(data, "%i", node_info->node_id);
 		fputs(data, file);
 		fputs("</nodeid>\n" , file);
 		fputs("<xmin>" , file);
-		if(current_node->partition_data[0] == SPINF) fputs("SPINF" , file);
-		else if(current_node->partition_data[0] == -SPINF) fputs("-SPINF" , file);
-		else{ sprintf(data, "%f", current_node->partition_data[0]); fputs(data, file); }
+		if(node_info->partition_data[0] == SPINF) fputs("SPINF" , file);
+		else if(node_info->partition_data[0] == -SPINF) fputs("-SPINF" , file);
+		else{ sprintf(data, "%f", node_info->partition_data[0]); fputs(data, file); }
 		fputs("</xmin>\n" , file);
 		fputs("<xmax>" , file);
-		if(current_node->partition_data[1] == SPINF) fputs("SPINF" , file);
-		else if(current_node->partition_data[1] == -SPINF) fputs("-SPINF" , file);
-		else{ sprintf(data, "%f", current_node->partition_data[1]); fputs(data, file); }
+		if(node_info->partition_data[1] == SPINF) fputs("SPINF" , file);
+		else if(node_info->partition_data[1] == -SPINF) fputs("-SPINF" , file);
+		else{ sprintf(data, "%f", node_info->partition_data[1]); fputs(data, file); }
 		fputs("</xmax>\n" , file);
 		fputs("<ymin>" , file);
-		if(current_node->partition_data[2] == SPINF) fputs("SPINF" , file);
-		else if(current_node->partition_data[2] == -SPINF) fputs("-SPINF" , file);
-		else{ sprintf(data, "%f", current_node->partition_data[2]); fputs(data, file); }
+		if(node_info->partition_data[2] == SPINF) fputs("SPINF" , file);
+		else if(node_info->partition_data[2] == -SPINF) fputs("-SPINF" , file);
+		else{ sprintf(data, "%f", node_info->partition_data[2]); fputs(data, file); }
 		fputs("</ymin>\n" , file);
 		fputs("<ymax>" , file);
-		if(current_node->partition_data[3] == SPINF) fputs("SPINF" , file);
-		else if(current_node->partition_data[3] == -SPINF) fputs("-SPINF" , file);
-		else{ sprintf(data, "%f", current_node->partition_data[3]); fputs(data, file); }
+		if(node_info->partition_data[3] == SPINF) fputs("SPINF" , file);
+		else if(node_info->partition_data[3] == -SPINF) fputs("-SPINF" , file);
+		else{ sprintf(data, "%f", node_info->partition_data[3]); fputs(data, file); }
 		fputs("</ymax>\n" , file);
 		fputs("<zmin>" , file);
-		if(current_node->partition_data[4] == SPINF) fputs("SPINF" , file);
-		else if(current_node->partition_data[4] == -SPINF) fputs("-SPINF" , file);
-		else{ sprintf(data, "%f", current_node->partition_data[4]); fputs(data, file); }
+		if(node_info->partition_data[4] == SPINF) fputs("SPINF" , file);
+		else if(node_info->partition_data[4] == -SPINF) fputs("-SPINF" , file);
+		else{ sprintf(data, "%f", node_info->partition_data[4]); fputs(data, file); }
 		fputs("</zmin>\n" , file);
 		fputs("<zmax>" , file);
-		if(current_node->partition_data[5] == SPINF) fputs("SPINF" , file);
-		else if(current_node->partition_data[5] == -SPINF) fputs("-SPINF" , file);
-		else{ sprintf(data, "%f", current_node->partition_data[5]); fputs(data, file); }
+		if(node_info->partition_data[5] == SPINF) fputs("SPINF" , file);
+		else if(node_info->partition_data[5] == -SPINF) fputs("-SPINF" , file);
+		else{ sprintf(data, "%f", node_info->partition_data[5]); fputs(data, file); }
 		fputs("</zmax>\n" , file);
 		fputs("</node>\n" , file);
 		
-		current_node = current_node->next;
+		node_info = node_info->next;
 	}
 	fputs("</partitions>\n" , file);
 	fputs("</spacepartitions>" , file);
