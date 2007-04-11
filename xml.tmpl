@@ -190,7 +190,8 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 						arraydata[array_k] = 0;
 						<?if int_array?>add_int($name, <?end if?><?if double_array?>add_double($name, <?end if?><?if static_array?>$name[arraycount] = <?end if?>ato$c_type(arraydata)<?if dynamic_array?><?if char_array?>[0]<?end if?>)<?end if?>;
 						arraycount++;
-						if(buffer[j] != '}') j = j++;
+						/*if(buffer[j] != '}') j = j++;*/
+						if(buffer[j] != '}') j++;
 					}<?end if?>
 				}<?end if?>
 <?end foreach?>			}
