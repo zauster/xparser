@@ -282,14 +282,14 @@ void propagate_agents() {
     probed = 0;
     inbuf[node_number] = NULL;
     in_req[node_number] = MPI_REQUEST_NULL;
-    
+    i = node_number;
     while (probed < (totalnodes - 1))
     {
-        /* probe incoming messages for bufsize */
-        MPI_Probe(MPI_ANY_SOURCE, TAG, MPI_COMM_WORLD, &status);
+        /* probe from next node id  */
+        i = (i + 1) % totalnodes;
 
-        /* get sender's id */
-        i = status.MPI_SOURCE;
+        /* probe incoming messages for bufsize */
+        MPI_Probe(i, TAG, MPI_COMM_WORLD, &status);
 
         /* get bufsize */
         MPI_Get_count(&status, MPI_BYTE, &bufsize);
