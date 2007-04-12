@@ -60,7 +60,7 @@ int main(int argc, char ** argv)
 	f_code * it_end_code;
 	layer * layers;
 	
-	model_data * modeldata = (model_data *)malloc(sizeof(model_data));
+	modeldata = (model_data *)malloc(sizeof(model_data));
 	/* Variable for code type */
 	/* 0=serial(default) 1=parallel 2=grid */
 	modeldata->code_type = 0;
