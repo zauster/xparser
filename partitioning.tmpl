@@ -258,8 +258,11 @@ void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6]
  * \param totalnodes The number of partitions
  * \param node_number This node's id from MPI
  *
- * \author  LS Chin (CCLRC)
+ * \author  DJ Worth & LS Chin (CCLRC)
  * \date    2007
+ * 
+ * \note Function optimised to use a single MPI_Bcast statement.
+ *
  */
 void broadcast_node_data(int totalnodes, int node_number)
 {
