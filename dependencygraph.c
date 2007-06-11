@@ -1,28 +1,5 @@
  #include "header.h"
 
-struct node
-{
-	char * name;
-	int rank;
-	int linesofcode;
-	int x;
-	int y;
-	struct adj_node * dependson;
-	
-	struct node * next;
-};
-
-struct adj_node
-{
-	struct node * node;
-	char * type;
-	
-	struct adj_node * next;
-};
-
-typedef struct node node;
-typedef struct adj_node adj_node;
-
 /** \fn char * copystr(char * string)
  * \brief Copy a string into new memory.
  * \param string The string to copy.
@@ -33,101 +10,6 @@ char * copystr(char * string)
 	char * new_string = (char *)malloc( (strlen(string) + 1) * sizeof(char));
 	return strcpy(new_string, string);
 }
-
-void add_node(char * string, node ** graph)
-{
-	node * current, * tmp = * graph;
-	
-	/* And current is the new element */
-	current = (node *)malloc(sizeof(node));
-	/* Make tmp->next point to current if tmp exists */
-	current->next = tmp;
-	* graph = current;
-	
-	/* Make current->next point to NULL */
-	current->name = copystr(string);
-	current->dependson = NULL;
-	current->rank = -1;
-	current->linesofcode = 0;
-}
-
-void add_dependency(char * function_name, char * function_depends, char * dependency, node ** graph)
-{
-	node * current2 = * graph, * current  = * graph;
-	adj_node * current_adj_node, * temp;
-	
-	while(current)
-	{
-		if(strcmp(current->name, function_name) == 0)
-		{
-			current_adj_node = (adj_node *)malloc(sizeof(adj_node));
-			temp = current->dependson;
-			current_adj_node->next = temp;
-			current_adj_node->type = copystr(dependency);
-			current->dependson = current_adj_node;
-			while(current2)
-			{
-				if(strcmp(current2->name, function_depends) == 0)
-				{
-					current_adj_node->node = current2;
-				}
-				
-				current2 = current2->next;
-			}
-		}
-		
-		current = current->next;
-	}
-}
-
-void print_graph(node ** graph)
-{
-	node * current = * graph;
-	adj_node * current_adj_node;
-	
-	while(current)
-	{
-		printf("node: %s - ", current->name);
-		current_adj_node = current->dependson;
-		while(current_adj_node)
-		{
-			printf("%s(%s), ", current_adj_node->node->name, current_adj_node->type);
-			
-			current_adj_node = current_adj_node->next;
-		}
-		
-		printf("\n");
-		
-		current = current->next;
-	}
-}
-
-void free_graph(node ** graph)
-{
-	node * temp, * head;
-	adj_node * adj_temp, * adj_head;
-	head = * graph;
-	
-	/* Loop until new elements of cells left */
-	while(head)
-	{
-		temp = head->next;
-		adj_head = head->dependson;
-		while(adj_head)
-		{
-			adj_temp = adj_head->next;
-			free(adj_head);
-			adj_head = adj_temp;
-		}
-		/* Free the cell memory */
-		/*freechars(&head->code);*/
-		free(head);
-		head = temp;
-	}
-	
-	* graph = NULL;
-}
-
 
 
 /** \fn void create_dependency_graph(char * filepath, model_data * modeldata)
@@ -185,38 +67,6 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 	int layer = 0;
 	/* File to write dgraph.dot to */
 	FILE *file;
-	
-	int communicationlayer;
-	
-	
-	node ** graph;
-	node * temp_node;
-	node * current_node;
-	adj_node * current_adj_node;
-	graph = &temp_node;
-	temp_node = NULL;
-	
-	print_graph(graph);
-	
-	current_xmachine = * modeldata->p_xmachines;
-	while(current_xmachine)
-	{
-		/* For each function */
-		current_function = current_xmachine->functions;
-		while(current_function)
-		{
-			add_node(current_function->name, graph);
-			
-			current_function = current_function->next;
-		}
-		
-		current_xmachine = current_xmachine->next;
-	}
-	
-	
-	
-	
-	
 	
 	printf("Creating dependency graph\n");
 	
@@ -314,8 +164,6 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 				action[i] = 3;
 				i++;*/
 				
-				add_dependency(current_function->name, current_trans->func, current_trans->dest, graph);
-				
 				strcpy(dependsfname[nodepends], funcname);
 				strcpy(dependson[nodepends], current_trans->func);
 				strcpy(dependsaction[nodepends], current_trans->dest);
@@ -329,9 +177,6 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 		
 		current_xmachine = current_xmachine->next;
 	}
-	
-	/* print graph */
-	print_graph(graph);
 	
 	/* Calculate dependencies */
 	
@@ -439,108 +284,62 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 	while(m == 0)
 	{
 		/* For every function */
-		current_node = * graph;
-		//for(i=nofunctions; i>=0; i--)
-		while(current_node)
+		for(i=nofunctions; i>=0; i--)
 		{
 			/* If the layer is unknown, checking for the default value of -1 */
-			if(current_node->rank == -1)
+			if(funclayer[i] == -1)
 			{
-				//printf("function to check: %s\n", current_node->name);
 				/* Set flag to no dependencies */
 				k = 0; 
 				/* Search dependencies on the current function */
-				current_adj_node = current_node->dependson;
-				//for(j=0; j<nodepends; j++)
-				while(current_adj_node)
+				for(j=0; j<nodepends; j++)
 				{
-					//printf("\tdependency to check: %s\n", current_adj_node->node->name);
 					/* Check if the function has a dependency on it (and not from itself) */
-					//if(strcmp(functions[i], dependson[j]) == 0 && strcmp(functions[i], dependsfname[j]) != 0)
-					//{
-						//for(n=0; n<=nofunctions; n++)
-						//{
+					if(strcmp(functions[i], dependson[j]) == 0 && strcmp(functions[i], dependsfname[j]) != 0)
+					{
+						for(n=0; n<=nofunctions; n++)
+						{
 							/* Check to see if the dependency is a function and not be assigned a layer in last layers */
-							//if(strcmp(dependsfname[j], functions[n]) == 0 && (funclayer[n] == -1 || funclayer[n] == layer))
-							if(current_adj_node->node->rank == -1 || current_adj_node->node->rank == layer)
+							if(strcmp(dependsfname[j], functions[n]) == 0 && (funclayer[n] == -1 || funclayer[n] == layer))
 							{
 								/* Change flag to say there is a dependency */
 								k = 1;
-								//printf("***** %s depends on %s via %s\n", dependsfname[j], dependson[j], dependsaction[j]);
 							}
-						//}
-					//}
-					
-					current_adj_node = current_adj_node->next;
+						}
+					}
 				}
 				/* If there is no dependency then add function to current layer */
 				if(k == 0)
 				{
-					current_node->rank = layer;
-					//printf("layer %d: %s\n", layer, current_node->name);
+					funclayer[i] = layer;
 					
-					//current_function = addxfunction(&current_layer->functions);
-					//current_function->name = copystr(functions[i]);
-					//current_function->note = copystr(funcxagent[i]);
+					current_function = addxfunction(&current_layer->functions);
+					current_function->name = copystr(functions[i]);
+					current_function->note = copystr(funcxagent[i]);
 				}
 			}
-			
-			current_node = current_node->next;
 		}
 		/* Increment layer */
 		layer++;
 		/* If all the functions have layers then stop */
 		/* Set flag to all functions have a layer */
 		k = 0;
-		
-		//for(n=0; n<=nofunctions; n++)
-		current_node = * graph;
-		while(current_node)
+		for(n=0; n<=nofunctions; n++)
 		{
 			/* If a function does not have a layer yet */
-			//if(funclayer[n] == -1) k = 1;
-			//if(current_node->rank == -1) current_node->rank = 1;
-			if(current_node->rank == -1) k = 1;
-			
-			current_node = current_node->next;
+			if(funclayer[n] == -1) k = 1;
 		}
 		/* If flag is still zero then stop */
 		if(k == 0) m = 1;
-		//else
-		//{
-		//	current_layer = addlayer(modeldata->p_layers);
-		//}
+		else
+		{
+			current_layer = addlayer(modeldata->p_layers);
+		}
 	}
 	/* Make the layer value equal to the number of layers */
 	layer--;
 	
 	/* Write dgraph.svg */
-	
-	layerheight = 20;
-	
-	current_node = * graph;
-	while(current_node)
-	{
-		layerwidth = layerwidth + boxwidth + 10;
-		
-		/* Make box height the no of lines in the function code */
-		boxheight = current_node->linesofcode;
-		/* Give a minimum box height */
-		if(boxheight < 40) boxheight = 40;
-		/* Save the height of the tallest box */
-		if(boxheight > tallestbox) tallestbox = boxheight;
-		/* Calculate the x-axis position of the box depending on the no of functions in this layer */
-		x = layerwidth;/*20 + i*(boxwidth+10);*/
-		/* Specify the y-axis position of the box */
-		y = layerheight;
-		/* Calculate boxwidth from function name */
-		boxwidth = 17 + (strlen(current_node->name)*7);
-		if(boxwidth < 100) boxwidth = 100;
-		
-		
-		current_node = current_node->next;
-	}
-	
 	
 	/* place in 'data' the file to write to */
 	sprintf(buffer, "%s%s", filepath, "dgraph.svg");
@@ -555,36 +354,21 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 	fputs("\n", file);
 	
 	layerheight = 20;
-	for(m=0; m<=layer; m++)
+	for(m=layer; m>=0; m--)
 	{
 		/* Number of functions already on layer */
 		i = 0;
-		communicationlayer = 0;
 		/* Variable to hold the tallest box in the current layer */
 		tallestbox = 0;
 		/* Variable to hold where to draw next box in a layer */
 		layerwidth = 20;
 		/* For each function check if they are on this layer */
-		//for(n=0; n<=nofunctions; n++)
-		
-		current_node = * graph;
-		while(current_node)
+		for(n=0; n<=nofunctions; n++)
 		{
-			if(current_node->rank == m + 1)
-			{
-				current_adj_node = current_node->dependson;
-				while(current_adj_node)
-				{
-					if(strcmp(current_adj_node->type,"message") == 0) communicationlayer = 1;
-					
-					current_adj_node = current_adj_node->next;
-				}
-			}
-			
-			if(current_node->rank == m)
+			if(funclayer[n] == m)
 			{
 				/* Make box height the no of lines in the function code */
-				boxheight = current_node->linesofcode;
+				boxheight = nolinesinf[n];
 				/* Give a minimum box height */
 				if(boxheight < 40) boxheight = 40;
 				/* Save the height of the tallest box */
@@ -594,7 +378,7 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 				/* Specify the y-axis position of the box */
 				y = layerheight;
 				/* Calculate boxwidth from function name */
-				boxwidth = 17 + (strlen(current_node->name)*7);
+				boxwidth = 10 + (strlen(functions[n])*7);
 				if(boxwidth < 100) boxwidth = 100;
 				/* Draw Rectangle */
 				fputs("<rect x=\"", file);
@@ -621,7 +405,7 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 				sprintf(buffer, "%d", y + 15);
 				fputs(buffer, file);
 				fputs("\" style=\"font-family: Lucida Console, monospace; font-size: 12px\">", file);
-				sprintf(buffer, "%s", current_node->name);
+				sprintf(buffer, "%s", functions[n]);
 				fputs(buffer, file);
 				fputs("</text>\n", file);
 				/* Print function line length */
@@ -632,8 +416,7 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 				sprintf(buffer, "%d", y + 32);
 				fputs(buffer, file);
 				fputs("\" style=\"font-family: Lucida Console, monospace; font-size: 12px\">(", file);
-				sprintf(buffer, "%d", current_node->linesofcode);
-				//sprintf(buffer, "%d", current_node->rank);
+				sprintf(buffer, "%d", nolinesinf[n]);
 				fputs(buffer, file);
 				fputs(" lines)</text>\n", file);
 				
@@ -641,26 +424,21 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 				
 				i++;
 			}
-			
-			current_node = current_node->next;
 		}
 		
 		layerheight = layerheight + tallestbox + 10;
 		
 		/* Draw sync point line */
-		//if(m != 0)
-		//{
-			if(communicationlayer)
-			{
-				fputs("<line x1=\"0\" y1=\"", file);
-				sprintf(buffer, "%d", layerheight - 5);
-				fputs(buffer, file);
-				fputs("\" x2=\"120\" y2=\"", file);
-				sprintf(buffer, "%d", layerheight - 5);
-				fputs(buffer, file);
-				fputs("\" style=\"stroke:rgb(256,0,0);stroke-width:2\"/>\n", file);
-			}
-		//}
+		if(m != 0)
+		{
+			fputs("<line x1=\"0\" y1=\"", file);
+			sprintf(buffer, "%d", layerheight - 5);
+			fputs(buffer, file);
+			fputs("\" x2=\"120\" y2=\"", file);
+			sprintf(buffer, "%d", layerheight - 5);
+			fputs(buffer, file);
+			fputs("\" style=\"stroke:rgb(256,0,0);stroke-width:2\"/>\n", file);
+		}
 	}
 	
 	fputs("\n", file);
@@ -668,82 +446,5 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 	
 	/* Close the file */
 	fclose(file);
-	
-	/* Test dot file */
-	
-	/* place in 'data' the file to write to */
-	sprintf(buffer, "%s%s", filepath, "test_dgraph.dot");
-	/* print out the location of the source file */
-	printf("writing file: %s\n", buffer);
-	/* open the file to write to */
-	file = fopen(buffer, "w");
-	
-	fputs("digraph dependency_graph {\n", file);
-	fputs("\trankdir=BT;\n", file);
-	fputs("\tsize=\"8,5\"\n", file);
-	fputs("\tnode [shape = rect];\n", file);
-	
-	fputs("\t\n\t/* Functions */\n", file);
-	/* For every function */
-	for(m=0; m<=nofunctions; m++)
-	{
-		fputs("\t", file);
-		sprintf(buffer, "%s", functions[m]);
-		fputs(buffer, file);
-		fputs("[height = ", file);
-		sprintf(buffer, "%f", ((double)nolinesinf[m]/50.0));
-		fputs(buffer, file);
-		fputs(", label = \"", file);
-		sprintf(buffer, "%s", functions[m]);
-		fputs(buffer, file);
-		fputs("\\n(", file);
-		sprintf(buffer, "%d", nolinesinf[m]);
-		fputs(buffer, file);
-		fputs(" lines)\"]\n", file);
-	}
-	fputs("\t\n\t/* Dependencies */\n", file);
-	/* For every dependency */
-	for(m=0; m<nodepends; m++)
-	{
-		/*printf("%d - %s - %s - %s\n", m, dependsfname[m], dependson[m], dependsaction[m]);*/
-		
-		fputs("\t", file);
-		sprintf(buffer, "%s", dependsfname[m]);
-		fputs(buffer, file);
-		fputs(" -> ", file);
-		sprintf(buffer, "%s", dependson[m]);
-		fputs(buffer, file);
-		fputs(" [ label = \"<depends on ", file);
-		sprintf(buffer, "%s", dependsaction[m]);
-		fputs(buffer, file);
-		fputs(">\" ];\n", file);
-	}
-	
-	fputs("\t\n\t{\n\t\tnode [shape=plaintext]; edge [arrowhead=none, color=white];\n\t\t", file);
-	for(m=layer; m>=0; m--)
-	{
-		sprintf(buffer, "%d", m);
-		fputs(buffer, file);
-		if(m != 0) fputs("->", file); else fputs(";\n\t}\n", file);
-	}
-	
-	for(m=layer; m>=0; m--)
-	{
-		/* For each function check if they are on this layer */
-		for(n=0; n<=nofunctions; n++)
-		{
-			if(funclayer[n] == m)
-			{
-				sprintf(buffer, "%s", functions[m]);
-			}
-		}
-	}
-	
-	fputs("\n}", file);
-	
-	/* Close the file */
-	fclose(file);
-	
-	free_graph(graph);
 }
 
