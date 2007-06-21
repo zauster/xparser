@@ -255,9 +255,9 @@ int main(int argc, char ** argv)
 			}
 		}
 <?if parallel?>		/* Propagate messages between nodes */
-		propagate_messages_init();
+		propagate_messages_init();<?end if?>
         randomisexagent();  /* randomise x-agents while waiting for communication to complete */
-        propagate_messages_complete();<?end if?><?if serial?>		current_node = current_node->next;
+        <?if parallel?>propagate_messages_complete();<?end if?><?if serial?>		current_node = current_node->next;
 		}<?end if?>		<?end foreach?><?foreach enditfunc?>
 		/* End of iteration code */
 		$code<?end foreach?>
