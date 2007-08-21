@@ -46,7 +46,7 @@ int main(int argc, char ** argv)
 	char templatename[100];
 	
 	model_data * modeldata;
-
+	
 	/* Hold model data */
 	xmachine * xmachines;
 	/*xmachine_memory * xmemory;*/
@@ -58,7 +58,8 @@ int main(int argc, char ** argv)
 	variable * envdefine;
 	variable * allvars;
 	f_code * it_end_code;
-	layer * layers;
+	communication_layer * communication_layers;
+	model_datatype * datatypes;
 	
 	modeldata = (model_data *)malloc(sizeof(model_data));
 	/* Variable for code type */
@@ -86,8 +87,10 @@ int main(int argc, char ** argv)
 	allvars = NULL;
 	modeldata->p_it_end_code = &it_end_code;
 	it_end_code = NULL;
-	modeldata->p_layers = &layers;
-	layers = NULL;
+	modeldata->p_com_layers = &communication_layers;
+	communication_layers = NULL;
+	modeldata->p_datatypes = &datatypes;
+	datatypes = NULL;
 	
 	printf("xparser ver : %d.%d.%d\n", VERSIONMAJOR, VERSIONMINOR, VERSIONMICRO);
 	
@@ -160,13 +163,6 @@ int main(int argc, char ** argv)
 		exit(1);
 	}
 	
-	/*writeSourceMain(directory, code_type, p_xmachines, p_xmessage, p_envvar, p_envdefine, p_envfunc, p_allvars, p_it_end_code, p_layers);*/
-	/*writeSourceMemory(directory, code_type, p_xmachines, p_xmessage, p_envvar, p_envdefine, p_envfunc, p_allvars, p_it_end_code);*/
-	/*writeSourceXML(directory, code_type, p_xmachines, p_xmessage, p_envvar, p_envdefine, p_envfunc, p_allvars, p_it_end_code);*/
-	/*writeSourceHeader(directory, code_type, p_xmachines, p_xmessage, p_envvar, p_envdefine, p_envfunc, p_allvars, p_it_end_code);*/
-	/* writeSourceXmachine */
-	
-	/*writeScript(directory, code_type, p_envfunc);*/
 	strcpy(filename, directory); strcat(filename, "Makefile"); strcpy(templatename, "Makefile.tmpl");
 	parseTemplate(filename, templatename, modeldata);
 	strcpy(filename, directory); strcat(filename, "xml.c"); strcpy(templatename, "xml.tmpl");
@@ -188,13 +184,15 @@ int main(int argc, char ** argv)
 	strcpy(filename, directory); strcat(filename, "propagate_agents.c"); strcpy(templatename, "propagate_agents.tmpl");
 	parseTemplate(filename, templatename, modeldata);
 	strcpy(filename, directory); strcat(filename, "Doxyfile"); strcpy(templatename, "Doxyfile.tmpl");
-	parseTemplate(filename, templatename, modeldata);
+	parseAgentHeaderTemplate(directory, modeldata);
 	
 	freexmachines(modeldata->p_xmachines);
 	freexmessages(modeldata->p_xmessages);
 	freeenvfunc(modeldata->p_envfuncs);
 	freevariables(modeldata->p_envvars);
 	freevariables(modeldata->p_envdefines);
+	freecommunication_layers(modeldata->p_com_layers);
+	freedatatypes(modeldata->p_datatypes);
 	free(modeldata);
 	
 	/* Exit successfully by returning zero to Operating System */

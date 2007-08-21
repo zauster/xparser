@@ -27,6 +27,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	int i;
 	int write = 1;
 	int lastwrite = 1;
+	int loopwrite[100];
+	int loopwritepos = 0;
 	int log = 0;
 	int var_count;
 	int message_count;
@@ -36,6 +38,9 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	char_array * buffer3 = init_char_array();
 	char_array * filebuffer = init_char_array();
 	char * previous_name;
+	int inallvar = 0;
+	int inxagentvar = 0;
+	int indatatypevar = 0;
 
 	/* pointers to model datatypes */
 	xmachine * current_xmachine;
@@ -43,11 +48,14 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	xmachine_function * current_function;
 	variable * current_variable;
 	f_code * current_code;
+	communication_layer * current_com_layer;
 	layer * current_layer;
 	env_func * current_envfunc;
 	variable * allvar;
 	variable * current_envvar;
-
+	variable * current_datatypevariable = NULL;
+	model_datatype * current_datatype = NULL;
+	
 	/* Open the output file */
 	printf("writing file: %s\t", filename);
 	file = fopen(filename, "w");
@@ -77,7 +85,18 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 			{
 				add_char(buffer, '>');
 				/* Handle tags */
-				if (strcmp(buffer->array, "<?if serial?>") == 0)
+				if (strcmp(buffer->array, "<?if use_arrays?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif use_arrays\n", numtag);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if (modeldata->agents_include_array_variables == 0)
+						write = 0;
+				}
+				else if (strcmp(buffer->array, "<?if serial?>") == 0)
 				{
 					if (log)
 						printf("start :%d\tif serial\n", numtag);
@@ -107,10 +126,17 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (write == 1)
 						lastiftag = numtag;
 					numtag++;
-					if (strcmp(lastloop, "foreach allvar") == 0)
+					if (indatatypevar)
+					{
+						if (current_datatypevariable->arraylength != -1)
+							write = 0;
+					}
+					else if (inallvar)
+					{
 						if (allvar->arraylength != -1)
 							write = 0;
-					if (strcmp(lastloop, "foreach xagentvar") == 0)
+					}
+					else if (inxagentvar)
 						if (current_variable->arraylength != -1)
 							write = 0;
 				}
@@ -122,11 +148,26 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (write == 1)
 						lastiftag = numtag;
 					numtag++;
-					if (strcmp(lastloop, "foreach allvar") == 0)
+					if (inallvar)
 						if (allvar->arraylength < 1)
 							write = 0;
-					if (strcmp(lastloop, "foreach xagentvar") == 0)
+					if (inxagentvar)
 						if (current_variable->arraylength < 1)
+							write = 0;
+				}
+				else if (strcmp(buffer->array, "<?if not_static_array?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif static_array\n", numtag);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if (inallvar)
+						if (allvar->arraylength > 0)
+							write = 0;
+					if (inxagentvar)
+						if (current_variable->arraylength > 0)
 							write = 0;
 				}
 				else if (strcmp(buffer->array, "<?if not_array?>") == 0)
@@ -137,10 +178,10 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (write == 1)
 						lastiftag = numtag;
 					numtag++;
-					if (strcmp(lastloop, "foreach allvar") == 0)
+					if (inallvar)
 						if (allvar->arraylength != 0)
 							write = 0;
-					if (strcmp(lastloop, "foreach xagentvar") == 0)
+					if (inxagentvar)
 						if (current_variable->arraylength != 0)
 							write = 0;
 				}
@@ -152,12 +193,92 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (write == 1)
 						lastiftag = numtag;
 					numtag++;
-					if (strcmp(lastloop, "foreach allvar") == 0)
+					if (inallvar)
 						if (allvar->arraylength == 0)
 							write = 0;
-					if (strcmp(lastloop, "foreach xagentvar") == 0)
+					if (inxagentvar)
 						if (current_variable->arraylength == 0)
 							write = 0;
+				}
+				else if (strcmp(buffer->array, "<?if modeldatatype?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif modeldatatype\n", numtag);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if (inallvar)
+					{
+						if (allvar->ismodeldatatype == 0) write = 0;
+					}
+					if (inxagentvar)
+					{
+						if (current_variable->ismodeldatatype == 0) write = 0;
+					}
+				}
+				else if (strcmp(buffer->array, "<?if not_modeldatatype?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif not_modeldatatype\n", numtag);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if (inallvar)
+						if (allvar->ismodeldatatype == 1)
+							write = 0;
+					if (inxagentvar)
+						if (current_variable->ismodeldatatype == 1)
+							write = 0;
+				}
+				else if (strcmp(buffer->array, "<?if char?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif not_char\n", numtag);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if (strcmp(lastloop, "foreach datatypevar") == 0)
+					{
+						if (indatatypevar)
+							if (strcmp(current_datatypevariable->type, "char") != 0 && strcmp(current_datatypevariable->type, "char_array") != 0)
+								write = 0;
+					}
+					else
+					{
+						if (inallvar)
+							if (strcmp(allvar->type, "char") != 0 && strcmp(allvar->type, "char_array") != 0)
+								write = 0;
+						if (inxagentvar)
+							if (strcmp(current_variable->type, "char") != 0 && strcmp(current_variable->type, "char_array") != 0)
+								write = 0;
+					}
+				}
+				else if (strcmp(buffer->array, "<?if not_char?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif not_char\n", numtag);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if (strcmp(lastloop, "foreach datatypevar") == 0)
+					{
+						if (indatatypevar)
+							if (strcmp(current_datatypevariable->type, "char") == 0 || strcmp(current_datatypevariable->type, "char_array") == 0)
+								write = 0;
+					}
+					else
+					{
+						if (inallvar)
+							if (strcmp(allvar->type, "char") == 0 || strcmp(allvar->type, "char_array") == 0)
+								write = 0;
+						if (inxagentvar)
+							if (strcmp(current_variable->type, "char") == 0 || strcmp(current_variable->type, "char_array") == 0)
+								write = 0;
+					}
 				}
 				else if (strcmp(buffer->array, "<?if char_array?>") == 0)
 				{
@@ -167,11 +288,14 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (write == 1)
 						lastiftag = numtag;
 					numtag++;
-					if (strcmp(lastloop, "foreach allvar") == 0)
+					if (inallvar)
 						if (strcmp(allvar->type, "char_array") != 0)
 							write = 0;
-					if (strcmp(lastloop, "foreach xagentvar") == 0)
+					if (inxagentvar)
 						if (strcmp(current_variable->type, "char_array") != 0)
+							write = 0;
+					if (indatatypevar)
+						if (strcmp(current_datatypevariable->type, "char_array") != 0)
 							write = 0;
 				}
 				else if (strcmp(buffer->array, "<?if notchar_array?>") == 0)
@@ -182,11 +306,14 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (write == 1)
 						lastiftag = numtag;
 					numtag++;
-					if (strcmp(lastloop, "foreach allvar") == 0)
+					if (inallvar)
 						if (strcmp(allvar->type, "char_array") == 0)
 							write = 0;
-					if (strcmp(lastloop, "foreach xagentvar") == 0)
+					if (inxagentvar)
 						if (strcmp(current_variable->type, "char_array") == 0)
+							write = 0;
+					if (indatatypevar)
+						if (strcmp(current_datatypevariable->type, "char_array") == 0)
 							write = 0;
 				}
 				else if (strcmp(buffer->array, "<?if int_array?>") == 0)
@@ -198,6 +325,17 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						lastiftag = numtag;
 					numtag++;
 					if (strcmp(allvar->type, "int_array") != 0)
+						write = 0;
+				}
+				else if (strcmp(buffer->array, "<?if float_array?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif float_array\twrite:%d\n", numtag, write);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if (strcmp(allvar->type, "float_array") != 0)
 						write = 0;
 				}
 				else if (strcmp(buffer->array, "<?if double_array?>") == 0)
@@ -261,6 +399,31 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (strcmp(lastloop, "foreach messagevar") == 0)
 						if (current_variable->next == NULL)
 							write = 0;
+					if(strcmp(lastloop, "foreach datatypevar") == 0)
+					{
+						if(current_datatypevariable != NULL)
+						{
+							if (current_datatypevariable->next == NULL) write = 0;
+						}
+						else write = 0;
+					}
+				}
+				else if (strcmp(buffer->array, "<?if last?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif last\n", numtag);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if(strcmp(lastloop, "foreach datatypevar") == 0)
+					{
+						if(current_datatypevariable != NULL)
+						{
+							if (current_datatypevariable->next != NULL) write = 0;
+						}
+						else write = 0;
+					}
 				}
 				else if (strcmp(buffer->array, "<?if allvar_in_agent?>") == 0)
 				{
@@ -333,7 +496,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					exitforeach = 0;
 					/* Look at last tag */
 					numtag--;
-
+					
 					/* Check for next element in current loop */
 					if (strcmp("foreach functionfiles", &chartag[numtag][0]) == 0)
 					{
@@ -350,11 +513,17 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					else if (strcmp("foreach allvar", &chartag[numtag][0]) == 0)
 					{
 						if (allvar != NULL)
+						{
 							allvar = allvar->next;
+						}
 						if (allvar == NULL)
+						{
 							exitforeach = 1;
+							inallvar = 0;
+						}
 						else
 						{
+							current_datatype = allvar->datatype;
 							pos = looppos[numtag];
 							numtag++;
 						}
@@ -389,9 +558,15 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					else if (strcmp("foreach xagentvar", &chartag[numtag][0]) == 0)
 					{
 						if (current_variable != NULL)
+						{
 							current_variable = current_variable->next;
+							if(current_variable != NULL) current_datatype = current_variable->datatype;
+						}
 						if (current_variable == NULL)
+						{
 							exitforeach = 1;
+							inxagentvar = 0;
+						}
 						else
 						{
 							pos = looppos[numtag];
@@ -419,6 +594,19 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						if (current_variable != NULL)
 							current_variable = current_variable->next;
 						if (current_variable == NULL)
+							exitforeach = 1;
+						else
+						{
+							pos = looppos[numtag];
+							numtag++;
+							var_count++;
+						}
+					}
+					else if (strcmp("foreach comlayer", &chartag[numtag][0]) == 0)
+					{
+						if (current_com_layer != NULL)
+							current_com_layer = current_com_layer->next;
+						if (current_com_layer == NULL)
 							exitforeach = 1;
 						else
 						{
@@ -466,6 +654,35 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							var_count++;
 						}
 					}
+					else if (strcmp("foreach datatype", &chartag[numtag][0]) == 0)
+					{
+						if (current_datatype != NULL)
+							current_datatype = current_datatype->next;
+						if (current_datatype == NULL)
+							exitforeach = 1;
+						else
+						{
+							pos = looppos[numtag];
+							numtag++;
+							var_count++;
+						}
+					}
+					else if (strcmp("foreach datatypevar", &chartag[numtag][0]) == 0)
+					{
+						if (current_datatypevariable != NULL)
+							current_datatypevariable = current_datatypevariable->next;
+						if (current_datatypevariable == NULL)
+						{
+							exitforeach = 1;
+							indatatypevar = 0;
+						}
+						else
+						{
+							pos = looppos[numtag];
+							numtag++;
+							var_count++;
+						}
+					}
 					/* If different then exit */
 					if (exitforeach)
 					{
@@ -477,7 +694,14 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							printf("tag to close: %s\n", &chartag[numtag][0]);
 							exit(0);
 						}
-						write = lastwrite;
+						
+						if(loopwritepos > 0)
+						{
+							loopwritepos--;
+							write = loopwrite[loopwritepos];
+						}
+						else write = lastwrite;
+						
 						/* find last loop in chartag */
 						if (log)
 							printf("**** exit loop = %s\n", lastloop);
@@ -518,8 +742,9 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					looppos[numtag] = pos;
 					numtag++;
 					lastwrite = write;
-
+					inallvar = 1;
 					allvar = * modeldata->p_allvars;
+					if(allvar != NULL) current_datatype = allvar->datatype;
 				}
 				else if (strcmp(buffer->array, "<?foreach envvar?>") == 0)
 				{
@@ -561,8 +786,9 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					numtag++;
 					var_count = 0;
 					lastwrite = write;
-
+					inxagentvar = 1;
 					current_variable = current_xmachine->memory->vars;
+					if(current_variable != NULL) current_datatype = current_variable->datatype;
 					if (current_variable == NULL)
 						write = 0;
 				}
@@ -597,6 +823,21 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (current_variable == NULL)
 						write = 0;
 				}
+				else if (strcmp(buffer->array, "<?foreach comlayer?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tforeach comlayer\tpos: %d\n", numtag, pos);
+					strcpy(&chartag[numtag][0], "foreach comlayer");
+					strcpy(lastloop, "foreach comlayer");
+					looppos[numtag] = pos;
+					numtag++;
+					var_count = 0;
+					lastwrite = write;
+
+					current_com_layer = * modeldata->p_com_layers;
+					if (current_com_layer == NULL)
+						write = 0;
+				}
 				else if (strcmp(buffer->array, "<?foreach funclayer?>") == 0)
 				{
 					if (log)
@@ -608,7 +849,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					var_count = 0;
 					lastwrite = write;
 
-					current_layer = * modeldata->p_layers;
+					current_layer = current_com_layer->layers;
 					if (current_layer == NULL)
 						write = 0;
 				}
@@ -652,20 +893,55 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (current_code == NULL)
 						write = 0;
 				}
+				else if (strcmp(buffer->array, "<?foreach datatype?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tforeach datatype\tpos: %d\n", numtag, pos);
+					strcpy(&chartag[numtag][0], "foreach datatype");
+					strcpy(lastloop, "foreach datatype");
+					looppos[numtag] = pos;
+					numtag++;
+					var_count = 0;
+					/*lastwrite = write;*/
+					loopwrite[loopwritepos] = write;
+					loopwritepos++;
+					
+					current_datatype = * modeldata->p_datatypes;
+					if (current_datatype == NULL) write = 0;
+				}
+				else if (strcmp(buffer->array, "<?foreach datatypevar?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tforeach datatypevar\tpos: %d\n", numtag, pos);
+					strcpy(&chartag[numtag][0], "foreach datatypevar");
+					strcpy(lastloop, "foreach datatypevar");
+					looppos[numtag] = pos;
+					numtag++;
+					var_count = 0;
+					/*lastwrite = write;*/
+					loopwrite[loopwritepos] = write;
+					loopwritepos++;
+					
+					indatatypevar = 1;
+					current_datatypevariable = NULL;
+					if(current_datatype != NULL) current_datatypevariable = current_datatype->vars;
+					if (current_datatypevariable == NULL)
+					{
+						write = 0;
+						indatatypevar = 0;
+					}
+				}
 				else
 				{
-					if (write)
-						fputs("<", file);
+					if(write) fputs("<", file);
 					pos = pos1;
 				}
-
 				tmplcode = 0;
 				reset_char_array(buffer);
 			}
 			else if (c == '<' || c == '\n')
 			{
-				if (write)
-					fputs("<", file);
+				if(write) fputs("<", file);
 				pos = pos1;
 				tmplcode = 0;
 			}
@@ -709,7 +985,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 
 				if (strcmp("foreach allvar", lastloop) == 0)
 				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$default_value") != 0 && strcmp(buffer3->array, "$c_type") != 0 && pos <= (pos1 + 14))
+					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$default_value") != 0 && strcmp(buffer3->array, "$c_type") != 0 && strcmp(buffer3->array, "$notarraytype") != 0 && strcmp(buffer3->array, "$arraylength") != 0 && pos <= (pos1 + 14))
 					{
 						add_char(buffer3, c);
 						pos++;
@@ -720,10 +996,17 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						fputs(allvar->name, file);
 					else if (strcmp(buffer3->array, "$type") == 0)
 						fputs(allvar->type, file);
+					else if (strcmp(buffer3->array, "$arraylength") == 0)
+					{
+						sprintf(data, "%i", allvar->arraylength);
+						fputs(data, file);
+					}
 					else if (strcmp(buffer3->array, "$default_value") == 0)
 						fputs(allvar->defaultvalue, file);
 					else if (strcmp(buffer3->array, "$c_type") == 0)
 						fputs(allvar->c_type, file);
+					else if (strcmp(buffer3->array, "$notarraytype") == 0)
+						fputs(allvar->typenotarray, file);
 					else
 					{
 						fputs("$", file);
@@ -855,7 +1138,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 				}
 				else if (strcmp("foreach message", lastloop) == 0)
 				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$var_number") != 0 && strcmp(buffer3->array, "$message_countplusone") != 0 && strcmp(buffer3->array, "$previous_name") != 0 && pos <= (pos1 + 22))
+					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$var_number") != 0 && strcmp(buffer3->array, "$message_countplusone") != 0 && strcmp(buffer3->array, "$previous_name") != 0 && strcmp(buffer3->array, "$capsname") != 0 && pos <= (pos1 + 22))
 					{
 						add_char(buffer3, c);
 						pos++;
@@ -864,6 +1147,12 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					pos--;
 					if (strcmp(buffer3->array, "$name") == 0)
 						fputs(current_message->name, file);
+					else if (strcmp(buffer3->array, "$capsname") == 0)
+					{
+						strcpy(data, current_message->name);
+						for(i = 0; i < strlen(data); i++) data[i] = (data[i] >= 'a' && data[i] <= 'z')?('A' + data[i] -'a'):data[i];
+						fputs(data, file);
+					}
 					else if (strcmp(buffer3->array, "$var_number") == 0)
 					{
 						sprintf(data, "%i", current_message->var_number);
@@ -959,6 +1248,64 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						pos = pos1;
 					}
 				}
+				else if (strcmp("foreach datatype", lastloop) == 0)
+				{
+					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$desc") != 0 && pos <= (pos1 + 5))
+					{
+						add_char(buffer3, c);
+						pos++;
+						c = filebuffer->array[pos];
+					}
+					pos--;
+					if (strcmp(buffer3->array, "$name") == 0)
+						fputs(current_datatype->name, file);
+					else if (strcmp(buffer3->array, "$desc") == 0)
+						fputs(current_datatype->desc, file);
+				}
+				else if (strcmp("foreach datatypevar", lastloop) == 0)
+				{
+					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$messagename") != 0 && strcmp(buffer3->array, "$c_type") != 0 && strcmp(buffer3->array, "$mpi_type") != 0 && strcmp(buffer3->array, "$arraylength") != 0 && strcmp(buffer3->array, "$var_count") != 0 && strcmp(buffer3->array, "$datatypevarname") != 0 && strcmp(buffer3->array, "$default_value") != 0 && strcmp(buffer3->array, "$agent_name") != 0 && pos <= (pos1 + 16))
+					{
+						add_char(buffer3, c);
+						pos++;
+						c = filebuffer->array[pos];
+					}
+					pos--;
+					if (strcmp(buffer3->array, "$name") == 0)
+						fputs(current_datatypevariable->name, file);
+					else if (strcmp(buffer3->array, "$datatypevarname") == 0)
+					{
+						if(inallvar) fputs(allvar->name, file);
+						if(inxagentvar) fputs(current_variable->name, file);
+					}
+					else if (strcmp(buffer3->array, "$agent_name") == 0)
+						fputs(current_xmachine->name, file);
+					else if (strcmp(buffer3->array, "$default_value") == 0)
+						fputs(current_datatypevariable->defaultvalue, file);
+					else if (strcmp(buffer3->array, "$type") == 0)
+						fputs(current_datatypevariable->type, file);
+					else if (strcmp(buffer3->array, "$messagename") == 0)
+						fputs(current_datatypevariable->name, file);
+					else if (strcmp(buffer3->array, "$c_type") == 0)
+						fputs(current_datatypevariable->c_type, file);
+					else if (strcmp(buffer3->array, "$mpi_type") == 0)
+						fputs(current_datatypevariable->mpi_type, file);
+					else if (strcmp(buffer3->array, "$arraylength") == 0)
+					{
+						sprintf(data, "%i", current_datatypevariable->arraylength);
+						fputs(data, file);
+					}
+					else if (strcmp(buffer3->array, "$var_count") == 0)
+					{
+						sprintf(data, "%i", var_count);
+						fputs(data, file);
+					}
+					else
+					{
+						fputs("$", file);
+						pos = pos1;
+					}
+				}
 				else if (write)
 					fputc(c, file);
 
@@ -973,7 +1320,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 			else if (write)
 				fputc(c, file);
 		}
-
+		
 		pos++;
 	}
 
@@ -988,4 +1335,65 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	free_char_array(buffer);
 	free_char_array(buffer3);
 	free_char_array(filebuffer);
+}
+
+/** \fn parseAgentHeaderTemplate(char * directory, model_data * modeldata)
+ * \brief Produces header files for specific agent types.
+ * \param directory The directory to write the files to.
+ * \param modeldata The model data.
+ */
+void parseAgentHeaderTemplate(char * directory, model_data * modeldata)
+{
+	FILE *file;
+	char filename[100];
+	char buffer[1000];
+	int i;
+	xmachine * current_xmachine = * modeldata->p_xmachines;
+	variable * current_variable;
+	
+	while(current_xmachine)
+	{
+		/* Open the output file */
+		strcpy(filename, directory);
+		strcat(filename, current_xmachine->name);
+		strcat(filename, "_agent_header.h");
+		printf("writing file: %s\n", filename);
+		file = fopen(filename, "w");
+		
+		fputs("/**\n", file);
+		fputs(" * \\file  ", file);
+		fputs(current_xmachine->name, file);
+		fputs("_agent_header.h\n", file);
+		fputs(" * \\brief Header for agent type memory access.\n", file);
+		fputs(" */\n\n", file);
+		
+		current_variable = current_xmachine->memory->vars;
+		while(current_variable)
+		{
+			strcpy(buffer, current_variable->name);
+			for(i = 0; i < strlen(buffer); i++) buffer[i] = (buffer[i] >= 'a' && buffer[i] <= 'z')?('A' + buffer[i] -'a'):buffer[i];
+			fputs("/** \\def ", file);
+			fputs(buffer, file);
+			fputs("\n", file);
+			fputs(" * \\brief Direct access to ", file);
+			fputs(current_variable->name, file);
+			fputs(" of ", file);
+			fputs(current_xmachine->name, file);
+			fputs(" agent memory variable. */\n", file);
+			fputs("#define ", file);
+			fputs(buffer, file);
+			fputs(" current_xmachine->xmachine_", file);
+			fputs(current_xmachine->name, file);
+			fputs("->", file);
+			fputs(current_variable->name, file);
+			fputs("\n", file);
+			
+			current_variable = current_variable->next;
+		}
+		
+		/* Close the files */
+		fclose(file);
+		
+		current_xmachine = current_xmachine->next;
+	}
 }

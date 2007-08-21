@@ -1,5 +1,164 @@
 #include "header.h"
 
+
+void handleVariableType(char_array * current_string, variable * current_variable, model_data * modeldata)
+{
+	model_datatype * current_datatype;
+	char buffer[100];
+	int i;
+	
+	current_variable->type = copy_array_to_str(current_string);
+	
+	current_variable->arraylength = 0;
+	current_variable->ismodeldatatype = 0;
+	
+	strcpy(current_variable->defaultvalue, "");
+	strcpy(current_variable->c_type, "");
+	
+	if(strcmp(current_variable->type, "int") == 0 ||
+		strcmp(current_variable->type, "short int") == 0 ||
+		strcmp(current_variable->type, "long int") == 0 ||
+		strcmp(current_variable->type, "unsigned int") == 0 ||
+		strcmp(current_variable->type, "unsigned short int") == 0 ||
+		strcmp(current_variable->type, "unsigned long int") == 0 ||
+		strcmp(current_variable->type, "int_array") == 0)
+	{
+		strcpy(current_variable->defaultvalue, "0");
+		strcpy(current_variable->c_type, "i");
+	}
+	
+	if(strcmp(current_variable->type, "double") == 0 ||
+		strcmp(current_variable->type, "float") == 0 ||
+		strcmp(current_variable->type, "double_array") == 0 ||
+		strcmp(current_variable->type, "float_array") == 0)
+	{
+		strcpy(current_variable->defaultvalue, "0.0");
+		strcpy(current_variable->c_type, "f");
+	}
+	
+	if(strcmp(current_variable->type, "char") == 0 ||
+		strcmp(current_variable->type, "unsigned char") == 0 ||
+		strcmp(current_variable->type, "char_array") == 0)
+	{
+		strcpy(current_variable->defaultvalue, "' '");
+		strcpy(current_variable->c_type, "c");
+	}
+	
+	/*copycharlist(&current_variable->type, &chardata[0]);*/
+	/* These are C to MPI datatype mappings */
+	if(strcmp(current_variable->type, "int") == 0) strcpy(current_variable->mpi_type, "MPI_INT");
+	if(strcmp(current_variable->type, "double") == 0) strcpy(current_variable->mpi_type, "MPI_DOUBLE");
+	if(strcmp(current_variable->type, "float") == 0) strcpy(current_variable->mpi_type, "MPI_FLOAT");
+	if(strcmp(current_variable->type, "char") == 0) strcpy(current_variable->mpi_type, "MPI_CHAR");
+	if(strcmp(current_variable->type, "short int") == 0) strcpy(current_variable->mpi_type, "MPI_SHORT");
+	if(strcmp(current_variable->type, "long int") == 0) strcpy(current_variable->mpi_type, "MPI_LONG");
+	if(strcmp(current_variable->type, "long double") == 0) strcpy(current_variable->mpi_type, "MPI_LONG_DOUBLE");
+	if(strcmp(current_variable->type, "unsigned int") == 0) strcpy(current_variable->mpi_type, "MPI_UNSIGNED");
+	if(strcmp(current_variable->type, "unsigned short int") == 0) strcpy(current_variable->mpi_type, "MPI_UNSIGNED_SHORT");
+	if(strcmp(current_variable->type, "unsigned long int") == 0) strcpy(current_variable->mpi_type, "MPI_UNSIGNED_LONG");
+	if(strcmp(current_variable->type, "unsigned char") == 0) strcpy(current_variable->mpi_type, "MPI_UNSIGNED_CHAR");
+	if(strcmp(current_variable->type, "int_array") == 0)
+	{
+		current_variable->arraylength = -1;
+		strcpy(current_variable->mpi_type, "MPI_INT");
+	}
+	if(strcmp(current_variable->type, "float_array") == 0)
+	{
+		current_variable->arraylength = -1;
+		strcpy(current_variable->mpi_type, "MPI_FLOAT");
+	}
+	if(strcmp(current_variable->type, "double_array") == 0)
+	{
+		current_variable->arraylength = -1;
+		strcpy(current_variable->mpi_type, "MPI_DOUBLE");
+	}
+	if(strcmp(current_variable->type, "char_array") == 0)
+	{
+		current_variable->arraylength = -1;
+		strcpy(current_variable->mpi_type, "MPI_CHAR");
+	}
+	/* Handle model defined data types */
+	current_datatype = * modeldata->p_datatypes;
+	while(current_datatype)
+	{
+		if(strcmp(current_variable->type, current_datatype->name) == 0)
+		{
+			current_variable->ismodeldatatype = 1;
+			current_variable->datatype = current_datatype;
+		}
+		
+		strcpy(buffer, current_datatype->name);
+		strcat(buffer, "_array");
+		
+		if(strcmp(current_variable->type, buffer) == 0)
+		{
+			current_variable->ismodeldatatype = 1;
+			current_variable->datatype = current_datatype;
+			current_variable->arraylength = -1;
+		}
+		
+		current_datatype = current_datatype->next;
+	}
+	
+	current_variable->typenotarray = copy_array_to_str(current_string);
+	/* Handle model data type arrays */
+	i = strlen(current_variable->type);
+	if(i > 6)
+	{
+		if(current_variable->type[i-1] == 'y' &&
+			current_variable->type[i-2] == 'a' &&
+			current_variable->type[i-3] == 'r' &&
+			current_variable->type[i-4] == 'r' &&
+			current_variable->type[i-5] == 'a' &&
+			current_variable->type[i-6] == '_')
+		{
+			remove_char(current_string, i-1);
+			remove_char(current_string, i-2);
+			remove_char(current_string, i-3);
+			remove_char(current_string, i-4);
+			remove_char(current_string, i-5);
+			remove_char(current_string, i-6);
+			current_variable->typenotarray = copy_array_to_str(current_string);
+		}
+	}
+}
+
+void handleVariableName(char_array * current_string, variable * current_variable)
+{
+	current_variable->name = copy_array_to_str(current_string);
+	
+	int j, i = 0;
+	char buffer[100];
+	
+	/* Handle static arrays */
+	while(current_variable->name[i] != '\0')
+	{
+		if(current_variable->name[i] == '[')
+		{
+			current_variable->name[i] = '\0';
+			j = 0;
+			i++;
+			while(current_variable->name[i] != ']')
+			{
+				buffer[j] = current_variable->name[i];
+				j++;
+				i++;
+			}
+			
+			buffer[j] = '\0';
+			
+			/* If no number*/
+			if(j == 0) current_variable->arraylength = -1;
+			else
+			{
+				current_variable->arraylength = atoi(buffer);
+			}
+		}
+		
+		i++;
+	}
+}
+
 /** \fn void readModel(char * inputfile, char * directory, model_data * modeldata)
  * \brief Read xmml model description and populate information into data structures.
  * \param inputfile Pointer to the xmml file path and name.
@@ -25,14 +184,12 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	int numtag = 0;
 	char chartag[10][100];
 	int tagline[10];
-	char buffer[50];
 	char chardata[100];
 	/*char chardata2[100];*/
 	char findfunction[1000];
 	int found;
 	int linenumber = 1;
 	int variable_count;
-	int ii;
 	/* Variable to keep reading file */
 	int reading;
 	/* Variable for buffer position */
@@ -45,7 +202,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	int xagentmodel, date, author, name, xmachine, memory, var, type, notes;
 	int states, state, attribute, transition, func, dest, functions, function;
 	int note, messages, message, code, cdata, environment, define, value, codefile;
-	int header, iteration_end_code, depends;
+	int header, iteration_end_code, depends, datatype, desc;
 	/* Pointer to new structs */
 	xmachine_memory * current_memory;
 	xmachine_message * current_message;
@@ -58,6 +215,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	variable ** p_variable;
 	variable * tvariable;
 	variable * current_variable;
+	model_datatype * current_datatype;
 	/*char_list ** p_charlist;*/
 	/*char_list * charlist;*/
 	/*char_list * current_charlist;*/
@@ -78,6 +236,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	/*char_list * charcheck;*/
 	modeldata->number_messages = 0;
 	modeldata->number_xmachines = 0;
+	modeldata->agents_include_array_variables = 0;
 	
 	/* Open config file to read-only */
 	if((file = fopen(inputfile, "r"))==NULL)
@@ -128,6 +287,8 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	header = 0;
 	iteration_end_code = 0;
 	depends = 0;
+	datatype = 0;
+	desc = 0;
 	
 	/*printf("%i> ", linenumber);*/
 	
@@ -293,6 +454,8 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					current_variable = current_memory->vars;
 					while(current_variable)
 					{
+						if(current_variable->arraylength != 0) modeldata->agents_include_array_variables = 1;
+						
 						/*copycharlist(&current_variable->name, &chardata[0]);*/
 						if(strcmp(current_variable->name, "x") == 0)    strcpy(current_xmachine->xvar, "x");
 						if(strcmp(current_variable->name, "px") == 0)   strcpy(current_xmachine->xvar, "px");
@@ -319,6 +482,9 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 							allvar->name = current_variable->name;
 							allvar->type = current_variable->type;
 							allvar->arraylength = current_variable->arraylength;
+							allvar->ismodeldatatype = current_variable->ismodeldatatype;
+							allvar->datatype = current_variable->datatype;
+							allvar->typenotarray = current_variable->typenotarray;
 							strcpy(allvar->defaultvalue, current_variable->defaultvalue);
 							strcpy(allvar->c_type, current_variable->c_type);
 						}
@@ -350,7 +516,8 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "var") == 0)
 			{
 				var = 1;
-				if(environment == 1) current_envvar = addvariable(modeldata->p_envvars);
+				if(datatype == 1) current_variable = addvariable(p_variable);
+				else if(environment == 1) current_envvar = addvariable(modeldata->p_envvars);
 				else current_variable = addvariable(p_variable);
 			}
 			if(strcmp(current_string->array, "/var") == 0) { var = 0; }
@@ -392,6 +559,18 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/func") == 0) { func = 0; }
 			if(strcmp(current_string->array, "dest") == 0) { dest = 1; }/*charlist = NULL; }*/
 			if(strcmp(current_string->array, "/dest") == 0) { dest = 0; }
+			if(strcmp(current_string->array, "datatype") == 0)
+			{
+				datatype = 1;
+				current_datatype = adddatatype(modeldata->p_datatypes);
+				tvariable = NULL;
+				reset_char_array(current_string);
+			}
+			if(strcmp(current_string->array, "/datatype") == 0)
+			{
+				datatype = 0;
+				current_datatype->vars = *p_variable;
+			}
 			if(strcmp(current_string->array, "functions") == 0) { functions = 1; }/*charlist = NULL; }*/
 			if(strcmp(current_string->array, "/functions") == 0) { functions = 0; }
 			if(strcmp(current_string->array, "function") == 0)
@@ -473,10 +652,10 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 								printf("*** xparser aborted ***\n");
 								exit(0);
 							}
-							/*else printf("reading file: %s\n", chardata);*/
 							
-							/*charlist = NULL;*/
-							/*i = 0;*/
+							i = 0;
+							j = 0;
+							c = ' ';
 							reset_char_array(current_string);
 							
 							/* Read characters until the end of the file */
@@ -529,12 +708,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 									findfunction[i] = c;
 									i++;
 								}
-								
-								if(c != (char)EOF)
-								{
-									/*current_charlist = addchar(p_charlist);*/
-									/*current_charlist->character = c;*/
-								}
 							}
 							
 							/* Close the file */
@@ -560,8 +733,10 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			}
 			if(strcmp(current_string->array, "header") == 0) { header = 1; current_envfunc = addenvfunc(modeldata->p_envfuncs); }
 			if(strcmp(current_string->array, "/header") == 0) { header = 0; }
-			if(strcmp(current_string->array, "note") == 0) { note = 1; }/*charlist = NULL; }*/
+			if(strcmp(current_string->array, "note") == 0) { note = 1; }
 			if(strcmp(current_string->array, "/note") == 0) { note = 0; }
+			if(strcmp(current_string->array, "desc") == 0) { desc = 1; }
+			if(strcmp(current_string->array, "/desc") == 0) { desc = 0; }
 			if(strcmp(current_string->array, "messages") == 0) { messages = 1; }
 			if(strcmp(current_string->array, "/messages") == 0) { messages = 0; }
 			if(strcmp(current_string->array, "message") == 0)
@@ -651,7 +826,23 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			
 			if(environment)
 			{
-				if(var)
+				if(datatype)
+				{
+					if(desc) current_datatype->desc = copy_array_to_str(current_string);
+					
+					if(var)
+					{
+						if(type) { handleVariableType(current_string, current_variable, modeldata); }
+						if(name) { handleVariableName(current_string, current_variable); }
+						/*if(type) current_variable->type = copy_array_to_str(current_string);*/
+						/*if(name) current_variable->name = copy_array_to_str(current_string);*/
+					}
+					else if(name)
+					{
+						current_datatype->name = copy_array_to_str(current_string);
+					}
+				}
+				else if(var)
 				{
 					if(type)
 					{
@@ -787,109 +978,8 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			}
 			else if(var)
 			{
-				if(type)
-				{
-					current_variable->type = copy_array_to_str(current_string);
-					
-					current_variable->arraylength = 0;
-					
-					strcpy(current_variable->defaultvalue, "");
-					strcpy(current_variable->c_type, "");
-					
-					if(strcmp(current_variable->type, "int") == 0 ||
-						strcmp(current_variable->type, "short int") == 0 ||
-						strcmp(current_variable->type, "long int") == 0 ||
-						strcmp(current_variable->type, "unsigned int") == 0 ||
-						strcmp(current_variable->type, "unsigned short int") == 0 ||
-						strcmp(current_variable->type, "unsigned long int") == 0 ||
-						strcmp(current_variable->type, "int_array") == 0)
-					{
-						strcpy(current_variable->defaultvalue, "0");
-						strcpy(current_variable->c_type, "i");
-					}
-					
-					if(strcmp(current_variable->type, "double") == 0 ||
-						strcmp(current_variable->type, "float") == 0 ||
-						strcmp(current_variable->type, "double_array") == 0)
-					{
-						strcpy(current_variable->defaultvalue, "0.0");
-						strcpy(current_variable->c_type, "f");
-					}
-					
-					if(strcmp(current_variable->type, "char") == 0 ||
-						strcmp(current_variable->type, "unsigned char") == 0 ||
-						strcmp(current_variable->type, "char_array") == 0)
-					{
-						strcpy(current_variable->defaultvalue, "' '");
-						strcpy(current_variable->c_type, "c");
-					}
-					
-					/*copycharlist(&current_variable->type, &chardata[0]);*/
-					/* These are C to MPI datatype mappings */
-					if(strcmp(current_variable->type, "int") == 0) strcpy(current_variable->mpi_type, "MPI_INT");
-					if(strcmp(current_variable->type, "double") == 0) strcpy(current_variable->mpi_type, "MPI_DOUBLE");
-					if(strcmp(current_variable->type, "float") == 0) strcpy(current_variable->mpi_type, "MPI_FLOAT");
-					if(strcmp(current_variable->type, "char") == 0) strcpy(current_variable->mpi_type, "MPI_CHAR");
-					if(strcmp(current_variable->type, "short int") == 0) strcpy(current_variable->mpi_type, "MPI_SHORT");
-					if(strcmp(current_variable->type, "long int") == 0) strcpy(current_variable->mpi_type, "MPI_LONG");
-					if(strcmp(current_variable->type, "long double") == 0) strcpy(current_variable->mpi_type, "MPI_LONG_DOUBLE");
-					if(strcmp(current_variable->type, "unsigned int") == 0) strcpy(current_variable->mpi_type, "MPI_UNSIGNED");
-					if(strcmp(current_variable->type, "unsigned short int") == 0) strcpy(current_variable->mpi_type, "MPI_UNSIGNED_SHORT");
-					if(strcmp(current_variable->type, "unsigned long int") == 0) strcpy(current_variable->mpi_type, "MPI_UNSIGNED_LONG");
-					if(strcmp(current_variable->type, "unsigned char") == 0) strcpy(current_variable->mpi_type, "MPI_UNSIGNED_CHAR");
-					if(strcmp(current_variable->type, "int_array") == 0)
-					{
-						current_variable->arraylength = -1;
-						strcpy(current_variable->mpi_type, "MPI_INT");
-					}
-					if(strcmp(current_variable->type, "double_array") == 0)
-					{
-						current_variable->arraylength = -1;
-						strcpy(current_variable->mpi_type, "MPI_DOUBLE");
-					}
-					if(strcmp(current_variable->type, "char_array") == 0)
-					{
-						current_variable->arraylength = -1;
-						strcpy(current_variable->mpi_type, "MPI_CHAR");
-					}
-				}
-				if(name)
-				{
-					current_variable->name = copy_array_to_str(current_string);
-					
-					/* (lsc)declaring new var as such is non standard */
-					/* int i = 0 */
-					/*  redeclaring i in this scope is also confusing as it
-                                            hides the value of i in parent scope */
-					/* replaced this with new var ii to ensure similar outcome */
-					ii = 0;
-					while(current_variable->name[ii] != '\0')
-					{
-						if(current_variable->name[ii] == '[')
-						{
-							current_variable->name[ii] = '\0';
-							j = 0;
-							ii++;
-							while(current_variable->name[ii] != ']')
-							{
-								buffer[j] = current_variable->name[ii];
-								j++;
-								ii++;
-							}
-							
-							buffer[j] = '\0';
-							
-							/* If no number*/
-							if(j == 0) current_variable->arraylength = -1;
-							else
-							{
-								current_variable->arraylength = atoi(buffer);
-							}
-						}
-						
-						ii++;
-					}
-				}
+				if(type) { handleVariableType(current_string, current_variable, modeldata); }
+				if(name) { handleVariableName(current_string, current_variable); }
 			}
 			else if(message && name)
 			{
@@ -1041,7 +1131,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			}
 		}
 		/* If in data read char into buffer */
-		else if(((iteration_end_code && code) || codefile || name || type || (memory && (var && (type || name)))) ||
+		else if(((iteration_end_code && code) || codefile || name || type || desc || (memory && (var && (type || name)))) ||
 					(message && (name || (var && (type || name))))
 					|| (state && (name || attribute || (transition && (func || dest))))
 						|| (function && (name || note || code || depends || type))

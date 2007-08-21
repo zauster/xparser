@@ -10,7 +10,7 @@
 #define VERSIONMAJOR 0
 /** \def VERSIONMINOR
  * \brief New features. */
-#define VERSIONMINOR 11
+#define VERSIONMINOR 12
 /** \def VERSIONMICRO
  * \brief Bug fixes. */
 #define VERSIONMICRO 0
@@ -88,12 +88,15 @@ struct char_array
 struct variable
 {
 	char * type;		/**< Pointer to variable C type. */
+	struct model_datatype * datatype;	/**< Pointer to variable model datatype. */
 	char * name;		/**< Pointer to variable name. */
 	char * value;		/**< Pointer to variable value. */
+	char * typenotarray;		/**< Pointer to type name used if array. */
 	char mpi_type[50];				/**< Variable MPI type. */
 	int arraylength;				/**< Variable array length. Zero for no array, -1 for dynamic array */
 	char defaultvalue[5];			/**< Default value for the type. */
 	char c_type[5];				/**< Variable C type, e.g 'i' or 'f'. */
+	int ismodeldatatype;			/**< Flag for model defined data type. */
 	
 	struct variable * next;		/**< Pointer to next variable in list. */
 };
@@ -223,6 +226,28 @@ struct layer
 	struct layer * next;					/**< Pointer next X-machine in list. */
 };
 
+/** \struct communication_layer
+ * \brief Holds communication layers which hold function layers.
+ */
+struct communication_layer
+{
+	struct layer * layers;					/**< Pointer to list of layers. */
+	
+	struct communication_layer * next;		/**< Pointer next X-machine in list. */
+};
+
+/** \struct model_datatype
+ * \brief Holds model datatypes.
+ */
+struct model_datatype
+{
+	char * name;					/**< Name of the datatype. */
+	char * desc;					/**< Description of the datatype. */
+	struct variable * vars;		/**< Pointer to variables of the datatype. */
+	
+	struct model_datatype * next;		/**< Pointer next model datatype. */
+};
+
 /** \struct model_data
  * \brief Holds model data.
  */
@@ -230,6 +255,7 @@ struct model_data
 {
 	char * name;
 	int code_type;
+	struct model_datatype ** p_datatypes;
 	struct xmachine ** p_xmachines;
 	struct xmachine_message ** p_xmessages;
 	struct variable ** p_envvars;
@@ -237,9 +263,10 @@ struct model_data
 	struct env_func ** p_envfuncs;
 	struct variable ** p_allvars;
 	struct f_code ** p_it_end_code;
-	struct layer ** p_layers;
+	struct communication_layer ** p_com_layers;
 	int number_messages;
 	int number_xmachines;
+	int agents_include_array_variables;
 };
 
 /* explicit define datatypes so dont need to use struct anymore */
@@ -311,6 +338,14 @@ typedef struct env_func env_func;
  * \brief Typedef for layer struct.
  */
 typedef struct layer layer;
+/** \typedef struct communication_layer communication_layer
+ * \brief Typedef for communication_layer struct.
+ */
+typedef struct communication_layer communication_layer;
+/** \typedef struct model_datatype model_datatype
+ * \brief Typedef for model_datatype struct.
+ */
+typedef struct model_datatype model_datatype;
 
 /* memory.c */
 f_code * addfcode(f_code ** p_code);
@@ -333,8 +368,12 @@ xmachine_function * addxfunction(xmachine_function ** p_xfunctions);
 void freexfunctions(xmachine_function ** p_xfunctions);
 xmachine * addxmachine(xmachine ** p_xmachines);
 void freexmachines(xmachine ** p_xmachines);
-layer * addlayer(layer ** p_layers);
-void freelayers(layer ** p_layers);
+layer * addlayer(communication_layer * com_layer);
+void freelayers(layer * layers);
+communication_layer * addcommunication_layer(communication_layer ** p_com_layers);
+void freecommunication_layers(communication_layer ** p_com_layers);
+model_datatype * adddatatype(model_datatype ** p_datatypes);
+void freedatatypes(model_datatype ** p_datatypes);
 /* charlist.c */
 void ws(int tabcount, char * string);
 void printcharlist(char_list ** p_charlist);
@@ -368,3 +407,4 @@ char * copystr(char * string);
 void create_dependency_graph(char * filepath, model_data * modeldata);
 /* parsetemplate.c */
 void parseTemplate(char * filename, char * templatename, model_data * modeldata);
+void parseAgentHeaderTemplate(char * directory, model_data * modeldata);

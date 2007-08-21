@@ -190,6 +190,7 @@ variable * addvariable(variable ** p_vars)
 	current->type = NULL;
 	current->name = NULL;
 	current->value = NULL;
+	current->datatype = NULL;
 	current->next = NULL;
 	
 	/* Return new element */
@@ -586,12 +587,12 @@ void freexmachines(xmachine ** p_xmachines)
 	*p_xmachines = NULL;
 }
 
-/** \fn layer * addlayer(layer ** p_layers)
+/** \fn layer * addlayer(communication_layer * com_layer)
  * \brief Allocate memory for a linked list of datatype layer.
- * \param p_layers Pointer Pointer to the layers list.
+ * \param com_layer Pointer Pointer to the layers list.
  * \return Pointer to the added layer.
  */
-layer * addlayer(layer ** p_layers)
+layer * addlayer(communication_layer * com_layer)
 {
 	layer * current;
 	
@@ -603,21 +604,21 @@ layer * addlayer(layer ** p_layers)
 	}
 	/* Make current->next point to NULL */
 	current->functions = NULL;
-	current->next = *p_layers;
-	*p_layers = current;
+	current->next = com_layer->layers;
+	com_layer->layers = current;
 	
 	/* Return new element */
 	return current;
 }
 
-/** \fn void freelayers(layer ** p_layers)
+/** \fn void freelayers(layer * layers)
  * \brief Free memory for a linked list of datatype layer.
- * \param p_layers Pointer Pointer to the layers list.
+ * \param layers Pointer to the layers list.
  */
-void freelayers(layer ** p_layers)
+void freelayers(layer * layers)
 {
 	layer * temp, * head;
-	head = *p_layers;
+	head = layers;
 	/* Loop until new elements of cells left */
 	while(head)
 	{
@@ -628,7 +629,97 @@ void freelayers(layer ** p_layers)
 		head = temp;
 	}
 	
-	*p_layers = NULL;
+	layers = NULL;
+}
+
+/** \fn communication_layer * addcommunication_layer(communication_layer ** p_com_layers)
+ * \brief Allocate memory for a linked list of datatype layer.
+ * \param p_com_layers Pointer Pointer to the layers list.
+ * \return Pointer to the added layer.
+ */
+communication_layer * addcommunication_layer(communication_layer ** p_com_layers)
+{
+	communication_layer * current;
+	
+	/* And current is the new element */
+	if((current = (communication_layer *)malloc(sizeof(communication_layer))) == NULL)
+	{
+		printf("Error: Cannot allocate memory\n");
+		exit(0);
+	}
+	/* Make current->next point to NULL */
+	current->layers = NULL;
+	current->next = *p_com_layers;
+	*p_com_layers = current;
+	
+	/* Return new element */
+	return current;
+}
+
+/** \fn void freecommunication_layers(communication_layer ** p_com_layers)
+ * \brief Free memory for a linked list of datatype layer.
+ * \param p_com_layers Pointer Pointer to the layers list.
+ */
+void freecommunication_layers(communication_layer ** p_com_layers)
+{
+	communication_layer * temp, * head;
+	head = *p_com_layers;
+	/* Loop until new elements of cells left */
+	while(head)
+	{
+		temp = head->next;
+		/* Free the cell memory */
+		freelayers(head->layers);
+		free(head);
+		head = temp;
+	}
+	
+	*p_com_layers = NULL;
+}
+
+/** \fn layer * adddatatype(model_datatype ** p_datatypes)
+ * \brief Allocate memory for a linked list of datatype layer.
+ * \param p_datatypes Pointer Pointer to the datatypes list.
+ * \return Pointer to the added datatype.
+ */
+model_datatype * adddatatype(model_datatype ** p_datatypes)
+{
+	model_datatype * current;
+	
+	/* And current is the new element */
+	if((current = (model_datatype *)malloc(sizeof(model_datatype))) == NULL)
+	{
+		printf("Error: Cannot allocate memory\n");
+		exit(0);
+	}
+	/* Make current->next point to NULL */
+	current->vars = NULL;
+	current->next = * p_datatypes;
+	* p_datatypes = current;
+	
+	/* Return new element */
+	return current;
+}
+
+/** \fn void freedatatypes(model_datatype ** p_datatypes)
+ * \brief Free memory for a linked list of datatype layer.
+ * \param p_datatypes Pointer Pointer to the datatype list.
+ */
+void freedatatypes(model_datatype ** p_datatypes)
+{
+	model_datatype * temp, * head;
+	head = * p_datatypes;
+	/* Loop until new elements of cells left */
+	while(head)
+	{
+		temp = head->next;
+		/* Free the cell memory */
+		freevariables(&head->vars);
+		free(head);
+		head = temp;
+	}
+	
+	* p_datatypes = NULL;
 }
 
 /** \fn int_array * init_int_array()

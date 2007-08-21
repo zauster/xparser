@@ -3,19 +3,45 @@
  * \brief Header for xmachine data structures and transition functions.
  */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <time.h>
-<?if parallel?>#include <mpi.h><?end if?>
-
+<?if parallel?>#include <mpi.h>
+<?end if?>
 /** \def ARRAY_BLOCK_SIZE
  * \brief The block size to allocate to dynamic arrays. */
 #define ARRAY_BLOCK_SIZE 5
+<?foreach message?>/** \def e START_$capsname_MESSAGE_LOOP
+ * \brief Start of loop to process $name messages. */
+#define START_$capsname_MESSAGE_LOOP  $name_message = get_first_$name_message(); while($name_message) {
+/** \def FINISH_$capsname_MESSAGE_LOOP
+ * \brief Finish of loop to process $name messages. */
+#define FINISH_$capsname_MESSAGE_LOOP $name_message = get_next_$name_message($name_message); }
+<?end foreach?>
+<?foreach datatype?>/** \struct $name
+ * \brief $desc.
+ *
+ * $desc.
+ */
+struct $name
+{
+<?foreach datatypevar?>	$type $name;
+<?end foreach?>};
 
-/** \struct int_array
+/** \struct $name_array
+ * \brief Dynamic array to hold $names
+ */
+struct $name_array
+{
+	int size;
+	int total_size;
+	
+	struct $name ** array;
+};
+
+<?end foreach?>/** \struct int_array
  * \brief Dynamic array to hold integers.
  *
  * Holds a pointer to an integer array and values for size and memory size.
@@ -26,6 +52,19 @@ struct int_array
 	int total_size;
 	
 	int * array;
+};
+
+/** \struct float_array
+ * \brief Dynamic array to hold floats.
+ *
+ * Holds a pointer to an float array and values for size and memory size.
+ */
+struct float_array
+{
+	int size;
+	int total_size;
+	
+	float * array;
 };
 
 /** \struct double_array
@@ -58,6 +97,10 @@ struct char_array
  * \brief Typedef for int_array struct.
  */
 typedef struct int_array int_array;
+/** \typedef struct float_array float_array
+ * \brief Typedef for float_array struct.
+ */
+typedef struct float_array float_array;
 /** \typedef struct double_array double_array
  * \brief Typedef for double_array struct.
  */
@@ -66,14 +109,22 @@ typedef struct double_array double_array;
  * \brief Typedef for char_array struct.
  */
 typedef struct char_array char_array;
-
+<?foreach datatype?>
+/** \var typedef $name $name
+ * \brief Typedef for $name struct.
+ */
+typedef struct $name $name;
+/** \var typedef $name_array $name_array
+ * \brief Typedef for $name_array struct.
+ */
+typedef struct $name_array $name_array;<?end foreach?>
 <?foreach xagent?>
 /** \struct xmachine_memory_$name
  * \brief Holds memory of xmachine $name.
  */
 struct xmachine_memory_$name
 {<?foreach xagentvar?>
-	$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[$arraylength]<?end if?>;	/**< X-machine memory variable $name of type $type. */<?end foreach?>
+	$type <?if modeldatatype?><?if static_array?>*<?end if?><?end if?><?if not_modeldatatype?><?if dynamic_array?>* <?end if?><?end if?><?if modeldatatype?>* <?end if?>$name<?if static_array?><?if not_modeldatatype?>[$arraylength]<?end if?><?end if?>;	/**< X-machine memory variable $name of type $type. */<?end foreach?>
 };
 <?end foreach?>
 /** \struct xmachine
@@ -87,7 +138,7 @@ struct xmachine
 };
 <?foreach message?>
 /** \struct xmachine_message_$name
- * \brief Holds message of type $name.
+ * \brief Holds message of type $name_message.
  */
 struct xmachine_message_$name
 {<?foreach messagevar?>
@@ -271,6 +322,14 @@ void free_node_info(void);
 void randomisexagent(void);
 void free_agent(void);
 void freexmachines(void);
+/* model datatypes */
+<?foreach datatype?>
+$name_array * init_$name_array();
+void reset_$name_array($name_array * array);
+void free_$name_array($name_array * array);
+void add_$name($name_array * array<?foreach datatypevar?>, $type $name<?end foreach?>);
+void remove_$name($name_array * array, int index);
+<?end foreach?>
 
 int_array * init_int_array(void);
 void reset_int_array(int_array * array);
@@ -279,6 +338,13 @@ void sort_int_array(int_array * array);
 void add_int(int_array * array, int new_int);
 void remove_int(int_array * array, int index);
 void print_int_array(int_array * array);
+float_array * init_float_array(void);
+void reset_float_array(float_array * array);
+void free_float_array(float_array * array);
+void sort_float_array(float_array * array);
+void add_float(float_array * array, float new_float);
+void remove_float(float_array * array, int index);
+void print_float_array(float_array * array);
 double_array * init_double_array(void);
 void reset_double_array(double_array * array);
 void free_double_array(double_array * array);
@@ -298,16 +364,16 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 void saveiterationdata_binary(int iteration_number);
 void saveiterationdata(int iteration_number);
 <?foreach xagent?>
-void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>);<?end foreach?>
+void add_$name_agent(<?foreach xagentvar?>$type <?if not_modeldatatype?><?if dynamic_array?>* <?end if?><?end if?><?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?>$name<?if not_modeldatatype?><?if static_array?>[]<?end if?><?end if?><?if notlast?>, <?end if?><?end foreach?>);<?end foreach?>
 <?foreach message?>
 void add_$name_message(<?foreach messagevar?>$type $name<?if notlast?>, <?end if?><?end foreach?>);
 xmachine_message_$name * add_$name_message_internal(void);
 xmachine_message_$name * get_first_$name_message(void);
 xmachine_message_$name * get_next_$name_message(xmachine_message_$name * current);
 void free$namemessages(void);<?end foreach?>
-<?foreach allvar?>
-void set_$name($type $name);
-$type get_$name(void);<?end foreach?>
+<?foreach allvar?><?if not_modeldatatype?><?if not_array?>
+void set_$name($type $name);<?end if?><?end if?>
+$type <?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?><?if not_modeldatatype?><?if array?>* <?end if?><?end if?>get_$name(void);<?end foreach?>
 double agent_get_x(void);
 double agent_get_y(void);
 double agent_get_z(void);

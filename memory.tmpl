@@ -19,10 +19,9 @@ void initialise_pointers()
 }
 
 /* add_location */
-/** \fn void add_location(double point, double iradius, location ** p_location)
+/** \fn void add_location(double point, location ** p_location)
  * \brief Adds a location in order into the location list.
  * \param point Position of an agent.
- * \param iradius Interaction radius.
  * \param p_location Pointer Pointer to the location list.
  */
 void add_location(double point, location ** p_location)
@@ -95,17 +94,17 @@ xmachine * add_xmachine()
 	return current;
 }
 <?foreach xagent?>
-/** \fn void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>)
+/** \fn void add_$name_agent(<?foreach xagentvar?>$type <?if not_modeldatatype?><?if dynamic_array?>* <?end if?><?end if?><?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?>$name<?if not_modeldatatype?><?if static_array?>[]<?end if?><?end if?><?if notlast?>, <?end if?><?end foreach?>)
  * \brief Add $name X-machine to the current being used X-machine list.
 <?foreach xagentvar?> * \param $name Variable for the X-machine memory.
 <?end foreach?> */
-void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>)
+void add_$name_agent(<?foreach xagentvar?>$type <?if not_modeldatatype?><?if dynamic_array?>* <?end if?><?end if?><?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?>$name<?if not_modeldatatype?><?if static_array?>[]<?end if?><?end if?><?if notlast?>, <?end if?><?end foreach?>)
 {
 	xmachine * new_xmachine = add_xmachine();
 	xmachine_memory_$name * current = (xmachine_memory_$name *)malloc(sizeof(xmachine_memory_$name));
 	
 	new_xmachine->xmachine_$name = current;
-<?foreach xagentvar?><?if not_array?>	current->$name = $name;<?end if?><?if dynamic_array?>	current->$name = $name;<?end if?><?if static_array?>	memcpy(current->$name, $name, $arraylength*sizeof($type));<?end if?>
+<?foreach xagentvar?>	<?if not_array?>current->$name = $name;<?end if?><?if dynamic_array?>current->$name = $name;<?end if?><?if static_array?><?if not_modeldatatype?>memcpy(current->$name, $name, $arraylength*sizeof($type));<?end if?><?if modeldatatype?>current->$name = $name;<?end if?><?end if?>
 <?end foreach?>}
 <?end foreach?>
 /** \fn void free_agent()
@@ -156,7 +155,9 @@ void freexmachines()
 		tmp = head->next;
 <?foreach xagent?>		if(head->xmachine_$name)
 		{
-<?foreach xagentvar?><?if dynamic_array?>			free_$type(head->xmachine_$agent_name->$name);
+<?foreach xagentvar?><?if modeldatatype?><?if not_array?>			free(head->xmachine_$agent_name->$name);
+<?end if?><?if static_array?>			free(&(head->xmachine_$agent_name->$name));
+<?end if?><?end if?><?if dynamic_array?>			free_$type(head->xmachine_$agent_name->$name);
 <?end if?><?end foreach?>			free(head->xmachine_$name);
 		}
 <?end foreach?>		free(head);
@@ -166,7 +167,7 @@ void freexmachines()
 	*p_xmachine = NULL;
 }
 
-<?foreach allvar?><?if not_array?>
+<?foreach allvar?><?if not_modeldatatype?><?if not_array?>
 /** \fn void set_$name($type $name) 
  * \brief Set $name memory variable for current X-machine.
  * \param $name New value for variable.
@@ -175,21 +176,20 @@ void set_$name($type $name)
 {
 <?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name) current_xmachine->xmachine_$name->$allvar_name = $allvar_name;
 <?end if?><?end foreach?>}
-
+<?end if?><?end if?>
 /** \fn $type get_$name()
  * \brief Get $name memory variable from current X-machine.
  * \return Value for variable.
  */
-$type get_$name()
+$type <?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?><?if not_modeldatatype?><?if array?>* <?end if?><?end if?>get_$name()
 {
 <?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name) return current_xmachine->xmachine_$name->$allvar_name;
 <?end if?><?end foreach?>
     /* suppress compiler warning by returning dummy value */
     /* this statement should rightfully NEVER be reached */
-    return ($type)0;
+    return <?if not_array?><?if not_modeldatatype?>($type)0<?end if?><?end if?><?if modeldatatype?>NULL<?end if?><?if not_modeldatatype?><?if array?>NULL<?end if?><?end if?>;
 }
-
-<?end if?><?end foreach?>
+<?end foreach?>
 
 /** \fn double agent_get_x()
  * \brief Fixed routine to get the x coordinate from current X-machine
@@ -575,6 +575,114 @@ void print_int_array(int_array * array)
 	}
 }
 
+/** \fn float_array * init_float_array()
+ * \brief Allocate memory for a dynamic float array.
+ * \return float_array Pointer to the new dynamic float array.
+ */
+float_array * init_float_array()
+{
+	float_array * new_array = (float_array *)malloc(sizeof(float_array));
+	new_array->size = 0;
+	new_array->total_size = ARRAY_BLOCK_SIZE;
+	new_array->array = (float *)malloc(ARRAY_BLOCK_SIZE * sizeof(float));
+	
+	return new_array;
+}
+
+/** \fn void reset_float_array(float_array * array)
+* \brief Reset the float array to hold nothing.
+* \param array Pointer to the dynamic float array.
+*/
+void reset_float_array(float_array * array)
+{
+	array->size = 0;
+}
+
+/** \fn void free_float_array(float_array * array)
+* \brief Free the memory of a dynamic float array.
+* \param array Pointer to the dynamic float array.
+*/
+void free_float_array(float_array * array)
+{
+	free(array->array);
+	free(array);
+}
+
+/** \fn void sort_float_array(float_array * array)
+* \brief Sort the elements of a dynamic float array with smallest first.
+* \param array Pointer to the dynamic float array.
+*/
+void sort_float_array(float_array * array)
+{
+	int i, j;
+	float temp;
+	/* Using bubble sorts nested loops */
+	for(i=0; i<(array->size-1); i++)
+	{
+		for(j=0; j<(array->size-1)-i; j++) 
+		{
+			/* Comparing the values between neighbours */
+			if(*(array->array+j+1) < *(array->array+j))
+			{
+                /* Swap neighbours */
+                temp = *(array->array+j); 
+                *(array->array+j) = *(array->array+j+1);
+                *(array->array+j+1) = temp;
+			}
+		}
+	}
+}
+
+/** \fn void add_float(float_array * array, float new_float)
+* \brief Add an floateger to the dynamic float array.
+* \param array Pointer to the dynamic float array.
+* \param new_float The float to add
+*/
+void add_float(float_array * array, float new_float)
+{
+	if(array->size == array->total_size)
+	{
+		array->total_size = array->total_size + ARRAY_BLOCK_SIZE;
+		array->array = (float *)realloc(array->array, (array->total_size * sizeof(float)));
+	}
+	array->array[array->size] = new_float;
+	array->size++;
+}
+
+/** \fn void remove_float(float_array * array, int index)
+ * \brief Remove an floateger from a dynamic float array.
+ * \param array Pointer to the dynamic float array.
+ * \param index The index of the float to remove.
+ */
+void remove_float(float_array * array, int index)
+{
+	int i;
+	
+	if(index <= array->size)
+	{
+		/* memcopy?? */
+		for(i = index; i < array->size; i++)
+		{
+			array->array[i] = array->array[i+1];
+		}
+		array->size--;
+	}
+}
+
+/** \fn void print_float_array(float_array * array)
+ * \brief Print the elements of a dynamic float array.
+ * \param array Pointer to the dynamic float array.
+ */
+void print_float_array(float_array * array)
+{
+	int i;
+	/* printf(""); // compiler does not like empty prfloats */
+	for(i=0; i<array->size; i++)
+	{
+		printf("%d> %f", i, array->array[i]);
+	}
+}
+
 /** \fn double_array * init_double_array()
  * \brief Allocate memory for a dynamic double array.
  * \return double_array Pointer to the new dynamic double array.
@@ -770,3 +878,82 @@ void print_char_array(char_array * array)
 {
 	printf("%s", array->array);
 }
+
+<?foreach datatype?>/* Functions for the $name datatype */
+/** \fn int_array * init_int_array()
+ * \brief Allocate memory for a dynamic integer array.
+ * \return int_array Pointer to the new dynamic integer array.
+ */
+$name_array * init_$name_array()
+{
+	$name_array * new_array = ($name_array *)malloc(sizeof($name_array));
+	new_array->size = 0;
+	new_array->total_size = ARRAY_BLOCK_SIZE;
+	new_array->array = ($name **)malloc(ARRAY_BLOCK_SIZE * sizeof($name *));
+	
+	return new_array;
+}
+
+/** \fn void reset_int_array(int_array * array)
+* \brief Reset the int array to hold nothing.
+* \param array Pointer to the dynamic integer array.
+*/
+void reset_$name_array($name_array * array)
+{
+	array->size = 0;
+}
+
+/** \fn void free_int_array(int_array * array)
+* \brief Free the memory of a dynamic integer array.
+* \param array Pointer to the dynamic integer array.
+*/
+void free_$name_array($name_array * array)
+{
+	int i;
+	
+	for(i = 0; i < array->size; i++)
+	{
+		free(array->array[i]);
+	}
+	free(array->array);
+	free(array);
+}
+
+/** \fn void add_int(int_array * array, int new_int)
+* \brief Add an integer to the dynamic integer array.
+* \param array Pointer to the dynamic integer array.
+* \param new_int The integer to add
+*/
+void add_$name($name_array * array<?foreach datatypevar?>, $type $name<?end foreach?>)
+{
+	if(array->size == array->total_size)
+	{
+		array->total_size = array->total_size + ARRAY_BLOCK_SIZE;
+		array->array = ($name **)realloc(array->array, (array->total_size * sizeof($name *)));
+	}
+	array->array[array->size] = ($name *)malloc(sizeof($name));
+	<?foreach datatypevar?>array->array[array->size]->$name = $name;
+	<?end foreach?>
+	array->size++;
+}
+
+/** \fn void remove_int(int_array * array, int index)
+ * \brief Remove an integer from a dynamic integer array.
+ * \param array Pointer to the dynamic integer array.
+ * \param index The index of the integer to remove.
+ */
+void remove_$name($name_array * array, int index)
+{
+	int i;
+	
+	if(index <= array->size)
+	{
+		/* memcopy?? */
+		for(i = index; i < array->size; i++)
+		{
+			array->array[i] = array->array[i+1];
+		}
+		array->size--;
+	}
+}
+<?end foreach?>
