@@ -186,7 +186,7 @@ void generate_partitions(double cloud_data[6], int partitions)
     	    if (xhi >= xmax) xhi = SPINF;
     	    if (ylo <= ymin) ylo = -SPINF;
     	    if (yhi >= ymax) yhi = SPINF;
-			printf("Partition %d : %f, %f, %f, %f\n ",
+			printf("Partition %d: %f, %f, %f, %f\n",
 							id,xlo,xhi,ylo,yhi); 
 			add_node(id++,xlo,xhi,ylo,yhi,-SPINF,SPINF);
 			py=py+dy;
