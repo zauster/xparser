@@ -1,4 +1,4 @@
-# Makefile for xparser
+# Makefile for FLAME xparser
 
 CC         = gcc
 CFLAGS     = -c -std=c99 -Wall -pedantic
