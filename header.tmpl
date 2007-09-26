@@ -275,12 +275,12 @@ MPI_Datatype spacePartitionType;
 <?foreach xagent?>
 /** \var MPI_Datatype xmachine$nameType
 * \brief MPI ", $name xmachine */
-MPI_Datatype xmachine$nameType;
+/* MPI_Datatype xmachine$nameType; */
 <?end foreach?>
 <?foreach message?>
 /** \var MPI_Datatype message$nameType
 * \brief MPI ", $name message */
-MPI_Datatype message$nameType;
+/* MPI_Datatype message$nameType; */
 <?end foreach?>
 /** \var int node_number\n 
  * \brief Node number (identifier for node) */

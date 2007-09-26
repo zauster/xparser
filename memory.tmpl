@@ -377,6 +377,16 @@ void clean_up(int code)
 	free_node_info();
 	
 <?if parallel?>
+        /* Clear MPI_Datatypes */
+        MPI_Type_free(&spacePartitionType);
+        <?foreach xagent?>
+        /* MPI_Type_free(&xmachine$nameType); */
+        <?end foreach?>
+        <?foreach message?>
+        /* MPI_Type_free(&message$nameType); */
+        <?end foreach?>
+        
+
 		/* MPI finalise routine */
 		MPI_Finalize();
 		
