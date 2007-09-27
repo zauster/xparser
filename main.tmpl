@@ -160,6 +160,11 @@ int main(int argc, char ** argv)
     partition_data(totalnodes, agent_list, cloud_data);
 <?end if?>
 <?if parallel?>
+    /* Clear previously populated agent list before readinitialstates()
+     *  overwrite the pointers and dereference allocated memory.
+     */
+    freexmachines();
+
     /* Partition the data by reading it in. Partitions are known so get the read function
      * to do the partitioning for us.
      */
