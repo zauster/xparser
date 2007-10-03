@@ -4,7 +4,7 @@
 
 /** \def NAME
  * \brief Release name. */
-#define NAME "X-machine agent parser"
+#define NAME "FLAME X-machine agent parser"
 /** \def VERSIONMAJOR
  * \brief Release number. */
 #define VERSIONMAJOR 0

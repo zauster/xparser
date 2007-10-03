@@ -2,7 +2,7 @@
  * \file  xparser.c
  * \code
  *     Author:       Simon Coakley
- *     Copyright (c) 2006 Simon Coakley
+ *     Copyright (c) 2007 The University of Sheffield.
  *     License:      n/a
  * \endcode
  * \brief Architecture for agent-based modelling based on X-machines.
@@ -92,7 +92,9 @@ int main(int argc, char ** argv)
 	modeldata->p_datatypes = &datatypes;
 	datatypes = NULL;
 	
-	printf("xparser ver : %d.%d.%d\n", VERSIONMAJOR, VERSIONMINOR, VERSIONMICRO);
+	printf("FLAME xparser %d.%d.%d\n", VERSIONMAJOR, VERSIONMINOR, VERSIONMICRO);
+	printf("Copyright (C) 2007 The University of Sheffield. \n");
+	printf("UoS License: See <https://trac.flame.ac.uk/wiki/License>\n");
 	
 	/* If file not defined then ask for it */
 	if(argc < 2)
