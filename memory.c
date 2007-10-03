@@ -1014,3 +1014,78 @@ void print_char_array(char_array * array)
 {
 	printf("%s\n", array->array);
 }
+
+/** \fn int quicksort_int(int *array, int elements)
+ *  \brief Sorts the elements of the integer array in ascending order.
+ *  \param Pointer to integer array
+ *  \param Number of elements that must be sorted
+ *  \return integer value indicating success(0) or failure(1)
+ */
+int quicksort_int(int * array, int start int elements)
+{
+	#define  LEVEL  1000
+	int  pivot, begin[LEVEL], end[LEVEL], i=0, left, right ;
+	begin[0]=0; end[0]=elements;
+	while (i>=0)
+	{
+		left=begin[i]; right=end[i]-1;
+		if (left<right)
+		{
+			pivot=array[left]; if (i==LEVEL-1) return 1;
+			while (left<right)
+			{
+				while (array[right]>=pivot && left<right) right--;
+				if (left<right) array[left++]=array[right];
+				while (array[left]<=pivot && left<right) left++;
+				if (left<right) array[right--]=array[left];
+			}
+			array[left]=pivot;
+			begin[i+1]=left+1;
+			end[i+1]=end[i];
+			end[i++]=left;
+		}
+	    else 
+	    {
+	      i--;
+	    }
+	}
+	return 0;
+}
+
+/** \fn int quicksort_double(double *array, int elements)
+ *  \brief Sorts the elements of the double array in ascending order.
+ *  \param Pointer to double array
+ *  \param Number of elements that must be sorted
+ *  \return integer value indicating success(0) or failure(1)
+ */
+int quicksort_double(double * array, int elements)
+{
+	#define  LEVEL  1000
+	double pivot, begin[LEVEL], end[LEVEL];
+	int  i=0, left, right ; 
+	begin[0]=0; end[0]=elements;
+	while (i>=0)
+	{
+		left=begin[i]; right=end[i]-1;
+		if (left<right)
+		{
+			pivot=array[left]; if (i==LEVEL-1) return 1;
+			while (left<right)
+			{
+				while (array[right]>=pivot && left<right) right--;
+				if (left<right) array[left++]=array[right];
+				while (array[left]<=pivot && left<right) left++;
+				if (left<right) array[right--]=array[left];
+			}
+			array[left]=pivot;
+			begin[i+1]=left+1;
+			end[i+1]=end[i];
+			end[i++]=left;
+		}
+	    else 
+	    {
+	      i--;
+	    }
+	}
+	return 0;
+}
