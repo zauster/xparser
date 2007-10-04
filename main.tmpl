@@ -5,12 +5,12 @@
 
 #include "header.h"
 
-/** \fn int main(int argc, char ** argv)
+/** \fn int main(int argc, char * argv[])
  * \brief Main program loop.
  * \param argc Argument count.
  * \param argv Pointer Pointer to Argument vector.
  */
-int main(int argc, char ** argv)
+int main(int argc, char * argv[])
 {
 	/* Timing variables */
 	clock_t start, stop, interval;
@@ -32,7 +32,12 @@ int main(int argc, char ** argv)
 	double time_ratio = 1000.0/CLOCKS_PER_SEC;
 	/* Particle cloud data */
 	double cloud_data[6];
-<?if parallel?>	int err; /* MPI errors */
+
+/* For partition method. Makes geometric (-g flag) the default but may be overridden with -r for round-robin */
+	int partition_method=1;
+
+<?if parallel?>	
+	int err; /* MPI errors */
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
 	int processor_name_length;
 	MPI_Aint baseaddress;
@@ -73,9 +78,30 @@ int main(int argc, char ** argv)
 		array_of_displacements[1] -= baseaddress;
 		MPI_Type_struct(2, array_of_block_lengths, array_of_displacements, array_of_types, &spacePartitionType);
 		MPI_Type_commit(&spacePartitionType);
-<?end if?>	if(argc < 2)
+<?end if?>	
+
+<?if serial?>
+	printf("FLAME Application: $model_name \n");
+<?end if?>
+<?if parallel?>
+	if(node_number == 0) {
+		printf("MPI FLAME Application: $model_name \n");
+	}
+<?end if?>
+
+
+
+if(argc < 2)
 	{
-		printf("No arguments defined\n");
+<?if serial?>
+		printf("Usage: %s <number of iterations> [<states_directory>]/<init_state> <partitions>\n",argv[0]);
+<?end if?>
+<?if parallel?>
+		if(node_number == 0) {
+			printf("Usage: mpirun -np <partitions> %s <number of iterations> [<states_directory>]/<init_state>\n",argv[0]);
+		}
+<?end if?>
+
 		exit(0);
 	}
 	iteration_total = atoi(argv[1]);
@@ -132,6 +158,9 @@ int main(int argc, char ** argv)
 				exit(0);
 			}
 		}
+		/* Partitioning method: -g = geometric, -r = round-robin */
+		if(strcmp(argv[i],"-g") == 0) partition_method = 1;
+		if(strcmp(argv[i],"-r") == 0) partition_method = 2;
 		i++;
 	}
 	
@@ -141,9 +170,9 @@ int main(int argc, char ** argv)
     {
 <?end if?>
        agent_list = p_xmachine;
-       readinitialstates(inputpath, p_iteration_number, agent_list, cloud_data, 0);
+       readinitialstates(inputpath, p_iteration_number, agent_list, cloud_data, partition_method, 0);
        /* Generate partitions */
-       generate_partitions(cloud_data,totalnodes);
+       generate_partitions(cloud_data,totalnodes,partition_method);
        save_partition_data();
 <?if parallel?>
     }
@@ -157,7 +186,7 @@ int main(int argc, char ** argv)
 
 <?if serial?>
     /* Partition data */
-    partition_data(totalnodes, agent_list, cloud_data);
+    partition_data(totalnodes, agent_list, cloud_data, partition_method);
 <?end if?>
 <?if parallel?>
     /* Clear previously populated agent list before readinitialstates()
@@ -168,7 +197,7 @@ int main(int argc, char ** argv)
     /* Partition the data by reading it in. Partitions are known so get the read function
      * to do the partitioning for us.
      */
-    readinitialstates(inputpath, p_iteration_number, agent_list, cloud_data, 1);
+    readinitialstates(inputpath, p_iteration_number, agent_list, cloud_data, partition_method, 1);
 <?end if?>
 
 <?if serial?>
@@ -196,7 +225,7 @@ int main(int argc, char ** argv)
 		
 		/* Quickly check account for all agents */
 		MPI_Reduce(&current_node->agent_total, &i, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-		if(node_number == 0) printf("Agent total check: %d\n", i);
+		if(node_number == 0) printf("%d> Agent total check: %d\n",node_number, i);
 <?end if?>
 	
 	/* Start log file (now so that xvisualiser can read straight away) */

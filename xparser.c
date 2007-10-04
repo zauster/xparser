@@ -1,8 +1,11 @@
 /**
  * \file  xparser.c
  * \code
- *     Author:       Simon Coakley
- *     Copyright (c) 2007 The University of Sheffield.
+ *     Author:       		Simon Coakley (USFD)
+ *     Added to and Modified: 	David Worth (STFC)
+ *				Shawn Chin (STFC)
+ *				Chris Greenough (STFC)
+ *     Copyright (c) 2006 Simon Coakley
  *     License:      n/a
  * \endcode
  * \brief Architecture for agent-based modelling based on X-machines.
@@ -12,12 +15,29 @@
  *
  * \section intro_sec Introduction
  *
- * This program accepts a model description in X-agent XML and produces source code for the model in either serial (default) or in parallel (via MPI libraries).
+ * This program is the FLAME XMML parser. It accepts a model description 
+ * in X-agent XML and produces source code for the model in either serial 
+ * (default) or in parallel (via MPI libraries).
+ *
+ * The command line is:
+ *
+ * 	xparser [-p | -s] [XMML file]
+ *
+ * xparser without any arguments will produce:
+ *
+ * xparser: Version \<version number\>
+ *
+ * Usage: xparser [XMML file] [-s | -p]
+ *
+ * By default xparser will generate a serial program.
+ *
+ * The code xparser generates, although not pretty, should compile on most
+ * systems that have a compiler conforming to the C99 standard.
  *
  * \section install_sec Installation
  *
- * Compile using a C compiler.
- * E.g. gcc
+ * Compile using a C compiler. A Make file is provided. xparser has been tested
+ * on a large number of UNIX based systems. 
  *
  * \section changelog
  *
@@ -26,20 +46,19 @@
 
 #include "header.h"
 
-/** \fn int main(int argc, char ** argv)
+/** \fn int main(int argc, char * argv[])
  * \brief Main program function.
  * \param argc Argument count.
  * \param argv Pointer Pointer to Argument vector
  * \return system int
  */
-int main(int argc, char ** argv)
+int main(int argc, char * argv[])
 {
 	/* Variables for parsing directories */
 	int lastd = 0;
 	int i;
 	
 	/* Variable to read in command line input */
-	char buffer[10];
 	char inputfile[100];
 	char directory[100];
 	char filename[100];
@@ -65,6 +84,8 @@ int main(int argc, char ** argv)
 	/* Variable for code type */
 	/* 0=serial(default) 1=parallel 2=grid */
 	modeldata->code_type = 0;
+
+	inputfile[1]='\0';
 	
 	/* Initialise pointers */
 	modeldata->p_xmachines = &xmachines;
@@ -92,20 +113,44 @@ int main(int argc, char ** argv)
 	modeldata->p_datatypes = &datatypes;
 	datatypes = NULL;
 	
-	printf("FLAME xparser %d.%d.%d\n", VERSIONMAJOR, VERSIONMINOR, VERSIONMICRO);
-	printf("Copyright (C) 2007 The University of Sheffield. \n");
-	printf("UoS License: See <https://trac.flame.ac.uk/wiki/License>\n");
-	
-	/* If file not defined then ask for it */
-	if(argc < 2)
-	{
-		printf("Usage: xparser [file] [-sp]\n");
+	printf("xparser: Version %d.%d.%d\n", VERSIONMAJOR, VERSIONMINOR, VERSIONMICRO);
+
+	/* Must be at least the input file name */
+
+	if(argc < 2) {
+		printf("Usage: xparser [XMML file] [-s | -p]\n");
 		return 0;
 	}
-	else
-	{
-		strcpy(inputfile, argv[1]);
+
+	/* parser command line */
+	while(argc >1){
+		if(argv[1][0] == '-') {
+			switch (argv[1][1]){
+			case 's': modeldata->code_type = 0;
+				  break;
+			case 'p': modeldata->code_type = 1;
+				  break;
+			default:  printf("xparser: Error - unknown option %s\n",argv[1]);
+				  return 0;
+			}
+		}
+		else
+		{
+			strcpy(inputfile,argv[1]);
+			printf("XMML input file: %s\n",argv[1]);
+		}
+		argc--;
+		argv++;
 	}
+	
+	if(inputfile[1] == '\0') {
+		printf("xparser: Error - XMML must be specified\n");
+		return 0;
+	}
+	
+	/* Print what type of code writing */
+	if(modeldata->code_type == 0) printf("code-type   : Serial\n");
+	if(modeldata->code_type == 1) printf("code-type   : Parallel\n");
 	
 	/* Calculate directory to write files to */
 	i = 0;
@@ -133,37 +178,6 @@ int main(int argc, char ** argv)
 	
 	/* Calculate dependency graph for model functions */
 	create_dependency_graph(directory, modeldata);
-	
-	i = 0;
-	if(argc > 2) 
-	{
-		strcpy(buffer, argv[2]);
-		
-		while(buffer[i] != '\0')
-		{
-			if(buffer[i] == '-') modeldata->code_type = 9;
-			if(buffer[i] == 's') if(modeldata->code_type == 9) modeldata->code_type = 0;
-			if(buffer[i] == 'p') if(modeldata->code_type == 9) modeldata->code_type = 1;
-			if(buffer[i] == 'g') if(modeldata->code_type == 9) modeldata->code_type = 2;
-			if(buffer[i] == 'q') if(modeldata->code_type == 9) modeldata->code_type = 3;
-			
-			i++;
-		}
-	}
-	
-	/* Print what type of code writing */
-	if(modeldata->code_type == 0) printf("code-type   : Serial\n");
-	if(modeldata->code_type == 1) printf("code-type   : Parallel\n");
-	if(modeldata->code_type == 2)
-	{
-		printf("code-type   : Grid\n*** not implemented, need more funding ***\n");
-		exit(1);
-	}
-	if(modeldata->code_type == 3)
-	{
-		printf("code-type   : Quantum\n*** not implemented, LOTS more funding needed ***\n");
-		exit(1);
-	}
 	
 	strcpy(filename, directory); strcat(filename, "Makefile"); strcpy(templatename, "Makefile.tmpl");
 	parseTemplate(filename, templatename, modeldata);

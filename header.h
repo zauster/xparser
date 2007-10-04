@@ -208,6 +208,9 @@ struct xmachine
 	struct xmachine_memory * memory;		/**< Pointer X-machine memory. */
 	struct xmachine_state * states;		/**< Pointer X-machine states. */
 	struct xmachine_function * functions;	/**< Pointer X-machine functions. */
+	
+	char rangevar[50];						/**< Variable name for range */
+	char idvar[50]; 						/**< Variable name for agent id. */
 	char xvar[50];							/**< Variable name for position in x-axis. */
 	char yvar[50];							/**< Variable name for position in y-axis. */
 	char zvar[50];							/**< Variable name for position in z-axis. */

@@ -13,6 +13,8 @@
 xmachine_message_$name * add_$name_message_internal()
 {
 	xmachine_message_$name * current = (xmachine_message_$name *)malloc(sizeof(xmachine_message_$name));
+	CHECK_POINTER(current);
+
 	current->next = *p_$name_message;
 	*p_$name_message = current;
 	

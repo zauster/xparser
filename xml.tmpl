@@ -11,9 +11,11 @@
  * \param itno Pointer to the iteration number.
  * \param agent_list List of agents in the model to be constructed by this function.
  * \param cloud_data Max and min x,y,z coordinates of agents.
+ * \param partition_method Identifies partitioning method: 1 = geometric, 2 = round-robin
  * \param flag Flag for whether to check space partitions.
  */
-void readinitialstates(char * filename, int * itno, xmachine ** agent_list, double cloud_data[6], int flag)
+void readinitialstates(char * filename, int * itno, xmachine ** agent_list, double cloud_data[6], 
+                       int partition_method, int flag)
 {
 	/* Pointer to file */
 	FILE *file;
@@ -25,6 +27,16 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 	<?if use_arrays?>/* Variables for dealing with variables which are arrays */
 	char arraydata[10000];
 	int array_k=0, j=0, arraycount=0;<?end if?>
+
+/* Things for round-robin partitioning */
+	int agent_count;
+	int number_partitions;
+	int geometric=1;
+	int other=2;
+	double 	xmax=0,xmin=0,ymax=0,ymin=0,
+		xcentre=0,ycentre=0,
+		rrange=1.5;
+	<?if parallel?>int node_number;<?end if?>
 	
 	/* Cloud data array initialisation */
 	cloud_data[0] = SPINF; cloud_data[1] = -SPINF;
@@ -71,10 +83,32 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 	/* Default variables for memory */
 	/* Not implemented static arrays */
 <?foreach allvar?><?if not_array?><?if not_modeldatatype?>	$name = $default_value;
-<?end if?><?end if?><?if modeldatatype?><?if array?>	//current_$name = ($notarraytype *)malloc(sizeof($notarraytype));
+<?end if?><?end if?><?if modeldatatype?><?if array?>
+//current_$name = ($notarraytype *)malloc(sizeof($notarraytype));
+//CHECK_POINTER(current_$name);
 <?end if?><?end if?><?end foreach?>
 <?foreach envvar?>	$name = $default_value;
 <?end foreach?>
+
+<?if parallel?>
+/* Initialisation */
+     MPI_Comm_size (MPI_COMM_WORLD, &number_partitions);
+     MPI_Comm_rank (MPI_COMM_WORLD, &node_number);
+     agent_count = node_number;
+<?end if?>
+
+<?if parallel?>
+	if(node_number==0 && flag==0){
+	    if(partition_method==geometric) printf("%d> xml: Geometric partitioning\n",node_number);
+    	else if(partition_method==other) printf("%d> xml: Round-robin partitioning\n",node_number);
+    	else printf("%d> xml: Error - invalid partitioning method\n",node_number);
+	}
+<?end if?>
+<?if serial?>
+	if(partition_method==geometric) printf("xml: Geometric partitioning\n");
+	else if(partition_method==other) printf("xml: Round-robin partitioning\n");
+	else printf("xml: Error - invalid partitioning method\n");
+<?end if?>
 
     /* Set p_xmachine to the agent list passed in then new agents are added to this list 
      * Will be set to agent list for specific node is space partitions are already known (flag=1)
@@ -123,18 +157,48 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
                         if ( $zvar < cloud_data[2]) cloud_data[4] = $zvar ;
                         if ( $zvar > cloud_data[3]) cloud_data[5] = $zvar ;
 					}
-					else if (
-					    ((current_node->partition_data[0] == SPINF) || (current_node->partition_data[0] != SPINF && $xvar >= current_node->partition_data[0])) &&
-					    ((current_node->partition_data[1] == SPINF) || (current_node->partition_data[1] != SPINF && $xvar < current_node->partition_data[1])) &&
-					    ((current_node->partition_data[2] == SPINF) || (current_node->partition_data[2] != SPINF && $yvar >= current_node->partition_data[2])) &&
-					    ((current_node->partition_data[3] == SPINF) || (current_node->partition_data[3] != SPINF && $yvar < current_node->partition_data[3])) &&
-					    ((current_node->partition_data[4] == SPINF) || (current_node->partition_data[4] != SPINF && $zvar >= current_node->partition_data[4])) &&
-					    ((current_node->partition_data[5] == SPINF) || (current_node->partition_data[5] != SPINF && $zvar < current_node->partition_data[5]))
-					)
+
+					else if (flag != 0)
 					{
-					    p_xmachine = &(current_node->agents);
-					    add_$name_agent(<?foreach xagentvar?>$name<?if notlast?>, <?end if?><?end foreach?>);
-					}
+					    if(partition_method == geometric) {
+					        if (
+    				    	    ((current_node->partition_data[0] == SPINF) || (current_node->partition_data[0] != SPINF && $xvar >= current_node->partition_data[0])) &&
+    					        ((current_node->partition_data[1] == SPINF) || (current_node->partition_data[1] != SPINF && $xvar < current_node->partition_data[1])) &&
+        					    ((current_node->partition_data[2] == SPINF) || (current_node->partition_data[2] != SPINF && $yvar >= current_node->partition_data[2])) &&
+        					    ((current_node->partition_data[3] == SPINF) || (current_node->partition_data[3] != SPINF && $yvar < current_node->partition_data[3])) &&
+        					    ((current_node->partition_data[4] == SPINF) || (current_node->partition_data[4] != SPINF && $zvar >= current_node->partition_data[4])) &&
+        					    ((current_node->partition_data[5] == SPINF) || (current_node->partition_data[5] != SPINF && $zvar < current_node->partition_data[5]))
+        					)
+        					{
+        					    p_xmachine = &(current_node->agents);
+        					    add_$name_agent(<?foreach xagentvar?>$name<?if notlast?>, <?end if?><?end foreach?>);
+        					} 
+	    				}
+	    				else if (partition_method == other){
+	    				    if (agent_count % number_partitions == 0) {
+                    			/* Compute centre of partition */
+		                       	xmin=current_node->partition_data[0];
+                        		xmax=current_node->partition_data[1];
+                       			ymin=current_node->partition_data[2];
+                       			ymax=current_node->partition_data[3];
+
+			                    xcentre=xmin+(xmax-xmin)/2.0;
+                    			ycentre=ymin+(ymax-ymin)/2.0;
+                    			rrange=1.5;
+
+                    			p_xmachine = &(current_node->agents);
+                    			add_$name_agent(<?foreach xagentvar?>$name<?if notlast?>, <?end if?><?end foreach?>);
+
+                    			set_$xvar(xcentre);
+                    			set_$yvar(ycentre);
+                    			set_$rangevar(rrange);
+
+					        }
+    					    ++agent_count;
+					    } /* if partition */
+
+					} /* if flag */
+
 				}
 <?end foreach?>				else
 				{
@@ -178,6 +242,7 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 				{
 					j = 0;
 					$name = ($type *)malloc(sizeof($type));<?foreach datatypevar?>
+					CHECK_POINTER($name);
 					$datatypevarname->$name = $default_value;
 					array_k = 0;
 					j++;
@@ -220,13 +285,18 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 				}<?end if?><?end if?><?if modeldatatype?>
 				{
 					<?if dynamic_array?>$name = init_$type();<?end if?>
-					<?if static_array?>$name = ($notarraytype **)malloc(ARRAY_BLOCK_SIZE * sizeof($notarraytype *));<?end if?>
+					<?if static_array?>
+                    $name = ($notarraytype **)malloc(ARRAY_BLOCK_SIZE * sizeof($notarraytype *));<?end if?>
+                    CHECK_POINTER($name);
 					j = 1;
 					arraycount = 0;
 					
 					while(buffer[j] == '{')
 					{
-						<?if static_array?>$name[arraycount] = ($notarraytype *)malloc(sizeof($notarraytype));<?foreach datatypevar?>
+						<?if static_array?>
+                        $name[arraycount] = ($notarraytype *)malloc(sizeof($notarraytype));
+                        CHECK_POINTER($name[arraycount]);
+                        <?foreach datatypevar?>
 						$datatypevarname[arraycount]->$name = $default_value;<?end foreach?>
 						<?foreach datatypevar?>
 						array_k = 0;
@@ -274,6 +344,22 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 			i++;
 		}
 	}
+    /* Make sure cloud data makes sense if any of x,y,z coords were all the same */
+    if ( partition_method == geometric ) {
+        if ( cloud_data[0] == cloud_data[1] ) {
+            cloud_data[0] = -SPINF;
+            cloud_data[1] = SPINF;
+        }
+        if ( cloud_data[2] == cloud_data[3] ) {
+            cloud_data[2] = -SPINF;
+            cloud_data[3] = SPINF;
+        }
+        if ( cloud_data[4] == cloud_data[5] ) {
+            cloud_data[4] = -SPINF;
+            cloud_data[5] = SPINF;
+        }
+    }
+
 	/* Close the file */
 	fclose(file);
 	/* Free temp data structures */

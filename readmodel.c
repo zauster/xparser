@@ -466,6 +466,11 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 						if(strcmp(current_variable->name, "z") == 0)    strcpy(current_xmachine->zvar, "z");
 						if(strcmp(current_variable->name, "pz") == 0)   strcpy(current_xmachine->zvar, "pz");
 						if(strcmp(current_variable->name, "posz") == 0) strcpy(current_xmachine->zvar, "posz");
+						if(strcmp(current_variable->name, "range") == 0) strcpy(current_xmachine->rangevar, "range");
+						if(strcmp(current_variable->name, "radius") == 0) strcpy(current_xmachine->rangevar, "radius");
+						
+						if(strcmp(current_variable->name, "id") == 0) strcpy(current_xmachine->idvar, "id");
+						if(strcmp(current_variable->name, "agent_id") == 0) strcpy(current_xmachine->idvar, "agent_id");
 						
 						found = 0;
 						allvar = * modeldata->p_allvars;

@@ -126,73 +126,127 @@ static void factor( long num )
  * \author  C Greenough and DJ Worth CCLRC
  * \date    2007
  */
-void generate_partitions(double cloud_data[6], int partitions)
-{		
-	int xdiv=1,ydiv=1;
-	int i,j,id;
-	double xmax,xmin,ymax,ymin;
-	double dx,dy,px,py;
-	/* Limits in x and y of partition to be created */
-	double xlo, xhi, ylo, yhi;
-	double margin=0.25; /* small extension of region */
-		
-	xmax=cloud_data[1]; /*+SPINF;*/
-	xmin=cloud_data[0]; /*-SPINF;*/
-	ymax=cloud_data[3]; /*+SPINF;*/
-	ymin=cloud_data[2]; /*-SPINF;*/
+void generate_partitions(double cloud_data[6], int partitions, int partition_method)
+{
+    int geometric = 1;
+        int other = 2;
+
+    int xdiv=1,ydiv=1;
+    int i,j,id;
+    double xmax=0,xmin=0,ymax=0,ymin=0;
+    double dx,dy,px,py;
+    /* Limits in x and y of partition to be created */
+    double xlo, xhi, ylo, yhi;
+    double margin=0.25; /* small extension of region */
 
     /* factor number of partitions */
 	factor((long) partitions);
 
     /* build divisions for x and y axes */
 
-	for ( i=nfactor-1; i >= 0; --i){
-		/* printf("%d : %d \n",factors[i],powers[i]);*/
-		for( j=1; j <=powers[i] ; ++j){
-			if(xdiv<=ydiv) {
-				xdiv=xdiv*factors[i];
-			}
-			else {
-				ydiv=ydiv*factors[i];
-			}
-		}
-	}
-	printf("xdiv=%d ydiv=%d\n",xdiv,ydiv);
+    for ( i=nfactor-1; i >= 0; --i){
+        /* printf("%d : %d \n",factors[i],powers[i]);*/
+        for( j=1; j <=powers[i] ; ++j){
+            if(xdiv<=ydiv) {
+                xdiv=xdiv*factors[i];
+            }
+            else {
+                ydiv=ydiv*factors[i];
+            }
+        }
+    }
+<?if serial?>
+    printf("xdiv=%d ydiv=%d\n",xdiv,ydiv);
+<?end if?>
+<?if parallel?>
+    if(node_number ==0){
+        printf("%d> xdiv=%d ydiv=%d\n",node_number, xdiv,ydiv);
+        if(partition_method==geometric) printf("%d> Geometric partitioning\n",node_number);
+        if(partition_method==other) printf("%d> Round-robin partitioning\n",node_number);
+    }
+<?end if?>
 
-    /* defined agent cloud with small margin */	
-	xmax+=fabs(xmax)*margin;
-	xmin-=fabs(xmin)*margin;
-	ymax+=fabs(ymax)*margin;
-	ymin-=fabs(ymin)*margin;
+/* Geometric partitioning */
+
+    if(partition_method==geometric){
+
+        xmax=cloud_data[1]; /*+SPINF;*/
+        xmin=cloud_data[0]; /*-SPINF;*/
+        ymax=cloud_data[3]; /*+SPINF;*/
+        ymin=cloud_data[2]; /*-SPINF;*/
+    }
+    else if(partition_method==other){
+    
+        dx=1.0;
+        dy=1.0;
+        xmax=dx;
+        xmin=0.0;
+        ymax=dy;
+        ymin=0.0;
+        margin=0.0;
+    }
+
+    /* defined agent cloud with small margin */ 
+    xmax+=fabs(xmax)*margin;
+    xmin-=fabs(xmin)*margin;
+    ymax+=fabs(ymax)*margin;
+    ymin-=fabs(ymin)*margin;
 
     /* calculate increments */
 
-	dx=(xmax-xmin)/(xdiv);
-	dy=(ymax-ymin)/(ydiv);
-
+    dx=(xmax-xmin)/(xdiv);
+    dy=(ymax-ymin)/(ydiv);
     /* generate partitions */
 
-	/* current = *node_list; */
-	id=0;
-	px=xmin;
-	for (i=0; i < xdiv; ++i){
-		py=ymin;
-		for (j=0; j < ydiv; ++j){
-		    xlo = px;
-		    xhi = px+dx;
-		    ylo = py;
-		    yhi = py+dy;
-    	    if (xlo <= xmin) xlo = -SPINF;
-    	    if (xhi >= xmax) xhi = SPINF;
-    	    if (ylo <= ymin) ylo = -SPINF;
-    	    if (yhi >= ymax) yhi = SPINF;
-			printf("Partition %d: %f, %f, %f, %f\n",
-							id,xlo,xhi,ylo,yhi); 
-			add_node(id++,xlo,xhi,ylo,yhi,-SPINF,SPINF);
-			py=py+dy;
-		}
-		px=px+dx;
-	}
+    /* current = *node_list; */
+    id=0;
+    px=xmin;
+    for (i=0; i < xdiv; ++i){
+        py=ymin;
+        for (j=0; j < ydiv; ++j){
+            xlo = px;
+            xhi = px+dx;
+            ylo = py;
+            yhi = py+dy;
+            if(partition_method==geometric){
+                if (xlo <= xmin+0.01) xlo = -SPINF;
+                if (xhi >= xmax-0.01) xhi = SPINF;
+                if (ylo <= ymin+0.01) ylo = -SPINF;
+                if (yhi >= ymax-0.01) yhi = SPINF;
+            }
+            else {
+                /*    
+                if (xlo <= xmin) xlo = -domain_size;
+                if (xhi >= xmax) xhi = domain_size;
+                if (ylo <= ymin) ylo = -domain_size;
+                if (yhi >= ymax) yhi = domain_size;
+            */
+            }
+<?if serial?>
+            printf("Partition %d: %f, %f, %f, %f\n",
+                            id,xlo,xhi,ylo,yhi); 
+<?end if?>
+<?if parallel?>
+            printf("%d> Partition %d : %f, %f, %f, %f\n",
+                            node_number,id,xlo,xhi,ylo,yhi); 
+<?end if?>
+            add_node(id++,xlo,xhi,ylo,yhi,-SPINF,SPINF);
+            py=py+dy;
+        }
+        px=px+dx;
+    }
+/*  } */
+/*  else if(partition_method == other){*/
+/* Round robin partitions */
+/*  id=0;
+    xlo=0.0;
+    xhi=0.0;
+    ylo=0.0;
+    yhi=0.0;
+    for(i=0;i<partitions;++i){
+        add_node(id++,xlo,xhi,ylo,yhi,-SPINF,SPINF);
+      }
+    }*/
 }
 
 <?if serial?>
@@ -208,44 +262,94 @@ void generate_partitions(double cloud_data[6], int partitions)
  * \author  DJ Worth CCLRC
  * \date    2007
  */
-void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6])
+void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6], int partition_method)
 {
     /* Data to loop through agents and copy data into nodes*/
     xmachine * current_xmemory, *next_agent;
     /* Data to loop through nodes*/
     node_information* current_partition;
     /* Limits of this space partition*/
-	double xmin,xmax,ymin,ymax;
-	
-    current_xmachine = *agent_list;
-    while(current_xmachine)
-    {
-        /* Loop through nodes */
-        current_partition = *p_node_info;
-        while (current_partition)
+    double xmin,xmax,ymin,ymax;
+    double x_centre,y_centre;
+    
+    int geometric = 1;
+    int other = 2;
+
+
+    if(partition_method == geometric){
+
+        printf("Geometric partitioning\n");
+
+        current_xmachine = *agent_list;
+        while(current_xmachine)
         {
-            /* Check if agent in this space partition. If so add it to agent list */
-	    	xmin=current_partition->partition_data[0];
-    		xmax=current_partition->partition_data[1];
-    		ymin=current_partition->partition_data[2];
-    		ymax=current_partition->partition_data[3];
-            /* Use get_ methods since current_agent global variable is set*/
-	    	if((agent_get_x() >= xmin) && (agent_get_x() < xmax) &&
-	    	   (agent_get_y() >= ymin) && (agent_get_y() < ymax))
+            /* Loop through nodes */
+            current_partition = *p_node_info;
+            while (current_partition)
             {
+                /* Check if agent in this space partition. If so add it to agent list */
+                xmin=current_partition->partition_data[0];
+                xmax=current_partition->partition_data[1];
+                ymin=current_partition->partition_data[2];
+                ymax=current_partition->partition_data[3];
+                /* Use get_ methods since current_agent global variable is set*/
+                if((agent_get_x() >= xmin) && (agent_get_x() < xmax) &&
+                   (agent_get_y() >= ymin) && (agent_get_y() < ymax))
+                {
+                    current_xmemory = current_partition->agents;
+                    current_partition->agents = current_xmachine;
+                    next_agent = current_xmachine->next;
+                     current_xmachine->next = current_xmemory;
+                    current_partition->agent_total++;
+                     /* Stop the loop over nodes*/
+                     current_partition = NULL;
+                }
+                else {
+                    current_partition = current_partition->next;
+                }
+            } /* end of partition while */
+            current_xmachine = next_agent;
+        } /* end of xmachine while */
+    }
+    else if(partition_method == other){/* Round Robin allocation */
+
+        printf("Round robin partitioning\n");
+
+        /* Loop through agents */
+        current_xmachine = *agent_list;
+        while(current_xmachine){
+            /* Loop through nodes */
+            current_partition = *p_node_info;
+            while(current_partition && current_xmachine){
+            
+                /* Compute centre of partition */
+                xmin=current_partition->partition_data[0];
+                xmax=current_partition->partition_data[1];
+                ymin=current_partition->partition_data[2];
+                ymax=current_partition->partition_data[3];
+                x_centre=xmin+(xmax-xmin)/2.0;
+                y_centre=ymin+(ymax-ymin)/2.0;
+                /*_centre=zmin+(zmax-zmin)/2.0;*/
+
+                /* Allocation current agent to current node */
                 current_xmemory = current_partition->agents;
+<?foreach xagent?>
+                /* Change agent position to centre */
+                set_$rangevar(1.5);
+                set_$xvar(x_centre);
+                set_$yvar(y_centre);
+<?end foreach?>
                 current_partition->agents = current_xmachine;
                 next_agent = current_xmachine->next;
                 current_xmachine->next = current_xmemory;
                 current_partition->agent_total++;
-                /* Stop the loop over nodes*/
-                current_partition = NULL;
-            }
-            else {
+
+                /* Select next agent and next node */
+                current_xmachine = next_agent;
                 current_partition = current_partition->next;
-            }
-        }
-        current_xmachine = next_agent;
+            } /* End of node loop */
+            current_xmachine = next_agent;
+        } /* End of agent loop */
     }
 
 }

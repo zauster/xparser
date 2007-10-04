@@ -1055,7 +1055,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 				}
 				else if (strcmp("foreach xagent", lastloop) == 0)
 				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$xvar") != 0 && strcmp(buffer3->array, "$yvar") != 0 && strcmp(buffer3->array, "$zvar") != 0 && strcmp(buffer3->array, "$var_number") != 0 && strcmp(buffer3->array, "$allvar_name") != 0 && strcmp(buffer3->array, "$xagentcountplusone") != 0 && strcmp(buffer3->array, "$xagent_count") != 0 && strcmp(buffer3->array, "$previous_name") != 0 && pos <= (pos1 + 22))
+					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$rangevar") != 0 && strcmp(buffer3->array, "$idvar") != 0 && strcmp(buffer3->array, "$xvar") != 0 && strcmp(buffer3->array, "$yvar") != 0 && strcmp(buffer3->array, "$zvar") != 0 && strcmp(buffer3->array, "$var_number") != 0 && strcmp(buffer3->array, "$allvar_name") != 0 && strcmp(buffer3->array, "$xagentcountplusone") != 0 && strcmp(buffer3->array, "$xagent_count") != 0 && strcmp(buffer3->array, "$previous_name") != 0 && pos <= (pos1 + 22))
 					{
 						add_char(buffer3, c);
 						pos++;
@@ -1064,6 +1064,10 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					pos--;
 					if (strcmp(buffer3->array, "$name") == 0)
 						fputs(current_xmachine->name, file);
+					else if (strcmp(buffer3->array, "$rangevar") == 0)
+						fputs(current_xmachine->rangevar, file);
+					else if (strcmp(buffer3->array, "$idvar") == 0)
+						fputs(current_xmachine->idvar, file);
 					else if (strcmp(buffer3->array, "$xvar") == 0)
 						fputs(current_xmachine->xvar, file);
 					else if (strcmp(buffer3->array, "$yvar") == 0)

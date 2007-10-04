@@ -342,7 +342,7 @@ void create_dependency_graph(char * filepath, model_data * modeldata)
 	
 	fputs("digraph dependency_graph {\n", file);
 	fputs("\trankdir=BT;\n", file);
-	fputs("\tsize=\"8,5\"\n", file);
+	fputs("\tsize=\"8,5;\"\n", file); /* cg 9/8/07 - bug - ; missing */
 	fputs("\tnode [shape = rect];\n", file);
 	
 	fputs("\t\n\t/* Functions */\n", file);

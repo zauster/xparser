@@ -8,6 +8,16 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+
+
+/* Checking macros */
+#ifdef CHECK_MEMORY
+#define CHECK_POINTER(PT) if(PT==NULL){printf("**** ERROR in Memory check 1\n");exit(1);}
+#else
+#define CHECK_POINTER(PT) 
+#endif
+
+
 <?if parallel?>#include <mpi.h>
 <?end if?>
 /** \def ARRAY_BLOCK_SIZE
@@ -363,7 +373,8 @@ void remove_char(char_array * array, int index);
 char * copy_array_to_str(char_array * array);
 void print_char_array(char_array * array);
 /* xml.c */
-void readinitialstates(char * filename, int * itno, xmachine ** agent_list, double cloud_data[6], int flag);
+void readinitialstates(char * filename, int * itno, xmachine ** agent_list, double cloud_data[6], 
+                       int partition_method, int flag);
 void saveiterationdata_binary(int iteration_number);
 void saveiterationdata(int iteration_number);
 <?foreach xagent?>
@@ -377,15 +388,16 @@ void free$namemessages(void);<?end foreach?>
 <?foreach allvar?><?if not_modeldatatype?><?if not_array?>
 void set_$name($type $name);<?end if?><?end if?>
 $type <?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?><?if not_modeldatatype?><?if array?>* <?end if?><?end if?>get_$name(void);<?end foreach?>
+int agent_get_id(void);
 double agent_get_x(void);
 double agent_get_y(void);
 double agent_get_z(void);
 /* partitioning.c */
-<?if serial?>void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6]);<?end if?>
+<?if serial?>void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6], int partition_method);<?end if?>
 <?if parallel?>void send_spacepartition(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz);<?end if?>
 <?if parallel?>void broadcast_node_data(int totalnodes, int node_number);<?end if?>
 void save_partition_data(void);
-void generate_partitions(double cloud_data[6], int partitions);
+void generate_partitions(double cloud_data[6], int partitions, int partition_method);
 
 /* messageboard.c */
 <?foreach message?>xmachine_message_$name * get_next_message_$name_in_range(xmachine_message_$name * current);

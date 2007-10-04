@@ -43,7 +43,7 @@ void add_location(double point, location ** p_location)
 	}
 	
 	newlocation = (location *)malloc(sizeof(location));
-	
+	CHECK_POINTER(newlocation);	
 	if(tmp)
 	{
 		tmp->next = newlocation;
@@ -85,11 +85,16 @@ void freelocations(location ** p_location)
 xmachine * add_xmachine()
 {
 	xmachine * current = (xmachine *)malloc(sizeof(xmachine));
+	CHECK_POINTER(current);
+
 <?foreach xagent?>	current->xmachine_$name = NULL;
 <?end foreach?>	current->next = *p_xmachine;
 	*p_xmachine = current;
 	
 	current_node->agent_total++;
+
+/* add by cg for round-robin so that set_ has something to point at */
+	current_xmachine = current;
 	
 	return current;
 }
@@ -102,7 +107,8 @@ void add_$name_agent(<?foreach xagentvar?>$type <?if not_modeldatatype?><?if dyn
 {
 	xmachine * new_xmachine = add_xmachine();
 	xmachine_memory_$name * current = (xmachine_memory_$name *)malloc(sizeof(xmachine_memory_$name));
-	
+		CHECK_POINTER(current);
+
 	new_xmachine->xmachine_$name = current;
 <?foreach xagentvar?>	<?if not_array?>current->$name = $name;<?end if?><?if dynamic_array?>current->$name = $name;<?end if?><?if static_array?><?if not_modeldatatype?>memcpy(current->$name, $name, $arraylength*sizeof($type));<?end if?><?if modeldatatype?>current->$name = $name;<?end if?><?end if?>
 <?end foreach?>}
@@ -156,7 +162,7 @@ void freexmachines()
 <?foreach xagent?>		if(head->xmachine_$name)
 		{
 <?foreach xagentvar?><?if modeldatatype?><?if not_array?>			free(head->xmachine_$agent_name->$name);
-<?end if?><?if static_array?>			free(&(head->xmachine_$agent_name->$name));
+<?end if?><?if static_array?>			free(*(head->xmachine_$agent_name->$name));
 <?end if?><?end if?><?if dynamic_array?>			free_$type(head->xmachine_$agent_name->$name);
 <?end if?><?end foreach?>			free(head->xmachine_$name);
 		}
@@ -190,6 +196,30 @@ $type <?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?><?if not_mod
     return <?if not_array?><?if not_modeldatatype?>($type)0<?end if?><?end if?><?if modeldatatype?>NULL<?end if?><?if not_modeldatatype?><?if array?>NULL<?end if?><?end if?>;
 }
 <?end foreach?>
+
+/** \fn double agent_get_range()
+ * \brief Fixed routine to get the range from current X-machine
+  * \return Value of range
+  */
+double agent_get_range()
+{
+    double value = 0.0;
+<?foreach xagent?>    if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$rangevar;
+<?end foreach?>
+    return value;
+}
+
+/** \fn int agent_get_id()
+ * \brief Fixed routine to get the id for the current X-machine
+  * \return Value of agent id
+  */
+int agent_get_id()
+{
+    int value = 0;
+<?foreach xagent?>    if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$idvar;
+<?end foreach?>
+    return value;
+}
 
 /** \fn double agent_get_x()
  * \brief Fixed routine to get the x coordinate from current X-machine
@@ -241,6 +271,7 @@ void randomisexagent() {
 
     /* allocate mem for dynamic temp array */
     address_list = (xmachine **)malloc(sizeof(xmachine *) * xm_count);
+	CHECK_POINTER(address_list);
 
     p_xmachine = &current_node->agents;
     
@@ -302,6 +333,7 @@ void add_node(int node_id, double minx, double maxx, double miny, double maxy, d
 	}
 	
 	current = (node_information *)malloc(sizeof(node_information));
+		CHECK_POINTER(current);
 <?if parallel?>	if(node_id == node_number) current_node = current;<?end if?>
 	if(tmp)
 	{
@@ -485,9 +517,11 @@ void propagate_agents()
 int_array * init_int_array()
 {
 	int_array * new_array = (int_array *)malloc(sizeof(int_array));
+		CHECK_POINTER(new_array);
 	new_array->size = 0;
 	new_array->total_size = ARRAY_BLOCK_SIZE;
 	new_array->array = (int *)malloc(ARRAY_BLOCK_SIZE * sizeof(int));
+		CHECK_POINTER(new_array->array);
 	
 	return new_array;
 }
@@ -629,9 +663,11 @@ void print_int_array(int_array * array)
 float_array * init_float_array()
 {
 	float_array * new_array = (float_array *)malloc(sizeof(float_array));
+		CHECK_POINTER(new_array);
 	new_array->size = 0;
 	new_array->total_size = ARRAY_BLOCK_SIZE;
 	new_array->array = (float *)malloc(ARRAY_BLOCK_SIZE * sizeof(float));
+		CHECK_POINTER(new_array->array);
 	
 	return new_array;
 }
@@ -775,9 +811,11 @@ void print_float_array(float_array * array)
 double_array * init_double_array()
 {
 	double_array * new_array = (double_array *)malloc(sizeof(double_array));
+		CHECK_POINTER(new_array);
 	new_array->size = 0;
 	new_array->total_size = ARRAY_BLOCK_SIZE;
 	new_array->array = (double *)malloc(ARRAY_BLOCK_SIZE * sizeof(double));
+		CHECK_POINTER(new_array->array);
 	return new_array;
 }
 
@@ -920,9 +958,11 @@ void print_double_array(double_array * array)
 char_array * init_char_array()
 {
 	char_array * new_array = (char_array *)malloc(sizeof(char_array));
+		CHECK_POINTER(new_array);
 	new_array->size = 0;
 	new_array->total_size = ARRAY_BLOCK_SIZE;
 	new_array->array = (char *)malloc(ARRAY_BLOCK_SIZE * sizeof(char));
+		CHECK_POINTER(new_array->array);
 	new_array->array[0] = '\0';
 	return new_array;
 }
@@ -990,6 +1030,7 @@ void remove_char(char_array * array, int index)
 char * copy_array_to_str(char_array * array)
 {
 	char * new_string = (char *)malloc( (array->size + 1) * sizeof(char));
+		CHECK_POINTER(new_string);
 	return strcpy(new_string, array->array);
 }
 
@@ -1010,9 +1051,11 @@ void print_char_array(char_array * array)
 $name_array * init_$name_array()
 {
 	$name_array * new_array = ($name_array *)malloc(sizeof($name_array));
+		CHECK_POINTER(new_array);
 	new_array->size = 0;
 	new_array->total_size = ARRAY_BLOCK_SIZE;
 	new_array->array = ($name **)malloc(ARRAY_BLOCK_SIZE * sizeof($name *));
+		CHECK_POINTER(new_array->array);
 	
 	return new_array;
 }
@@ -1055,6 +1098,8 @@ void add_$name($name_array * array<?foreach datatypevar?>, $type $name<?end fore
 		array->array = ($name **)realloc(array->array, (array->total_size * sizeof($name *)));
 	}
 	array->array[array->size] = ($name *)malloc(sizeof($name));
+		CHECK_POINTER(array->array[array->size]);
+
 	<?foreach datatypevar?>array->array[array->size]->$name = $name;
 	<?end foreach?>
 	array->size++;

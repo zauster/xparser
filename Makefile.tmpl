@@ -1,16 +1,36 @@
-# Makefile
-
-<?if serial?>CC=gcc<?end if?><?if parallel?>CC=mpicc<?end if?>
-CFLAGS=-c -std=c99 -Wall
+# Makefile template file for FLAME
+#
+# FLAME is the FLAME source files
+# SOURCE is the user source files
+#
+# The assumption is that the user only provides C files
+# and a model files <file>.xml
+#
+DEFINES=-DNONE
+<?if serial?>
+CC=gcc
+<?end if?>
+<?if parallel?>
+CC=mpicc
+<?end if?>
+CFLAGS=-c -std=c99 -Wall ${DEFINES}
+LDFLAGS = 
 LIBS=-lm
-SOURCES=main.c memory.c xml.c messageboards.c partitioning.c <?if parallel?>propagate_messages.c propagate_agents.c<?end if?><?foreach functionfiles?> $filepath<?end foreach?>
+
+#FLAME source files
+FLAME   = main.c memory.c xml.c messageboards.c partitioning.c <?if parallel?>propagate_messages.c propagate_agents.c<?end if?>
+
+# FLAME generated model files
+SOURCES = <?foreach functionfiles?> $filepath<?end foreach?>
+HEADERS = header.h low_primes.h 
+
 DEPS=Makefile header.h low_primes.h
 
-OBJECTS=$(SOURCES:.c=.o)
+OBJECTS=$(SOURCES:.c=.o) $(FLAME:.c=.o)
 EXECUTABLE=main
 RM=rm -f
 
-all: $(SOURCES) $(EXECUTABLE)
+all: $(SOURCES) $(FLAME) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS) 
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@ $(LIBS)
@@ -21,4 +41,6 @@ $(OBJECTS): $(DEPS)
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	$(RM) *.o main.exe main
+	$(RM) *.o main
+vclean:
+	$(RM) main *.o  $(FLAME) $(HEADERS)

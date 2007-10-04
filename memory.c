@@ -554,6 +554,7 @@ xmachine * addxmachine(xmachine ** p_xmachines)
 	current->memory = NULL;
 	current->states = NULL;
 	current->functions = NULL;
+	current->idvar[0] = 0;
 	current->xvar[0] = 0;
 	current->yvar[0] = 0;
 	current->zvar[0] = 0;
