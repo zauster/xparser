@@ -84,10 +84,12 @@ void process_$name_message(xmachine_message_$name * current)
 <?end foreach?> */
 void add_$name_message(<?foreach messagevar?>$type $name<?if notlast?>, <?end if?><?end foreach?>)
 {
+
 	p_$name_message = &current_node->$name_messages;
 	xmachine_message_$name * tmp = add_$name_message_internal();
 <?foreach messagevar?>	tmp->$name = $name;
 <?end foreach?>
+
 	/* Check if agent in halo region */
 	process_$name_message(tmp);
 }
