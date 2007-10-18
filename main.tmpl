@@ -94,11 +94,11 @@ int main(int argc, char * argv[])
 if(argc < 2)
 	{
 <?if serial?>
-		printf("Usage: %s <number of iterations> [<states_directory>]/<init_state> <partitions>\n",argv[0]);
+		printf("Usage: %s <number of iterations> [<states_directory>]/<init_state> <partitions> [-r | -g ]\n",argv[0]);
 <?end if?>
 <?if parallel?>
 		if(node_number == 0) {
-			printf("Usage: mpirun -np <partitions> %s <number of iterations> [<states_directory>]/<init_state>\n",argv[0]);
+			printf("Usage: mpirun -np <partitions> %s <number of iterations> [<states_directory>]/<init_state> [-g | -r] \n",argv[0]);
 		}
 <?end if?>
 
@@ -258,24 +258,33 @@ if(argc < 2)
 		/* Print out iteration number */
 <?if serial?>		<?end if?><?if parallel?>		if(node_number == 0) <?end if?>printf("Iteration - %d\n", iteration_loop);
 		/* START OF ITERATION */
-<?foreach comlayer?><?if serial?>
+<?foreach comlayer?>
+/* Start of communications layer loop */
+	<?if serial?>
 		current_node = *p_node_info;
 		while(current_node)
 		{
-<?foreach message?>		p_$name_message = &current_node->$name_messages;
-<?end foreach?>		p_xmachine = &current_node->agents;
-<?end if?><?if parallel?>		/* Barrier synchronisation */
+		<?foreach message?>		
+			p_$name_message = &current_node->$name_messages;
+		<?end foreach?>		
+		p_xmachine = &current_node->agents;
+	<?end if?>
+	<?if parallel?>		/* Barrier synchronisation */
         /* (lsc) removed barriers. message propagation should already synchronise all nodes */
-		/* MPI_Barrier(MPI_COMM_WORLD); */<?end if?><?foreach funclayer?>
+		/* MPI_Barrier(MPI_COMM_WORLD); */
+	<?end if?>
+	<?foreach funclayer?>
 		/* Loop through x-machines */
 		current_xmachine = *p_xmachine;
 		while(current_xmachine)
 		{
-			i = 0;<?foreach function?>
+			i = 0;
+		<?foreach function?>
 			if(current_xmachine->xmachine_$note != NULL)
 			{
 				i = $name();
-			}<?end foreach?>	
+			}
+		<?end foreach?>	
 			/* If agent is freed */
 			if(i == 1)
 			{
@@ -288,11 +297,22 @@ if(argc < 2)
 				current_xmachine = current_xmachine->next;
 			}
 		}
-<?end foreach?><?if parallel?>		/* Propagate messages between nodes */
-		propagate_messages_init();<?end if?>
+	<?end foreach?>
+	<?if parallel?>		/* Propagate messages between nodes */
+		propagate_messages_init();
+	<?end if?>
         randomisexagent();  /* randomise x-agents while waiting for communication to complete */
-        <?if parallel?>propagate_messages_complete();<?end if?><?if serial?>		current_node = current_node->next;
-		}<?end if?>		<?end foreach?><?foreach enditfunc?>
+        <?if parallel?>
+		propagate_messages_complete();
+	<?end if?>
+	<?if serial?>		
+		current_node = current_node->next;
+		}
+	<?end if?>		
+/* End of communications layer loop */
+<?end foreach?>
+
+<?foreach enditfunc?>
 		/* End of iteration code */
 		$code<?end foreach?>
 		if(iteration_loop%output_frequency == 0)
