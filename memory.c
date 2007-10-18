@@ -558,6 +558,10 @@ xmachine * addxmachine(xmachine ** p_xmachines)
 	current->xvar[0] = 0;
 	current->yvar[0] = 0;
 	current->zvar[0] = 0;
+
+	current->rangevar[0] = 0;
+	current->idvar[0] = 0;
+
 	current->next = NULL;
 
 	/* Return new element */
