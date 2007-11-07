@@ -72,7 +72,7 @@ void propagate_messages_init() {
     in_req  = (MPI_Request *)malloc(sizeof(MPI_Request) * totalnodes);
 	CHECK_POINTER(in_req);
     out_req = (MPI_Request *)malloc(sizeof(MPI_Request) * totalnodes);
-	CHECK_POINTER(out_red);
+	CHECK_POINTER(out_req);
     /* Memory for buffer arrays */
     inbuf  = (void **)malloc(sizeof(void *) * totalnodes);
 	CHECK_POINTER(inbuf)
