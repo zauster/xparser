@@ -18,11 +18,13 @@ LDFLAGS =
 LIBS=-lm
 
 #FLAME source files
-FLAME   = main.c memory.c xml.c messageboards.c partitioning.c <?if parallel?>propagate_messages.c propagate_agents.c<?end if?>
+FLAME   = main.c memory.c xml.c messageboards.c partitioning.c <?if parallel?>propagate_messages.c propagate_agents.c <?end if?>
+#FLAME auxilary files
+AUX 	= dgraph.dot dgraph.svg
 
 # FLAME generated model files
-SOURCES = <?foreach functionfiles?> $filepath<?end foreach?>
-HEADERS = header.h low_primes.h 
+SOURCES = <?foreach functionfiles?> $filepath <?end foreach?>
+HEADERS = header.h low_primes.h <?foreach xagent?> $name_agent_header.h <?end foreach?> 
 
 DEPS=Makefile header.h low_primes.h
 
@@ -41,6 +43,6 @@ $(OBJECTS): $(DEPS)
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	$(RM) *.o main
+	$(RM) *.o $(EXECUTABLE) $(EXECUTABLE).exe
 vclean:
-	$(RM) main *.o  $(FLAME) $(HEADERS)
+	$(RM) main $(EXECUTABLE) $(EXECUTABLE).exe *.o  $(FLAME) $(HEADERS)  $(AUX) Makefile
