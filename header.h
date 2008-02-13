@@ -10,7 +10,7 @@
 #define VERSIONMAJOR 0
 /** \def VERSIONMINOR
  * \brief New features. */
-#define VERSIONMINOR 12
+#define VERSIONMINOR 13
 /** \def VERSIONMICRO
  * \brief Bug fixes. */
 #define VERSIONMICRO 0
