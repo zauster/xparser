@@ -241,8 +241,8 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	/* Open config file to read-only */
 	if((file = fopen(inputfile, "r"))==NULL)
 	{
-		printf("cannot read file: %s\n", inputfile);
-		exit(0);
+		printf("*** ERROR: Cannot read file: %s\n", inputfile);
+		exit(1);
 	}
 	else { printf("reading xmml: %s\n", inputfile); }
 	
@@ -409,9 +409,9 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 				/* If different then exit */
 				if(strcmp(&current_string->array[1], &chartag[numtag][0]) != 0)
 				{
-					printf("ERROR: The tag <%s> on line number %i\n", current_string->array, linenumber);
-					printf("ERROR: doesn't close the tag <%s> on line number %i\n", &chartag[numtag][0], tagline[numtag]);
-					printf("Exit xparser\n\n");
+					printf("*** ERROR: The tag <%s> on line number %i\n", current_string->array, linenumber);
+					printf("*** ERROR: doesn't close the tag <%s> on line number %i\n", &chartag[numtag][0], tagline[numtag]);
+					printf("*** ERROR: Exit xparser\n\n");
 					exit(1);
 				}
 			}
@@ -653,9 +653,9 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 							/* Open code file read-only */
 							if((filecode = fopen(chardata, "r"))==NULL)
 							{
-								printf("ERROR - cannot read file: %s\n", chardata);
-								printf("*** xparser aborted ***\n");
-								exit(0);
+								printf("*** ERROR: Cannot read file: %s\n", chardata);
+								printf("*** ERROR: xparser aborted ***\n");
+								exit(1);
 							}
 							
 							i = 0;
@@ -771,7 +771,7 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 				
 				if(found == 0)
 				{
-					printf("Error: No 'range' variable in %s message\n", current_message->name);
+					printf("*** Error: No 'range' variable in %s message\n", current_message->name);
 					exit(1);
 				}
 				
@@ -937,9 +937,9 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					/* Open code file read-only */
 					if((filecode = fopen(chardata, "r"))==NULL)
 					{
-						printf("ERROR - cannot read file: %s\n", chardata);
-						printf("*** xparser aborted ***\n");
-						exit(0);
+						printf("*** ERROR: Cannot read file: %s\n", chardata);
+						printf("*** ERROR: xparser aborted ***\n");
+						exit(1);
 					}
 					else printf("reading file: %s\n", chardata);
 					
@@ -1038,9 +1038,9 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					/* Open code file read-only */
 					if((filecode = fopen(chardata, "r"))==NULL)
 					{
-						printf("ERROR - cannot read file: %s\n", chardata);
-						printf("*** xparser aborted ***\n");
-						exit(0);
+						printf("*** ERROR: Cannot read file: %s\n", chardata);
+						printf("*** ERROR: xparser aborted ***\n");
+						exit(1);
 					}
 					else printf("reading file: %s\n", chardata);
 					
