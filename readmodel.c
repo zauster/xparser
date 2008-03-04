@@ -178,7 +178,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	int j, k;
 	/* Variable to see if function defined, if not look in functions file */
 	int foundfunctioncode;
-	int foundfunctioninfile;
 	/* Char and char buffer for reading file to */
 	char c = ' ';
 	int numtag = 0;
@@ -186,8 +185,8 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 	int tagline[10];
 	char chardata[100];
 	/*char chardata2[100];*/
-	char findfunction[1000];
 	int found;
+	int dynamic_array_found;
 	int linenumber = 1;
 	int variable_count;
 	/* Variable to keep reading file */
@@ -409,9 +408,9 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 				/* If different then exit */
 				if(strcmp(&current_string->array[1], &chartag[numtag][0]) != 0)
 				{
-					printf("*** ERROR: The tag <%s> on line number %i\n", current_string->array, linenumber);
-					printf("*** ERROR: doesn't close the tag <%s> on line number %i\n", &chartag[numtag][0], tagline[numtag]);
-					printf("*** ERROR: Exit xparser\n\n");
+					printf("ERROR: The tag <%s> on line number %i\n", current_string->array, linenumber);
+					printf("ERROR: doesn't close the tag <%s> on line number %i\n", &chartag[numtag][0], tagline[numtag]);
+					printf("Exit xparser\n\n");
 					exit(1);
 				}
 			}
@@ -575,6 +574,24 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			{
 				datatype = 0;
 				current_datatype->vars = *p_variable;
+				
+				current_datatype->has_single_vars = 0;
+				current_datatype->has_dynamic_arrays = 0;
+				/* Check if datatype has single variables and dynamic arrays */
+				current_variable = current_datatype->vars;
+				while(current_variable)
+				{
+					if((strcmp(current_variable->type, "int") == 0 ||
+						strcmp(current_variable->type, "float") == 0 ||
+						strcmp(current_variable->type, "double") == 0 ||
+						strcmp(current_variable->type, "char") == 0) &&
+						current_variable->arraylength == 0) current_datatype->has_single_vars = 1;
+					
+					if(current_variable->arraylength == -1) current_datatype->has_dynamic_arrays = 1;
+					if(current_variable->ismodeldatatype == 1 && current_variable->datatype->has_dynamic_arrays == 1) current_datatype->has_dynamic_arrays = 1;
+					
+					current_variable = current_variable->next;
+				}
 			}
 			if(strcmp(current_string->array, "functions") == 0) { functions = 1; }/*charlist = NULL; }*/
 			if(strcmp(current_string->array, "/functions") == 0) { functions = 0; }
@@ -599,142 +616,6 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/function") == 0)
 			{
 				function = 0;
-				foundfunctioninfile = 0;
-				
-				if(foundfunctioncode == 0)
-				{
-					printf("Function ");
-					printf(current_function->name);
-					/*printf(" function not found, look in functions file\n");*/
-					
-					/*charlist = NULL;*/
-					reset_char_array(current_string);
-					current_fcode = addfcode(p_fcode);
-					current_fcode->code = copy_array_to_str(current_string);/*charlist;*/
-					current_function->code = *p_fcode;
-					
-					current_envfunc = * modeldata->p_envfuncs;
-					while(current_envfunc)
-					{
-						if(current_envfunc->header == 2)
-						{
-							/* parse functions file looking for function and read in code */
-							/* Place directory at start of chardata */
-							
-							
-							/*j = 0;
-							while(*directory != 0)
-							{
-								chardata[j] = *directory;
-								(directory)++;
-								j++;
-							}*/
-							/* Make directory pointer point to start of chars again */
-							/*for(k = 0; k < j; k++)
-							{
-								(directory)--;
-							}*/
-							
-							/* Add file name to chardata on end of directory */
-							/*current_charlist = current_envfunc->filepath;
-							while(current_charlist)
-							{
-								chardata[j] = current_charlist->character;
-								j++;
-								
-								current_charlist = current_charlist->next;
-							}
-							chardata[j] = 0;*/
-							/*printf("01\t%s\n", chardata);*/
-							
-							strcpy(chardata, directory);
-							strcat(chardata, current_envfunc->filepath);
-							
-							/* Open code file read-only */
-							if((filecode = fopen(chardata, "r"))==NULL)
-							{
-								printf("*** ERROR: Cannot read file: %s\n", chardata);
-								printf("*** ERROR: xparser aborted ***\n");
-								exit(1);
-							}
-							
-							i = 0;
-							j = 0;
-							c = ' ';
-							reset_char_array(current_string);
-							
-							/* Read characters until the end of the file */
-							while(c != (char)EOF)
-							{
-								/* Get the next char from the file */
-								c = (char)fgetc(filecode);
-								
-								if(c == '\n')
-								{
-									if((i > 0) && findfunction[i-1] == ')' &&
-										findfunction[0] == 'i' &&
-										findfunction[1] == 'n' &&
-										findfunction[2] == 't')
-									{
-										findfunction[i-2] = 0;
-										/*printf("ff: %s\n", findfunction+4);*/
-										/*copycharlist(&current_function->name, chardata2);*/
-										/*printf("chardata: %s\n", chardata);*/
-										
-										if(strcmp(findfunction+4, current_function->name) == 0)
-										{
-											printf(": found in %s\n", chardata);
-											foundfunctioninfile = 1;
-											/* number of open brackets*/
-											while(c != '{') c = (char)fgetc(filecode);
-											j = 1;
-											/*charlist = NULL;*/
-											reset_char_array(current_string);
-											while(j>0)
-											{
-												c = (char)fgetc(filecode);
-												if(c == '{') j++;
-												if(c == '}') j--;
-												
-												if(j != 0)
-												{
-													/*current_charlist = addchar(p_charlist);*/
-													/*current_charlist->character = c;*/
-													add_char(current_string, c);
-												}
-											}
-										}
-									}
-									
-									i = 0;
-								}
-								else
-								{
-									findfunction[i] = c;
-									i++;
-								}
-							}
-							
-							/* Close the file */
-							fclose(filecode);
-						}
-						
-						current_envfunc = current_envfunc->next;
-					}
-					
-					current_fcode->code = copy_array_to_str(current_string);/**p_charlist;*/
-					
-					if(foundfunctioninfile == 0) printf(": not found in function file(s)\n");
-					
-					/*printf("code: ");*/
-					/*printcharlist(&current_fcode->code);*/
-					/*printf("\n");*/
-				}
-				
-				if(environment == 0)
-				{
-					current_function->code = *p_fcode;
-				}
 			}
 			if(strcmp(current_string->array, "header") == 0) { header = 1; current_envfunc = addenvfunc(modeldata->p_envfuncs); }
 			if(strcmp(current_string->array, "/header") == 0) { header = 0; }
@@ -758,20 +639,31 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 				
 				/* Count number of variables */
 				variable_count = 0;
-				/* Find 'range' variable */
+				/* Find 'range' variable and unallowed dynamic arrays */
 				found = 0;
+				dynamic_array_found = 0;
 				current_variable = current_message->vars;
 				while(current_variable)
 				{
 					variable_count++;
 					if(strcmp(current_variable->name, "range") == 0) found = 1;
+					if(current_variable->arraylength == -1 || (current_variable->ismodeldatatype == 1 && current_variable->datatype->has_dynamic_arrays == 1))
+					{
+						printf("Error: %s - dyamic array found in message\n", current_variable->name);
+						dynamic_array_found = 1;
+					}
 					
 					current_variable = current_variable->next;
 				}
 				
 				if(found == 0)
 				{
-					printf("*** Error: No 'range' variable in %s message\n", current_message->name);
+					printf("Error: No 'range' variable in %s message\n", current_message->name);
+					exit(1);
+				}
+				if(dynamic_array_found == 1)
+				{
+					printf("Error: Dynamic array found in %s message\n", current_message->name);
 					exit(1);
 				}
 				
@@ -937,9 +829,9 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					/* Open code file read-only */
 					if((filecode = fopen(chardata, "r"))==NULL)
 					{
-						printf("*** ERROR: Cannot read file: %s\n", chardata);
-						printf("*** ERROR: xparser aborted ***\n");
-						exit(1);
+						printf("ERROR - cannot read file: %s\n", chardata);
+						printf("*** xparser aborted ***\n");
+						exit(0);
 					}
 					else printf("reading file: %s\n", chardata);
 					
@@ -1038,9 +930,9 @@ void readModel(char * inputfile, char * directory, model_data * modeldata)
 					/* Open code file read-only */
 					if((filecode = fopen(chardata, "r"))==NULL)
 					{
-						printf("*** ERROR: Cannot read file: %s\n", chardata);
-						printf("*** ERROR: xparser aborted ***\n");
-						exit(1);
+						printf("ERROR - cannot read file: %s\n", chardata);
+						printf("*** xparser aborted ***\n");
+						exit(0);
 					}
 					else printf("reading file: %s\n", chardata);
 					

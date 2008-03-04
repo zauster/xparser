@@ -68,8 +68,12 @@ void process_$name_message(xmachine_message_$name * current)
 			{
 				p_$name_message = &node_info->$name_messages;
 				temp_send_message = add_$name_message_internal();
-<?foreach messagevar?>				temp_send_message->$name = current->$name;
-<?end foreach?><?if parallel?>				node_info->$name_message_no++;
+				
+<?foreach messagevar?>				<?if modeldatatype?><?if not_array?>copy_$type(&current->$name, &temp_send_message->$name);
+<?end if?><?if static_array?>copy_$type_static_array(current->$name, temp_send_message->$name, $arraylength);
+<?end if?><?end if?><?if not_modeldatatype?><?if not_array?>temp_send_message->$name = current->$name;
+<?end if?><?if static_array?>memcpy(temp_send_message->$name, current->$name, $arraylength*sizeof($type));
+<?end if?><?end if?><?end foreach?><?if parallel?>				node_info->$name_message_no++;
 <?end if?>			}
 			node_info = node_info->next;
 		}
@@ -82,14 +86,17 @@ void process_$name_message(xmachine_message_$name * current)
  * \brief Add $name message by calling internal and processing.
 <?foreach messagevar?> * \param $name Message variable.
 <?end foreach?> */
-void add_$name_message(<?foreach messagevar?>$type $name<?if notlast?>, <?end if?><?end foreach?>)
+void add_$name_message(<?foreach messagevar?>$type $name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>)
 {
 
 	p_$name_message = &current_node->$name_messages;
 	xmachine_message_$name * tmp = add_$name_message_internal();
-<?foreach messagevar?>	tmp->$name = $name;
-<?end foreach?>
-
+	
+<?foreach messagevar?>	<?if modeldatatype?><?if not_array?>copy_$type(&$name, &tmp->$name);
+<?end if?><?if static_array?>copy_$type_static_array($name, tmp->$name, $arraylength);
+<?end if?><?end if?><?if not_modeldatatype?><?if not_array?>tmp->$name = $name;
+<?end if?><?if static_array?>memcpy(tmp->$name, $name, $arraylength*sizeof($type));
+<?end if?><?end if?><?end foreach?>	
 	/* Check if agent in halo region */
 	process_$name_message(tmp);
 }
@@ -145,6 +152,7 @@ void free$namemessages()
 	while(head)
 	{
 		tmp = head->next;
+		
 		free(head);
 		head = tmp;
 	}

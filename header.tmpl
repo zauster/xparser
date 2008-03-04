@@ -30,28 +30,7 @@
  * \brief Finish of loop to process $name messages. */
 #define FINISH_$capsname_MESSAGE_LOOP $name_message = get_next_$name_message($name_message); }
 <?end foreach?>
-<?foreach datatype?>/** \struct $name
- * \brief $desc.
- *
- * $desc.
- */
-struct $name
-{
-<?foreach datatypevar?>	$type $name;
-<?end foreach?>};
-
-/** \struct $name_array
- * \brief Dynamic array to hold $names
- */
-struct $name_array
-{
-	int size;
-	int total_size;
-	
-	struct $name ** array;
-};
-
-<?end foreach?>/** \struct int_array
+/** \struct int_array
  * \brief Dynamic array to hold integers.
  *
  * Holds a pointer to an integer array and values for size and memory size.
@@ -119,7 +98,28 @@ typedef struct double_array double_array;
  * \brief Typedef for char_array struct.
  */
 typedef struct char_array char_array;
-<?foreach datatype?>
+
+<?foreach datatype?>/** \struct $name
+ * \brief $desc.
+ *
+ * $desc.
+ */
+struct $name
+{
+<?foreach datatypevar?>	$type $name<?if static_array?>[$arraylength]<?end if?>;	/**< Datatype memory variable $name of type $type. */
+<?end foreach?>};
+
+/** \struct $name_array
+ * \brief Dynamic array to hold $names
+ */
+struct $name_array
+{
+	int size;
+	int total_size;
+	
+	struct $name * array;
+};
+
 /** \var typedef $name $name
  * \brief Typedef for $name struct.
  */
@@ -127,14 +127,14 @@ typedef struct $name $name;
 /** \var typedef $name_array $name_array
  * \brief Typedef for $name_array struct.
  */
-typedef struct $name_array $name_array;<?end foreach?>
-<?foreach xagent?>
+typedef struct $name_array $name_array;
+<?end foreach?><?foreach xagent?>
 /** \struct xmachine_memory_$name
  * \brief Holds memory of xmachine $name.
  */
 struct xmachine_memory_$name
 {<?foreach xagentvar?>
-	$type <?if modeldatatype?><?if static_array?>*<?end if?><?end if?><?if not_modeldatatype?><?if dynamic_array?>* <?end if?><?end if?><?if modeldatatype?>* <?end if?>$name<?if static_array?><?if not_modeldatatype?>[$arraylength]<?end if?><?end if?>;	/**< X-machine memory variable $name of type $type. */<?end foreach?>
+	$type $name<?if static_array?>[$arraylength]<?end if?>;	/**< X-machine memory variable $name of type $type. */<?end foreach?>
 };
 <?end foreach?>
 /** \struct xmachine
@@ -152,7 +152,7 @@ struct xmachine
  */
 struct xmachine_message_$name
 {<?foreach messagevar?>
-	$type $name;	/**< Message memory variable $name of type $type. */<?end foreach?>
+	$type $name<?if static_array?>[$arraylength]<?end if?>;	/**< Message memory variable $name of type $type. */<?end foreach?>
 	
 	struct xmachine_message_$name * next;	/**< Pointer to next message in the list. */
 };
@@ -320,6 +320,7 @@ int next_avaliable_id;
 #define kill_me_now return 1
 
 void initialise_pointers(void);
+void initialise_unit_testing(void);
 void add_location(double point, location ** p_location);
 void freelocations(location ** p_location);
 void add_node(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz);
@@ -334,60 +335,89 @@ void free_agent(void);
 void freexmachines(void);
 /* model datatypes */
 <?foreach datatype?>
-$name_array * init_$name_array();
+void init_$name_array($name_array * array);
 void reset_$name_array($name_array * array);
 void free_$name_array($name_array * array);
-void add_$name($name_array * array<?foreach datatypevar?>, $type $name<?end foreach?>);
+void copy_$name_array($name_array * from, $name_array * to);
+void add_$name($name_array * array<?foreach datatypevar?>, $type <?if modeldatatype?><?if not_array?>* <?end if?><?end if?><?if array?>* <?end if?>$name<?end foreach?>);
 void remove_$name($name_array * array, int index);
 <?end foreach?>
 
-int_array * init_int_array(void);
+void init_int_array(int_array * array);
 void reset_int_array(int_array * array);
 void free_int_array(int_array * array);
-void sort_int_array(int_array * array);
-int quicksort_int(int * array, int elements);
+void copy_int_array(int_array * from, int_array * to);
+//void sort_int_array(int_array array);
+//int quicksort_int(int array, int elements);
 void add_int(int_array * array, int new_int);
 void remove_int(int_array * array, int index);
 void print_int_array(int_array * array);
-float_array * init_float_array(void);
+void init_float_array(float_array * array);
 void reset_float_array(float_array * array);
 void free_float_array(float_array * array);
-void sort_float_array(float_array * array);
-int quicksort_float(float * array, int elements);
+void copy_float_array(float_array * from, float_array * to);
+//void sort_float_array(float_array array);
+//int quicksort_float(float array, int elements);
 void add_float(float_array * array, float new_float);
 void remove_float(float_array * array, int index);
 void print_float_array(float_array * array);
-double_array * init_double_array(void);
+void init_double_array(double_array * array);
 void reset_double_array(double_array * array);
 void free_double_array(double_array * array);
-void sort_double_array(double_array * array);
-int quicksort_double(double * array, int elements);
+void copy_double_array(double_array * from, double_array * to);
+//void sort_double_array(double_array array);
+//int quicksort_double(double array, int elements);
 void add_double(double_array * array, double new_double);
 void remove_double(double_array * array, int index);
 void print_double_array(double_array * array);
-char_array * init_char_array(void);
+void init_char_array(char_array * array);
 void reset_char_array(char_array * array);
 void free_char_array(char_array * array);
+void copy_char_array(char_array * from, char_array * to);
 void add_char(char_array * array, char new_char);
 void remove_char(char_array * array, int index);
 char * copy_array_to_str(char_array * array);
 void print_char_array(char_array * array);
 /* xml.c */
+void read_int_static_array(char * buffer, int * j, int * int_static_array, int size);
+void read_float_static_array(char * buffer, int * j, float * float_static_array, int size);
+void read_double_static_array(char * buffer, int * j, double * double_static_array, int size);
+void read_char_static_array(char * buffer, int * j, char * char_static_array, int size);
+void read_int_dynamic_array(char * buffer, int * j, int_array * int_dynamic_array);
+void read_float_dynamic_array(char * buffer, int * j, float_array * float_dynamic_array);
+void read_double_dynamic_array(char * buffer, int * j, double_array * double_dynamic_array);
+void read_char_dynamic_array(char * buffer, int * j, char_array * char_dynamic_array);
+<?foreach datatype?>
+void init_$name($name * temp);
+void init_$name_static_array($name * array, int size);
+void read_$name(char * buffer, int * j, $name * temp_datatype);
+void read_$name_dynamic_array(char * buffer, int * j, $name_array * temp_datatype_array);
+void read_$name_static_array(char * buffer, int * j, $name * temp_datatype_array, int size);
+void write_$name(FILE *file, $name * temp_datatype);
+void write_$name_static_array(FILE *file, $name * temp_datatype, int size);
+void write_$name_dynamic_array(FILE *file, $name_array * temp_datatype);<?end foreach?>
 void readinitialstates(char * filename, int * itno, xmachine ** agent_list, double cloud_data[6], 
                        int partition_method, int flag);
 void saveiterationdata_binary(int iteration_number);
 void saveiterationdata(int iteration_number);
+<?foreach datatype?>
+void free_$name($name * temp);
+void free_$name_static_array($name * array, int size);
+void copy_$name($name * from, $name * to);
+void copy_$name_static_array($name * from, $name * to, int size);<?end foreach?>
 <?foreach xagent?>
-void add_$name_agent(<?foreach xagentvar?>$type <?if not_modeldatatype?><?if dynamic_array?>* <?end if?><?end if?><?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?>$name<?if not_modeldatatype?><?if static_array?>[]<?end if?><?end if?><?if notlast?>, <?end if?><?end foreach?>);<?end foreach?>
+xmachine_memory_$name * init_$name_agent();
+void add_$name_agent_internal(xmachine_memory_$name * current);
+void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>);<?end foreach?>
 <?foreach message?>
-void add_$name_message(<?foreach messagevar?>$type $name<?if notlast?>, <?end if?><?end foreach?>);
+void add_$name_message(<?foreach messagevar?>$type $name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>);
 xmachine_message_$name * add_$name_message_internal(void);
 xmachine_message_$name * get_first_$name_message(void);
 xmachine_message_$name * get_next_$name_message(xmachine_message_$name * current);
 void free$namemessages(void);<?end foreach?>
 <?foreach allvar?><?if not_modeldatatype?><?if not_array?>
-void set_$name($type $name);<?end if?><?end if?>
-$type <?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?><?if not_modeldatatype?><?if array?>* <?end if?><?end if?>get_$name(void);<?end foreach?>
+void set_$name($type <?if dynamic_array?>* <?end if?><?if static_array?>*<?end if?>$name<?if static_array?>[]<?end if?>);<?end if?><?end if?>
+$type <?if modeldatatype?>* <?end if?><?if not_modeldatatype?><?if array?>* <?end if?><?end if?>get_$name();<?end foreach?>
 int agent_get_id(void);
 double agent_get_x(void);
 double agent_get_y(void);

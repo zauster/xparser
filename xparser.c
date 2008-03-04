@@ -55,14 +55,15 @@
 int main(int argc, char * argv[])
 {
 	/* Variables for parsing directories */
-	int lastd = 0;
+	int lastd;
 	int i;
 	
 	/* Variable to read in command line input */
-	char inputfile[100];
-	char directory[100];
-	char filename[100];
-	char templatename[100];
+	char inputfile[1000];
+	char directory[1000];
+	char filename[1000];
+	char templatename[1000];
+	char templatedirectory[1000];
 	
 	model_data * modeldata;
 	
@@ -114,14 +115,16 @@ int main(int argc, char * argv[])
 	datatypes = NULL;
 	
 	printf("xparser: Version %d.%d.%d\n", VERSIONMAJOR, VERSIONMINOR, VERSIONMICRO);
-
+	
 	/* Must be at least the input file name */
-
 	if(argc < 2) {
 		printf("Usage: xparser [XMML file] [-s | -p]\n");
 		return 0;
 	}
-
+	
+	/* Copy location of xparser */
+	strcpy(templatedirectory,argv[0]);
+	
 	/* parser command line */
 	while(argc >1){
 		if(argv[1][0] == '-') {
@@ -154,6 +157,7 @@ int main(int argc, char * argv[])
 	
 	/* Calculate directory to write files to */
 	i = 0;
+	lastd = 0;
 	while(inputfile[i] != '\0')
 	{
 	/* For windows directories */
@@ -170,8 +174,27 @@ int main(int argc, char * argv[])
 	}
 	else directory[0] = '\0';
 	
+	/* Calculate directory where xparser and template files are */
+	i = 0;
+	lastd = 0;
+	while(templatedirectory[i] != '\0')
+	{
+		/* For windows directories */
+		if(templatedirectory[i] == '\\') lastd=i;
+		/* For unix directories */
+		if(templatedirectory[i] == '/') lastd=i;
+		i++;
+	}
+	/* If a directory is in the path */
+	if(lastd != 0)
+	{
+		templatedirectory[lastd+1] = '\0';
+	}
+	else templatedirectory[0] = '\0';
+	
 	printf("inputfile: %s\n", inputfile);
 	printf("directory: %s\n", directory);
+	printf("templates: %s\n", templatedirectory);
 	
 	/* Read model from model xml file */
 	readModel(inputfile, directory, modeldata);
@@ -179,29 +202,42 @@ int main(int argc, char * argv[])
 	/* Calculate dependency graph for model functions */
 	create_dependency_graph(directory, modeldata);
 	
-	strcpy(filename, directory); strcat(filename, "Makefile"); strcpy(templatename, "Makefile.tmpl");
+	strcpy(filename, directory); strcat(filename, "Makefile");
+	strcpy(templatename, templatedirectory); strcat(templatename, "Makefile.tmpl");
 	parseTemplate(filename, templatename, modeldata);
-	strcpy(filename, directory); strcat(filename, "xml.c"); strcpy(templatename, "xml.tmpl");
+	strcpy(filename, directory); strcat(filename, "xml.c");
+	strcpy(templatename, templatedirectory); strcat(templatename, "xml.tmpl");
 	parseTemplate(filename, templatename, modeldata);
-	strcpy(filename, directory); strcat(filename, "main.c"); strcpy(templatename, "main.tmpl");
+	strcpy(filename, directory); strcat(filename, "main.c");
+	strcpy(templatename, templatedirectory); strcat(templatename, "main.tmpl");
 	parseTemplate(filename, templatename, modeldata);
-	strcpy(filename, directory); strcat(filename, "header.h"); strcpy(templatename, "header.tmpl");
+	strcpy(filename, directory); strcat(filename, "header.h");
+	strcpy(templatename, templatedirectory); strcat(templatename, "header.tmpl");
 	parseTemplate(filename, templatename, modeldata);
-	strcpy(filename, directory); strcat(filename, "memory.c"); strcpy(templatename, "memory.tmpl");
+	strcpy(filename, directory); strcat(filename, "memory.c");
+	strcpy(templatename, templatedirectory); strcat(templatename, "memory.tmpl");
 	parseTemplate(filename, templatename, modeldata);
-	strcpy(filename, directory); strcat(filename, "low_primes.h"); strcpy(templatename, "low_primes.tmpl");
+	strcpy(filename, directory); strcat(filename, "low_primes.h");
+	strcpy(templatename, templatedirectory); strcat(templatename, "low_primes.tmpl");
 	parseTemplate(filename, templatename, modeldata);
-	strcpy(filename, directory); strcat(filename, "messageboards.c"); strcpy(templatename, "messageboards.tmpl");
+	strcpy(filename, directory); strcat(filename, "messageboards.c");
+	strcpy(templatename, templatedirectory); strcat(templatename, "messageboards.tmpl");
 	parseTemplate(filename, templatename, modeldata);
-	strcpy(filename, directory); strcat(filename, "partitioning.c"); strcpy(templatename, "partitioning.tmpl");
+	strcpy(filename, directory); strcat(filename, "partitioning.c");
+	strcpy(templatename, templatedirectory); strcat(templatename, "partitioning.tmpl");
 	parseTemplate(filename, templatename, modeldata);
-	if(modeldata->code_type==1){
-	strcpy(filename, directory); strcat(filename, "propagate_messages.c"); strcpy(templatename, "propagate_messages.tmpl");
-	parseTemplate(filename, templatename, modeldata);
-	strcpy(filename, directory); strcat(filename, "propagate_agents.c"); strcpy(templatename, "propagate_agents.tmpl");
-	parseTemplate(filename, templatename, modeldata);
+	if(modeldata->code_type == 1)
+	{
+		strcpy(filename, directory); strcat(filename, "propagate_messages.c");
+		strcpy(templatename, templatedirectory); strcat(templatename, "propagate_messages.tmpl");
+		parseTemplate(filename, templatename, modeldata);
+		strcpy(filename, directory); strcat(filename, "propagate_agents.c");
+		strcpy(templatename, templatedirectory); strcat(templatename, "propagate_agents.tmpl");
+		parseTemplate(filename, templatename, modeldata);
 	}
-	strcpy(filename, directory); strcat(filename, "Doxyfile"); strcpy(templatename, "Doxyfile.tmpl");
+	strcpy(filename, directory); strcat(filename, "Doxyfile");
+	strcpy(templatename, templatedirectory); strcat(templatename, "Doxyfile.tmpl");
+	parseTemplate(filename, templatename, modeldata);
 	parseAgentHeaderTemplate(directory, modeldata);
 	
 	freexmachines(modeldata->p_xmachines);

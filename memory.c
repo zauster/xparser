@@ -689,7 +689,9 @@ void freecommunication_layers(communication_layer ** p_com_layers)
  */
 model_datatype * adddatatype(model_datatype ** p_datatypes)
 {
-	model_datatype * current;
+	model_datatype * current, * head, * temp;
+	head = * p_datatypes;
+	temp = head;
 	
 	/* And current is the new element */
 	if((current = (model_datatype *)malloc(sizeof(model_datatype))) == NULL)
@@ -697,10 +699,22 @@ model_datatype * adddatatype(model_datatype ** p_datatypes)
 		printf("Error: Cannot allocate memory\n");
 		exit(0);
 	}
-	/* Make current->next point to NULL */
 	current->vars = NULL;
-	current->next = * p_datatypes;
-	* p_datatypes = current;
+	current->next = NULL;
+	/* Find end of list */
+	if(* p_datatypes == NULL)
+	{
+		* p_datatypes = current;
+	}
+	else
+	{
+		while(head)
+		{
+			temp = head;
+			head = temp->next;
+		}
+		temp->next = current;
+	}
 	
 	/* Return new element */
 	return current;

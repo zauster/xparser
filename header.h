@@ -10,7 +10,7 @@
 #define VERSIONMAJOR 0
 /** \def VERSIONMINOR
  * \brief New features. */
-#define VERSIONMINOR 13
+#define VERSIONMINOR 14
 /** \def VERSIONMICRO
  * \brief Bug fixes. */
 #define VERSIONMICRO 0
@@ -247,6 +247,8 @@ struct model_datatype
 	char * name;					/**< Name of the datatype. */
 	char * desc;					/**< Description of the datatype. */
 	struct variable * vars;		/**< Pointer to variables of the datatype. */
+	int has_single_vars;			/**< Flag if the datatype holds single variables. */
+	int has_dynamic_arrays;			/**< Flag if the datatype holds dynamic arrays. */
 	
 	struct model_datatype * next;		/**< Pointer next model datatype. */
 };

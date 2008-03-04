@@ -18,6 +18,19 @@ void initialise_pointers()
 	p_node_info = &temp_node_info;
 }
 
+/** \fn void initialise_unit_testing()
+ * \brief Initialises framework for unit testing.
+ */
+void initialise_unit_testing()
+{
+	initialise_pointers();
+	add_node(0, -SPINF, SPINF, -SPINF, SPINF, -SPINF, SPINF);
+	current_node = *p_node_info;
+	p_xmachine = &current_node->agents;
+	current_xmachine = *p_xmachine;
+<?foreach message?>	p_$name_message = &current_node->$name_messages;
+<?end foreach?>}
+
 /* add_location */
 /** \fn void add_location(double point, location ** p_location)
  * \brief Adds a location in order into the location list.
@@ -94,24 +107,140 @@ xmachine * add_xmachine()
 	current_node->agent_total++;
 
 /* add by cg for round-robin so that set_ has something to point at */
-	current_xmachine = current;
+	//current_xmachine = current;
 	
 	return current;
 }
+
+void init_int_static_array(int * array, int size)
+{
+	int i;
+	
+	for(i = 0; i < size; i++) array[i] = 0;
+}
+
+void init_float_static_array(float * array, int size)
+{
+	int i;
+	
+	for(i = 0; i < size; i++) array[i] = 0.0;
+}
+
+void init_double_static_array(double* array, int size)
+{
+	int i;
+	
+	for(i = 0; i < size; i++) array[i] = 0.0;
+}
+
+void init_char_static_array(char * array, int size)
+{
+	int i;
+	
+	for(i = 0; i < size; i++) array[i] = '\0';
+}
+
+<?foreach datatype?>
+
+void init_$name($name * temp)
+{
+<?foreach datatypevar?><?if modeldatatype?><?if not_array?>	init_$type(&(*temp).$name);
+<?end if?><?end if?><?if static_array?>	init_$type_static_array((*temp).$name, $arraylength);
+<?end if?><?if dynamic_array?>	init_$type(&(*temp).$name);
+<?end if?><?if not_modeldatatype?><?if not_array?>	(*temp).$name = $default_value;
+<?end if?><?end if?><?end foreach?>
+}
+
+void init_$name_static_array($name * array, int size)
+{
+	int i;
+	
+	for(i = 0; i < size; i++) init_$name(&array[i]);
+}
+
+void free_$name($name * temp)
+{
+<?foreach datatypevar?><?if modeldatatype?><?if not_array?>	free_$type(&(*temp).$name);
+<?end if?><?if static_array?>	free_$type_static_array((*temp).$name, $arraylength);
+<?end if?><?end if?><?if dynamic_array?>	free_$type(&(*temp).$name);
+<?end if?><?end foreach?>
+}
+
+void free_$name_static_array($name * array, int size)
+{
+	int i;
+	
+	for(i = 0; i < size; i++) free_$name(&array[i]);
+}
+
+void copy_$name($name * from, $name * to)
+{
+<?foreach datatypevar?>	<?if modeldatatype?><?if not_array?>copy_$type(&(*from).$name, &(*to).$name);
+<?end if?><?if dynamic_array?>copy_$type(&(*from).$name, &(*to).$name);
+<?end if?><?if static_array?>copy_$type_static_array((*from).$name, (*to).$name, $arraylength);
+<?end if?><?end if?><?if not_modeldatatype?><?if not_array?>(*to).$name = (*from).$name;
+<?end if?><?if dynamic_array?>copy_$type(&(*from).$name, &(*to).$name);
+<?end if?><?if static_array?>memcpy((*to).$name, (*from).$name, $arraylength*sizeof($type));
+<?end if?><?end if?><?end foreach?>}
+
+void copy_$name_static_array($name * from, $name * to, int size)
+{
+	int i;
+	
+	for(i = 0; i < size; i++)
+	{
+		copy_$name(&from[i], &to[i]);
+	}
+}
+<?end foreach?>
+
 <?foreach xagent?>
+xmachine_memory_$name * init_$name_agent()
+{
+	xmachine_memory_$name * current = (xmachine_memory_$name *)malloc(sizeof(xmachine_memory_$name));
+	CHECK_POINTER(current);
+	
+<?foreach xagentvar?><?if modeldatatype?><?if not_array?>	init_$type(&current->$name);
+<?end if?><?end if?><?if static_array?>	init_$type_static_array(current->$name, $arraylength);
+<?end if?><?if dynamic_array?>	init_$type(&current->$name);
+<?end if?><?if not_modeldatatype?><?if not_array?>	current->$name = $default_value;
+<?end if?><?end if?><?end foreach?>	
+	return current;
+}
+
+void free_$name_agent(xmachine_memory_$name * tmp)
+{
+	<?foreach xagentvar?><?if modeldatatype?><?if not_array?>free_$type(&tmp->$name);
+	<?end if?><?if static_array?>free_$type_static_array(tmp->$name, $arraylength);
+	<?end if?><?end if?><?if dynamic_array?>free_$type(&tmp->$name);
+	<?end if?><?end foreach?>
+}
+
+void add_$name_agent_internal(xmachine_memory_$name * current)
+{
+	xmachine * new_xmachine = add_xmachine();
+	new_xmachine->xmachine_$name = current;
+}
+
 /** \fn void add_$name_agent(<?foreach xagentvar?>$type <?if not_modeldatatype?><?if dynamic_array?>* <?end if?><?end if?><?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?>$name<?if not_modeldatatype?><?if static_array?>[]<?end if?><?end if?><?if notlast?>, <?end if?><?end foreach?>)
  * \brief Add $name X-machine to the current being used X-machine list.
 <?foreach xagentvar?> * \param $name Variable for the X-machine memory.
 <?end foreach?> */
-void add_$name_agent(<?foreach xagentvar?>$type <?if not_modeldatatype?><?if dynamic_array?>* <?end if?><?end if?><?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?>$name<?if not_modeldatatype?><?if static_array?>[]<?end if?><?end if?><?if notlast?>, <?end if?><?end foreach?>)
+void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>)
 {
 	xmachine * new_xmachine = add_xmachine();
-	xmachine_memory_$name * current = (xmachine_memory_$name *)malloc(sizeof(xmachine_memory_$name));
-		CHECK_POINTER(current);
-
+	xmachine_memory_$name * current;
+	
+	current = init_$name_agent();
 	new_xmachine->xmachine_$name = current;
-<?foreach xagentvar?>	<?if not_array?>current->$name = $name;<?end if?><?if dynamic_array?>current->$name = $name;<?end if?><?if static_array?><?if not_modeldatatype?>memcpy(current->$name, $name, $arraylength*sizeof($type));<?end if?><?if modeldatatype?>current->$name = $name;<?end if?><?end if?>
-<?end foreach?>}
+	
+<?foreach xagentvar?>	<?if modeldatatype?><?if not_array?>copy_$type(&$name, &current->$name);
+<?end if?><?if dynamic_array?>copy_$type($name, &current->$name);
+<?end if?><?if static_array?>copy_$type_static_array($name, current->$name, $arraylength);
+<?end if?><?end if?><?if not_modeldatatype?><?if not_array?>current->$name = $name;
+<?end if?><?if dynamic_array?>copy_$type($name, &current->$name);
+<?end if?><?if static_array?>memcpy(current->$name, $name, $arraylength*sizeof($type));
+<?end if?><?end if?><?end foreach?>}
 <?end foreach?>
 /** \fn void free_agent()
  * \brief Free the currently being used X-machine.
@@ -130,11 +259,10 @@ void free_agent()
 			else *p_xmachine = head->next;
 <?foreach xagent?>			if(head->xmachine_$name)
 			{
-<?foreach xagentvar?><?if dynamic_array?>				free_$type(head->xmachine_$agent_name->$name);
-<?end if?><?end foreach?>				free(head->xmachine_$name);
+				free_$name_agent(head->xmachine_$name);
+				free(head->xmachine_$name);
 			}
-<?end foreach?>
-		free(head);
+<?end foreach?>		free(head);
 		head = NULL;
 	}
 	else
@@ -161,10 +289,8 @@ void freexmachines()
 		tmp = head->next;
 <?foreach xagent?>		if(head->xmachine_$name)
 		{
-<?foreach xagentvar?><?if modeldatatype?><?if not_array?>			free(head->xmachine_$agent_name->$name);
-<?end if?><?if static_array?>			free(*(head->xmachine_$agent_name->$name));
-<?end if?><?end if?><?if dynamic_array?>			free_$type(head->xmachine_$agent_name->$name);
-<?end if?><?end foreach?>			free(head->xmachine_$name);
+			free_$name_agent(head->xmachine_$name);
+			free(head->xmachine_$name);
 		}
 <?end foreach?>		free(head);
 		head = tmp;
@@ -178,21 +304,21 @@ void freexmachines()
  * \brief Set $name memory variable for current X-machine.
  * \param $name New value for variable.
  */
-void set_$name($type $name)
+void set_$name($type <?if dynamic_array?>* <?end if?><?if static_array?>*<?end if?>$name<?if static_array?>[]<?end if?>)
 {
-<?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name) current_xmachine->xmachine_$name->$allvar_name = $allvar_name;
+<?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name) (*current_xmachine->xmachine_$name).$allvar_name = $allvar_name;
 <?end if?><?end foreach?>}
 <?end if?><?end if?>
 /** \fn $type get_$name()
  * \brief Get $name memory variable from current X-machine.
  * \return Value for variable.
  */
-$type <?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?><?if not_modeldatatype?><?if array?>* <?end if?><?end if?>get_$name()
+$type <?if modeldatatype?>* <?end if?><?if not_modeldatatype?><?if array?>* <?end if?><?end if?>get_$name()
 {
-<?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name) return current_xmachine->xmachine_$name->$allvar_name;
+<?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name) return <?if modeldatatype?><?if not_static_array?>&<?end if?><?end if?><?if not_modeldatatype?><?if dynamic_array?>&<?end if?><?end if?>(*current_xmachine->xmachine_$name).$allvar_name;
 <?end if?><?end foreach?>
-    /* suppress compiler warning by returning dummy value */
-    /* this statement should rightfully NEVER be reached */
+    // suppress compiler warning by returning dummy value /
+    // this statement should rightfully NEVER be reached /
     return <?if not_array?><?if not_modeldatatype?>($type)0<?end if?><?end if?><?if modeldatatype?>NULL<?end if?><?if not_modeldatatype?><?if array?>NULL<?end if?><?end if?>;
 }
 <?end foreach?>
@@ -382,6 +508,14 @@ void free_node_info()
 	*p_node_info = NULL;
 }
 
+/**\fn void free_messages()
+ * \brief Frees all the message lists (of the current node if in serial).
+ */
+void free_messages()
+{
+<?foreach message?>	free$namemessages();<?end foreach?>
+}
+
 /** \fn void clean_up(int code)
  * \brief Add a node to the node list.
  * \param code The error code (zero is no error).
@@ -514,16 +648,12 @@ void propagate_agents()
  * \brief Allocate memory for a dynamic integer array.
  * \return int_array Pointer to the new dynamic integer array.
  */
-int_array * init_int_array()
+void init_int_array(int_array * array)
 {
-	int_array * new_array = (int_array *)malloc(sizeof(int_array));
-		CHECK_POINTER(new_array);
-	new_array->size = 0;
-	new_array->total_size = ARRAY_BLOCK_SIZE;
-	new_array->array = (int *)malloc(ARRAY_BLOCK_SIZE * sizeof(int));
-		CHECK_POINTER(new_array->array);
-	
-	return new_array;
+	(*array).size = 0;
+	(*array).total_size = ARRAY_BLOCK_SIZE;
+	(*array).array = (int *)malloc(ARRAY_BLOCK_SIZE * sizeof(int));
+	CHECK_POINTER((*array).array);
 }
 
 /** \fn void reset_int_array(int_array * array)
@@ -532,7 +662,7 @@ int_array * init_int_array()
 */
 void reset_int_array(int_array * array)
 {
-	array->size = 0;
+	(*array).size = 0;
 }
 
 /** \fn void free_int_array(int_array * array)
@@ -541,33 +671,41 @@ void reset_int_array(int_array * array)
 */
 void free_int_array(int_array * array)
 {
-	free(array->array);
-	free(array);
+	free((*array).array);
+}
+
+void copy_int_array(int_array * from, int_array * to)
+{
+	int i;
+	//to = init_int_array();
+	
+	for (i = 0; i < (*from).size; i++)
+	{
+		add_int(to, (*from).array[i]);
+	}
 }
 
 /** \fn void sort_int_array(int_array * array)
 * \brief Sort the elements of a dynamic integer array with smallest first.
 * \param array Pointer to the dynamic integer array.
 */
-void sort_int_array(int_array * array)
+/*void sort_int_array(int_array * array)
 {
 	int i, j, temp;
-	/* Using bubble sorts nested loops */
-	for(i=0; i<(array->size-1); i++)
+	
+	for(i=0; i<((*array).size-1); i++)
 	{
-		for(j=0; j<(array->size-1)-i; j++) 
+		for(j=0; j<((*array).size-1)-i; j++) 
 		{
-			/* Comparing the values between neighbours */
-			if(*(array->array+j+1) < *(array->array+j))
+			if(*((*array).array+j+1) < *((*array).array+j))
 			{
-                /* Swap neighbours */
-                temp = *(array->array+j); 
-                *(array->array+j) = *(array->array+j+1);
-                *(array->array+j+1) = temp;
+                temp = *((*array).(*array)+j); 
+                *((*array).array+j) = *((*array).array+j+1);
+                *((*array).array+j+1) = temp;
 			}
 		}
 	}
-}
+}*/
 
 /** \fn int quicksort_int(int *array, int elements)
  *  \brief Sorts the elements of the integer array in ascending order.
@@ -575,7 +713,7 @@ void sort_int_array(int_array * array)
  *  \param Number of elements that must be sorted
  *  \return integer value indicating success(0) or failure(1)
  */
-int quicksort_int(int * array, int elements)
+/*int quicksort_int(int array, int elements)
 {
 	#define  LEVEL  1000
 	int  pivot, begin[LEVEL], end[LEVEL], i=0, left, right ;
@@ -604,7 +742,7 @@ int quicksort_int(int * array, int elements)
 	    }
 	}
 	return 0;
-}
+}*/
 
 /** \fn void add_int(int_array * array, int new_int)
 * \brief Add an integer to the dynamic integer array.
@@ -613,13 +751,13 @@ int quicksort_int(int * array, int elements)
 */
 void add_int(int_array * array, int new_int)
 {
-	if(array->size == array->total_size)
+	if((*array).size == (*array).total_size)
 	{
-		array->total_size = array->total_size + ARRAY_BLOCK_SIZE;
-		array->array = (int *)realloc(array->array, (array->total_size * sizeof(int)));
+		(*array).total_size = (*array).total_size + ARRAY_BLOCK_SIZE;
+		(*array).array = (int *)realloc((*array).array, ((*array).total_size * sizeof(int)));
 	}
-	array->array[array->size] = new_int;
-	array->size++;
+	(*array).array[(*array).size] = new_int;
+	(*array).size++;
 }
 
 /** \fn void remove_int(int_array * array, int index)
@@ -631,14 +769,14 @@ void remove_int(int_array * array, int index)
 {
 	int i;
 	
-	if(index <= array->size)
+	if(index <= (*array).size)
 	{
 		/* memcopy?? */
-		for(i = index; i < array->size - 1; i++)
+		for(i = index; i < (*array).size - 1; i++)
 		{
-			array->array[i] = array->array[i+1];
+			(*array).array[i] = (*array).array[i+1];
 		}
-		array->size--;
+		(*array).size--;
 	}
 }
 
@@ -649,10 +787,10 @@ void remove_int(int_array * array, int index)
 void print_int_array(int_array * array)
 {
 	int i;
-	/* printf(""); // compiler does not like empty prints */
-	for(i=0; i<array->size; i++)
+	
+	for(i=0; i<(*array).size; i++)
 	{
-		printf("%d> %d", i, array->array[i]);
+		printf("%d> %d", i, (*array).array[i]);
 	}
 }
 
@@ -660,16 +798,12 @@ void print_int_array(int_array * array)
  * \brief Allocate memory for a dynamic float array.
  * \return float_array Pointer to the new dynamic float array.
  */
-float_array * init_float_array()
+void init_float_array(float_array * array)
 {
-	float_array * new_array = (float_array *)malloc(sizeof(float_array));
-		CHECK_POINTER(new_array);
-	new_array->size = 0;
-	new_array->total_size = ARRAY_BLOCK_SIZE;
-	new_array->array = (float *)malloc(ARRAY_BLOCK_SIZE * sizeof(float));
-		CHECK_POINTER(new_array->array);
-	
-	return new_array;
+	(*array).size = 0;
+	(*array).total_size = ARRAY_BLOCK_SIZE;
+	(*array).array = (float *)malloc(ARRAY_BLOCK_SIZE * sizeof(float));
+	CHECK_POINTER((*array).array);
 }
 
 /** \fn void reset_float_array(float_array * array)
@@ -678,7 +812,7 @@ float_array * init_float_array()
 */
 void reset_float_array(float_array * array)
 {
-	array->size = 0;
+	(*array).size = 0;
 }
 
 /** \fn void free_float_array(float_array * array)
@@ -687,34 +821,44 @@ void reset_float_array(float_array * array)
 */
 void free_float_array(float_array * array)
 {
-	free(array->array);
-	free(array);
+	free((*array).array);
+}
+
+void copy_float_array(float_array * from, float_array * to)
+{
+	int i;
+	//to = init_float_array();
+	
+	for (i = 0; i < (*from).size; i++)
+	{
+		add_float(to, (*from).array[i]);
+	}
 }
 
 /** \fn void sort_float_array(float_array * array)
 * \brief Sort the elements of a dynamic float array with smallest first.
 * \param array Pointer to the dynamic float array.
 */
-void sort_float_array(float_array * array)
+/*void sort_float_array(float_array array)
 {
 	int i, j;
 	float temp;
-	/* Using bubble sorts nested loops */
-	for(i=0; i<(array->size-1); i++)
+	// Using bubble sorts nested loops //
+	for(i=0; i<(array.size-1); i++)
 	{
-		for(j=0; j<(array->size-1)-i; j++) 
+		for(j=0; j<(array.size-1)-i; j++) 
 		{
-			/* Comparing the values between neighbours */
-			if(*(array->array+j+1) < *(array->array+j))
+			// Comparing the values between neighbours //
+			if(*(array.array+j+1) < *(array.array+j))
 			{
-                /* Swap neighbours */
-                temp = *(array->array+j); 
-                *(array->array+j) = *(array->array+j+1);
-                *(array->array+j+1) = temp;
+                // Swap neighbours //
+                temp = *(array.array+j); 
+                *(array.array+j) = *(array.array+j+1);
+                *(array.array+j+1) = temp;
 			}
 		}
 	}
-}
+}*/
 
 /** \fn int quicksort_float(float *array, int elements)
  *  \brief Sorts the elements of the float array in ascending order.
@@ -722,7 +866,7 @@ void sort_float_array(float_array * array)
  *  \param Number of elements that must be sorted
  *  \return integer value indicating success(0) or failure(1)
  */
-int quicksort_float(float * array, int elements)
+/*int quicksort_float(float array, int elements)
 {
 	#define  LEVEL  1000
 	int i=0, left, right ;
@@ -752,7 +896,7 @@ int quicksort_float(float * array, int elements)
 	    }
 	}
 	return 0;
-}
+}*/
 
 /** \fn void add_float(float_array * array, float new_float)
 * \brief Add an floateger to the dynamic float array.
@@ -761,13 +905,13 @@ int quicksort_float(float * array, int elements)
 */
 void add_float(float_array * array, float new_float)
 {
-	if(array->size == array->total_size)
+	if((*array).size == (*array).total_size)
 	{
-		array->total_size = array->total_size + ARRAY_BLOCK_SIZE;
-		array->array = (float *)realloc(array->array, (array->total_size * sizeof(float)));
+		(*array).total_size = (*array).total_size + ARRAY_BLOCK_SIZE;
+		(*array).array = (float *)realloc((*array).array, ((*array).total_size * sizeof(float)));
 	}
-	array->array[array->size] = new_float;
-	array->size++;
+	(*array).array[(*array).size] = new_float;
+	(*array).size++;
 }
 
 /** \fn void remove_float(float_array * array, int index)
@@ -779,14 +923,14 @@ void remove_float(float_array * array, int index)
 {
 	int i;
 	
-	if(index <= array->size)
+	if(index <= (*array).size)
 	{
 		/* memcopy?? */
-		for(i = index; i < array->size - 1; i++)
+		for(i = index; i < (*array).size - 1; i++)
 		{
-			array->array[i] = array->array[i+1];
+			(*array).array[i] = (*array).array[i+1];
 		}
-		array->size--;
+		(*array).size--;
 	}
 }
 
@@ -798,9 +942,9 @@ void print_float_array(float_array * array)
 {
 	int i;
 	/* printf(""); // compiler does not like empty prfloats */
-	for(i=0; i<array->size; i++)
+	for(i=0; i<(*array).size; i++)
 	{
-		printf("%d> %f", i, array->array[i]);
+		printf("%d> %f", i, (*array).array[i]);
 	}
 }
 
@@ -808,15 +952,12 @@ void print_float_array(float_array * array)
  * \brief Allocate memory for a dynamic double array.
  * \return double_array Pointer to the new dynamic double array.
  */
-double_array * init_double_array()
+void init_double_array(double_array * array)
 {
-	double_array * new_array = (double_array *)malloc(sizeof(double_array));
-		CHECK_POINTER(new_array);
-	new_array->size = 0;
-	new_array->total_size = ARRAY_BLOCK_SIZE;
-	new_array->array = (double *)malloc(ARRAY_BLOCK_SIZE * sizeof(double));
-		CHECK_POINTER(new_array->array);
-	return new_array;
+	(*array).size = 0;
+	(*array).total_size = ARRAY_BLOCK_SIZE;
+	(*array).array = (double *)malloc(ARRAY_BLOCK_SIZE * sizeof(double));
+	CHECK_POINTER((*array).array);
 }
 
 /** \fn void reset_double_array(double_array * array)
@@ -825,7 +966,7 @@ double_array * init_double_array()
 */
 void reset_double_array(double_array * array)
 {
-	array->size = 0;
+	(*array).size = 0;
 }
 
 /** \fn void free_double_array(double_array * array)
@@ -834,35 +975,45 @@ void reset_double_array(double_array * array)
  */
 void free_double_array(double_array * array)
 {
-	free(array->array);
-	free(array);
+	free((*array).array);
+}
+
+void copy_double_array(double_array * from, double_array * to)
+{
+	int i;
+	//to = init_double_array();
+	
+	for (i = 0; i < (*from).size; i++)
+	{
+		add_double(to, (*from).array[i]);
+	}
 }
 
 /** \fn void sort_double_array(double_array * array)
  * \brief Sort the elements of a dynamic double array with smallest first.
  * \param array Pointer to the dynamic double array.
  */
-void sort_double_array(double_array * array)
+/*void sort_double_array(double_array array)
 {
 	int i, j;
 	double temp;
 	
-	/* Using bubble sorts nested loops */
-	for(i=0; i<(array->size-1); i++)
+	// Using bubble sorts nested loops //
+	for(i=0; i<(array.size-1); i++)
 	{
-		for(j=0; j<(array->size-1)-i; j++) 
+		for(j=0; j<(array.size-1)-i; j++) 
 		{
-			/* Comparing the values between neighbours */
-			if(*(array->array+j+1) < *(array->array+j))
+			// Comparing the values between neighbours //
+			if(*(array.array+j+1) < *(array.array+j))
 			{
-                /* Swap neighbours */
-                temp = *(array->array+j); 
-                *(array->array+j) = *(array->array+j+1);
-                *(array->array+j+1) = temp;
+                // Swap neighbours //
+                temp = *(array.array+j); 
+                *(array.array+j) = *(array.array+j+1);
+                *(array.array+j+1) = temp;
 			}
 		}
 	}
-}
+}*/
 
 /** \fn int quicksort_double(double *array, int elements)
  *  \brief Sorts the elements of the double array in ascending order.
@@ -870,7 +1021,7 @@ void sort_double_array(double_array * array)
  *  \param Number of elements that must be sorted
  *  \return integer value indicating success(0) or failure(1)
  */
-int quicksort_double(double * array, int elements)
+/*int quicksort_double(double array, int elements)
 {
 	#define  LEVEL  1000
 	double pivot, begin[LEVEL], end[LEVEL];
@@ -900,7 +1051,7 @@ int quicksort_double(double * array, int elements)
 	    }
 	}
 	return 0;
-}
+}*/
 
 /** \fn void add_double(double_array * array, double new_double)
  * \brief Add an double to the dynamic double array.
@@ -909,13 +1060,13 @@ int quicksort_double(double * array, int elements)
  */
 void add_double(double_array * array, double new_double)
 {
-	if(array->size == array->total_size)
+	if((*array).size == (*array).total_size)
 	{
-		array->total_size = array->total_size + ARRAY_BLOCK_SIZE;
-		array->array = (double *)realloc(array->array, (array->total_size * sizeof(double)));
+		(*array).total_size = (*array).total_size + ARRAY_BLOCK_SIZE;
+		(*array).array = (double *)realloc((*array).array, ((*array).total_size * sizeof(double)));
 	}
-	array->array[array->size] = new_double;
-	array->size++;
+	(*array).array[(*array).size] = new_double;
+	(*array).size++;
 }
 
 /** \fn void remove_double(double_array * array, int index)
@@ -926,14 +1077,14 @@ void add_double(double_array * array, double new_double)
 void remove_double(double_array * array, int index)
 {
 	int i;
-	if(index <= array->size)
+	if(index <= (*array).size)
 	{
 		/* memcopy?? */
-		for(i = index; i < array->size - 1; i++)
+		for(i = index; i < (*array).size - 1; i++)
 		{
-			array->array[i] = array->array[i+1];
+			(*array).array[i] = (*array).array[i+1];
 		}
-		array->size--;
+		(*array).size--;
 	}
 }
 
@@ -944,10 +1095,10 @@ void remove_double(double_array * array, int index)
 void print_double_array(double_array * array)
 {
 	int i;
-	/* printf(""); // compiler does not like empty prints */
-	for(i=0; i<array->size; i++)
+	
+	for(i=0; i<(*array).size; i++)
 	{
-		printf("%d> %f", i, array->array[i]);
+		printf("%d> %f", i, (*array).array[i]);
 	}
 }
 
@@ -955,16 +1106,13 @@ void print_double_array(double_array * array)
  * \brief Allocate memory for a dynamic char array.
  * \return char_array Pointer to the new dynamic char array.
  */
-char_array * init_char_array()
+void init_char_array(char_array * array)
 {
-	char_array * new_array = (char_array *)malloc(sizeof(char_array));
-		CHECK_POINTER(new_array);
-	new_array->size = 0;
-	new_array->total_size = ARRAY_BLOCK_SIZE;
-	new_array->array = (char *)malloc(ARRAY_BLOCK_SIZE * sizeof(char));
-		CHECK_POINTER(new_array->array);
-	new_array->array[0] = '\0';
-	return new_array;
+	(*array).size = 0;
+	(*array).total_size = ARRAY_BLOCK_SIZE;
+	(*array).array = (char *)malloc(ARRAY_BLOCK_SIZE * sizeof(char));
+	CHECK_POINTER((*array).array);
+	(*array).array[0] = '\0';
 }
 
 /** \fn void reset_char_array(char_array * array)
@@ -973,7 +1121,7 @@ char_array * init_char_array()
 */
 void reset_char_array(char_array * array)
 {
-	array->size = 0;
+	(*array).size = 0;
 }
 
 /** \fn void free_char_array(char_array * array)
@@ -982,8 +1130,17 @@ void reset_char_array(char_array * array)
  */
 void free_char_array(char_array * array)
 {
-	free(array->array);
-	free(array);
+	free((*array).array);
+}
+
+void copy_char_array(char_array * from, char_array * to)
+{
+	int i;
+	
+	for (i = 0; i < (*from).size; i++)
+	{
+		add_char(to, (*from).array[i]);
+	}
 }
 
 /** \fn void add_char(char_array * array, char new_char)
@@ -993,14 +1150,14 @@ void free_char_array(char_array * array)
  */
 void add_char(char_array * array, char new_char)
 {
-	if(array->size + 1 == array->total_size)
+	if((*array).size + 1 == (*array).total_size)
 	{
-		array->total_size = array->total_size + ARRAY_BLOCK_SIZE;
-		array->array = (char *)realloc(array->array, (array->total_size * sizeof(char)));
+		(*array).total_size = (*array).total_size + ARRAY_BLOCK_SIZE;
+		(*array).array = (char *)realloc((*array).array, ((*array).total_size * sizeof(char)));
 	}
-	array->array[array->size] = new_char;
-	array->array[array->size + 1] = '\0';
-	array->size++;
+	(*array).array[(*array).size] = new_char;
+	(*array).array[(*array).size + 1] = '\0';
+	(*array).size++;
 }
 
 /** \fn void remove_char(char_array * array, int index)
@@ -1011,14 +1168,14 @@ void add_char(char_array * array, char new_char)
 void remove_char(char_array * array, int index)
 {
 	int i;
-	if(index <= array->size)
+	if(index <= (*array).size)
 	{
 		/* memcopy?? */
-		for(i = index; i < array->size - 1; i++)
+		for(i = index; i < (*array).size - 1; i++)
 		{
-			array->array[i] = array->array[i+1];
+			(*array).array[i] = (*array).array[i+1];
 		}
-		array->size--;
+		(*array).size--;
 	}
 }
 
@@ -1029,9 +1186,9 @@ void remove_char(char_array * array, int index)
  */
 char * copy_array_to_str(char_array * array)
 {
-	char * new_string = (char *)malloc( (array->size + 1) * sizeof(char));
-		CHECK_POINTER(new_string);
-	return strcpy(new_string, array->array);
+	char * new_string = (char *)malloc( ((*array).size + 1) * sizeof(char));
+	CHECK_POINTER(new_string);
+	return strcpy(new_string, (*array).array);
 }
 
 /** \fn void print_char_array(char_array * array)
@@ -1040,88 +1197,90 @@ char * copy_array_to_str(char_array * array)
  */
 void print_char_array(char_array * array)
 {
-	printf("%s", array->array);
+	printf("%s", (*array).array);
 }
 
 <?foreach datatype?>/* Functions for the $name datatype */
-/** \fn int_array * init_int_array()
- * \brief Allocate memory for a dynamic integer array.
- * \return int_array Pointer to the new dynamic integer array.
+/** \fn $name_array * init_$name_array()
+ * \brief Allocate memory for a dynamic $name array.
+ * \return $name_array Pointer to the new dynamic $name array.
  */
-$name_array * init_$name_array()
+void init_$name_array($name_array * array)
 {
-	$name_array * new_array = ($name_array *)malloc(sizeof($name_array));
-		CHECK_POINTER(new_array);
-	new_array->size = 0;
-	new_array->total_size = ARRAY_BLOCK_SIZE;
-	new_array->array = ($name **)malloc(ARRAY_BLOCK_SIZE * sizeof($name *));
-		CHECK_POINTER(new_array->array);
-	
-	return new_array;
+	(*array).size = 0;
+	(*array).total_size = ARRAY_BLOCK_SIZE;
+	(*array).array = ($name *)malloc(ARRAY_BLOCK_SIZE * sizeof($name));
+	CHECK_POINTER((*array).array);
 }
 
-/** \fn void reset_int_array(int_array * array)
-* \brief Reset the int array to hold nothing.
-* \param array Pointer to the dynamic integer array.
+/** \fn void reset_$name_array($name_array* array)
+* \brief Reset the $name array to hold nothing.
+* \param array Pointer to the dynamic $name array.
 */
 void reset_$name_array($name_array * array)
 {
-	array->size = 0;
+	(*array).size = 0;
 }
 
-/** \fn void free_int_array(int_array * array)
-* \brief Free the memory of a dynamic integer array.
-* \param array Pointer to the dynamic integer array.
+/** \fn void free_$name_array($name_array * array)
+* \brief Free the memory of a dynamic $name array.
+* \param array Pointer to the dynamic $name array.
 */
 void free_$name_array($name_array * array)
 {
+	free((*array).array);
+}
+
+void copy_$name_array($name_array * from, $name_array * to)
+{
 	int i;
 	
-	for(i = 0; i < array->size; i++)
+	//to = init_$name_array();
+	
+	for(i = 0; i < (*from).size; i++)
 	{
-		free(array->array[i]);
+		add_$name(to<?foreach datatypevar?>, <?if modeldatatype?><?if not_array?>&<?end if?><?end if?><?if dynamic_array?>&<?end if?>(*from).array[i].$name<?end foreach?>);
 	}
-	free(array->array);
-	free(array);
 }
 
-/** \fn void add_int(int_array * array, int new_int)
-* \brief Add an integer to the dynamic integer array.
-* \param array Pointer to the dynamic integer array.
-* \param new_int The integer to add
+/** \fn void add_$name($name_array * array<?foreach datatypevar?>, $type <?if modeldatatype?>* <?end if?>$name<?end foreach?>)
+* \brief Add an $name to the dynamic $name array.
+* \param array Pointer to the dynamic $name array.
+* \param new_int The $name to add
 */
-void add_$name($name_array * array<?foreach datatypevar?>, $type $name<?end foreach?>)
+void add_$name($name_array * array<?foreach datatypevar?>, $type <?if modeldatatype?><?if not_array?>* <?end if?><?end if?><?if array?>* <?end if?>$name<?end foreach?>)
 {
-	if(array->size == array->total_size)
+	if((*array).size == (*array).total_size)
 	{
-		array->total_size = array->total_size + ARRAY_BLOCK_SIZE;
-		array->array = ($name **)realloc(array->array, (array->total_size * sizeof($name *)));
+		(*array).total_size = (*array).total_size + ARRAY_BLOCK_SIZE;
+		(*array).array = ($name *)realloc((*array).array, ((*array).total_size * sizeof($name)));
 	}
-	array->array[array->size] = ($name *)malloc(sizeof($name));
-		CHECK_POINTER(array->array[array->size]);
-
-	<?foreach datatypevar?>array->array[array->size]->$name = $name;
-	<?end foreach?>
-	array->size++;
+	init_$name(&(*array).array[(*array).size]);
+<?foreach datatypevar?><?if modeldatatype?><?if not_array?>	copy_$type($name, &(*array).array[(*array).size].$name);<?end if?><?if static_array?>	if($name != NULL) copy_$type_static_array($name, (*array).array[(*array).size].$name, $arraylength);<?end if?><?end if?><?if not_modeldatatype?><?if not_array?>	(*array).array[(*array).size].$name = $name;<?end if?><?if static_array?>	if($name != NULL) memcpy((*array).array[(*array).size].$name, $name, $arraylength*sizeof($type));<?end if?><?end if?><?if dynamic_array?>	if($name != NULL) copy_$type($name, &(*array).array[(*array).size].$name);<?end if?>
+<?end foreach?>
+	(*array).size++;
 }
 
-/** \fn void remove_int(int_array * array, int index)
- * \brief Remove an integer from a dynamic integer array.
- * \param array Pointer to the dynamic integer array.
- * \param index The index of the integer to remove.
+/** \fn void remove_$name($name_array * array, int index)
+ * \brief Remove an $name from a dynamic $name array.
+ * \param array Pointer to the dynamic $name array.
+ * \param index The index of the $name to remove.
  */
 void remove_$name($name_array * array, int index)
 {
 	int i;
 	
-	if(index <= array->size)
+	/* Free element at index index */
+	free_$name(&(*array).array[index]);
+	
+	/* Copy all elements up by one */
+	if(index <= (*array).size)
 	{
-		/* memcopy?? */
-		for(i = index; i < array->size - 1; i++)
+		for(i = index; i < (*array).size - 1; i++)
 		{
-			array->array[i] = array->array[i+1];
+			copy_$name(&(*array).array[i+1], &(*array).array[i]);
 		}
-		array->size--;
+		(*array).size--;
 	}
 }
 <?end foreach?>

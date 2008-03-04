@@ -5,7 +5,273 @@
 
 #include "header.h"
 
-/** \fn void readinitialstates(char * filename, int * itno, xmachine ** agent_list, double cloud_data[6], int flag)
+/** \fn void read_int_static_array(char * buffer, int * j, int ** int_static_array)
+ * \brief Reads integer static array.
+ */
+void read_int_static_array(char * buffer, int * j, int * int_static_array, int size)
+{
+	int arraycount = 0;
+	int array_k;
+	char arraydata[10000];
+	
+	(*j)++;
+	
+	while(buffer[(*j)] != '}')
+	{
+		array_k = 0;
+		while(buffer[(*j)] != ',' && buffer[(*j)] != '}')
+		{
+			arraydata[array_k] = buffer[(*j)];
+			array_k++;
+			(*j)++;
+		}
+		arraydata[array_k] = 0;
+		int_static_array[arraycount] = atoi(arraydata);
+		arraycount++;
+		if(buffer[(*j)] != '}') (*j)++;
+	}
+	
+	(*j)++;
+}
+
+/** \fn void read_float_static_array(char * buffer, int * (*j), int ** float_static_array)
+ * \brief Reads float static array.
+ */
+void read_float_static_array(char * buffer, int * j, float * float_static_array, int size)
+{
+	int arraycount = 0;
+	int array_k;
+	char arraydata[10000];
+	
+	(*j)++;
+	
+	while(buffer[(*j)] != '}')
+	{
+		array_k = 0;
+		while(buffer[(*j)] != ',' && buffer[(*j)] != '}')
+		{
+			arraydata[array_k] = buffer[(*j)];
+			array_k++;
+			(*j)++;
+		}
+		arraydata[array_k] = 0;
+		float_static_array[arraycount] = atof(arraydata);
+		arraycount++;
+		if(buffer[(*j)] != '}') (*j)++;
+	}
+	
+	(*j)++;
+}
+
+/** \fn void read_double_static_array(char * buffer, int * (*j), int ** double_static_array)
+ * \brief Reads double static array.
+ */
+void read_double_static_array(char * buffer, int * j, double * double_static_array, int size)
+{
+	int arraycount = 0;
+	int array_k;
+	char arraydata[10000];
+	
+	(*j)++;
+	
+	while(buffer[(*j)] != '}')
+	{
+		array_k = 0;
+		while(buffer[(*j)] != ',' && buffer[(*j)] != '}')
+		{
+			arraydata[array_k] = buffer[(*j)];
+			array_k++;
+			(*j)++;
+		}
+		arraydata[array_k] = 0;
+		double_static_array[arraycount] = atof(arraydata);
+		arraycount++;
+		if(buffer[(*j)] != '}') (*j)++;
+	}
+	
+	(*j)++;
+}
+
+/** \fn void read_char_static_array(char * buffer, int * (*j), int ** char_static_array)
+ * \brief Reads char static array.
+ */
+void read_char_static_array(char * buffer, int * j, char * char_static_array, int size)
+{
+	while(buffer[(*j)] != '\0')
+	{
+		/* Add check here for buffer overrun */
+		char_static_array[(*j)] = buffer[(*j)];
+		
+		(*j)++;
+	}
+	
+	(*j)++;
+}
+
+/** \fn void read_int_dynamic_array(char * buffer, int * (*j), int ** int_dynamic_array)
+ * \brief Reads integer dynamic array.
+ */
+void read_int_dynamic_array(char * buffer, int * j, int_array * int_dynamic_array)
+{
+	int arraycount = 0;
+	int array_k;
+	char arraydata[10000];
+	
+	(*j)++;
+	
+	while(buffer[(*j)] != '}')
+	{
+		array_k = 0;
+		while(buffer[(*j)] != ',' && buffer[(*j)] != '}')
+		{
+			arraydata[array_k] = buffer[(*j)];
+			array_k++;
+			(*j)++;
+		}
+		arraydata[array_k] = 0;
+		add_int(int_dynamic_array, atoi(arraydata));
+		arraycount++;
+		if(buffer[(*j)] != '}') (*j)++;
+	}
+	
+	(*j)++;
+}
+
+/** \fn void read_float_dynamic_array(char * buffer, int * (*j), int ** float_dynamic_array)
+ * \brief Reads float dynamic array.
+ */
+void read_float_dynamic_array(char * buffer, int * j, float_array * float_dynamic_array)
+{
+	int arraycount = 0;
+	int array_k;
+	char arraydata[10000];
+	
+	(*j)++;
+	
+	while(buffer[(*j)] != '}')
+	{
+		array_k = 0;
+		while(buffer[(*j)] != ',' && buffer[(*j)] != '}')
+		{
+			arraydata[array_k] = buffer[(*j)];
+			array_k++;
+			(*j)++;
+		}
+		arraydata[array_k] = 0;
+		add_float(float_dynamic_array, atof(arraydata));
+		arraycount++;
+		if(buffer[(*j)] != '}') (*j)++;
+	}
+	
+	(*j)++;
+}
+
+/** \fn void read_double_dynamic_array(char * buffer, int * (*j), int ** double_dynamic_array)
+ * \brief Reads double dynamic array.
+ */
+void read_double_dynamic_array(char * buffer, int * j, double_array * double_dynamic_array)
+{
+	int arraycount = 0;
+	int array_k;
+	char arraydata[10000];
+	
+	(*j)++;
+	
+	while(buffer[(*j)] != '}')
+	{
+		array_k = 0;
+		while(buffer[(*j)] != ',' && buffer[(*j)] != '}')
+		{
+			arraydata[array_k] = buffer[(*j)];
+			array_k++;
+			(*j)++;
+		}
+		arraydata[array_k] = 0;
+		add_double(double_dynamic_array, atof(arraydata));
+		arraycount++;
+		if(buffer[(*j)] != '}') (*j)++;
+	}
+	
+	(*j)++;
+}
+
+/** \fn void read_char_dynamic_array(char * buffer, int * (*j), int ** char_dynamic_array)
+ * \brief Reads char dynamic array.
+ */
+void read_char_dynamic_array(char * buffer, int * j, char_array * char_dynamic_array)
+{
+	while(buffer[(*j)] != '\0' && buffer[(*j)] != ',' && buffer[(*j)] != '}')
+	{
+		add_char(char_dynamic_array, buffer[(*j)]);
+		(*j)++;
+	}
+}
+
+
+<?foreach datatype?>/** \fn void read_$name(char * buffer, int * j, $name * temp_datatype)
+ * \brief Reads $name datatype.
+ */
+void read_$name(char * buffer, int * j, $name * temp_datatype)
+{
+	<?if single_vars?>int array_k;
+	char arraydata[10000];<?end if?>
+	(*j)++;
+	
+<?foreach datatypevar?><?if modeldatatype?>	while(buffer[*j] != '{') (*j)++;
+<?if not_array?>	read_$type(buffer, j, &(*temp_datatype).$name);<?end if?><?if array?><?if static_array?>
+	read_$type_static_array(buffer, j, (*temp_datatype).$name, $arraylength);<?end if?><?if dynamic_array?>
+	read_$notarraytype_dynamic_array(buffer, j, &(*temp_datatype).$name);<?end if?>
+	<?end if?><?end if?><?if not_modeldatatype?><?if not_array?>	(*temp_datatype).$name = $default_value;
+	array_k = 0;<?end if?>
+	<?if notlast?>while(buffer[*j] != ',')<?end if?><?if last?>while(buffer[*j] != '}')<?end if?>
+	{
+		<?if not_array?>arraydata[array_k] = buffer[*j];
+		array_k++;
+		(*j)++;<?end if?><?if array?><?if notchar_array?>while(buffer[*j] != '{') (*j)++;<?end if?>
+		<?if static_array?>read_$type_static_array(buffer, j, (*temp_datatype).$name, $arraylength);<?end if?><?if dynamic_array?>
+		read_$notarraytype_dynamic_array(buffer, j, &(*temp_datatype).$name);<?end if?><?end if?>
+	}
+	<?if not_array?>arraydata[array_k] = 0;
+	(*temp_datatype).$name = <?if not_char?>ato$c_type<?end if?>(arraydata<?if char?>[array_k-1]<?end if?>);<?end if?><?end if?>
+	(*j)++;
+<?end foreach?>}
+
+void read_$name_dynamic_array(char * buffer, int * j, $name_array * temp_datatype_array)
+{
+	int arraycount = 0;
+	
+	(*j)++;
+	
+	while(buffer[(*j)] != '\0' && buffer[(*j)] != '}')
+	{
+		if(buffer[(*j)] == '{')
+		{
+			add_$name(temp_datatype_array<?foreach datatypevar?>, <?if not_array?><?if not_modeldatatype?>$default_value<?end if?><?if modeldatatype?>NULL<?end if?><?end if?><?if array?>NULL<?end if?><?end foreach?>);
+			read_$name(buffer, j, &(*temp_datatype_array).array[arraycount]);
+			arraycount++;
+		}
+		while(buffer[(*j)] != '{' && buffer[(*j)] != '\0') { (*j)++; }
+	}
+	
+	(*j)++;
+}
+
+void read_$name_static_array(char * buffer, int * j, $name * temp_datatype_array, int size)
+{
+	int arraycount;
+	
+	(*j)++;
+	
+	for(arraycount = 0; arraycount < size; arraycount++)
+	{
+		read_$name(buffer, j, &temp_datatype_array[arraycount]);
+		if(arraycount < (size-1)) while(buffer[(*j)] != '{') { (*j)++; }
+	}
+	
+	(*j)++;
+}
+
+<?end foreach?>/** \fn void readinitialstates(char * filename, int * itno, xmachine ** agent_list, double cloud_data[6], int flag)
  * \brief Read initial X-machine memory starting values from a file.
  * \param filename The path to the file.
  * \param itno Pointer to the iteration number.
@@ -15,7 +281,7 @@
  * \param flag Flag for whether to check space partitions.
  */
 void readinitialstates(char * filename, int * itno, xmachine ** agent_list, double cloud_data[6], 
-                       int partition_method, int flag)
+					   int partition_method, int flag)
 {
 	/* Pointer to file */
 	FILE *file;
@@ -23,10 +289,9 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 	char c = ' ';
 	char buffer[10000];
 	char agentname[1000];
-	
-	<?if use_arrays?>/* Variables for dealing with variables which are arrays */
-	char arraydata[10000];
-	int array_k=0, j=0, arraycount=0;<?end if?>
+	//char arraydata[10000];
+	//int array_k=0, arraycount=0;
+	int j;
 
 /* Things for round-robin partitioning */
 	int agent_count;
@@ -36,6 +301,7 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 	double 	xmax=0,xmin=0,ymax=0,ymin=0,
 		xcentre=0,ycentre=0,
 		rrange=1.5;
+	double posx, posy, posz;
 	<?if parallel?>int node_number;<?end if?>
 	
 	/* Cloud data array initialisation */
@@ -50,16 +316,20 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 	/*xmachine * current_xmachine;*/
 	/* Variables for checking tags */
 	int reading, i;
-	int in_tag, in_itno, in_agent, in_name, in_environment;
+	int in_tag, in_itno, in_agent, in_name, in_environment, in_memory, in_functions;
+<?foreach xagent?>	int in_$name_agent;
+<?end foreach?>
 <?foreach allvar?>	int in_$name;
 <?end foreach?>
 <?foreach envvar?>	int in_$name;
 <?end foreach?>
 	/* Variables for initial state data */
-<?foreach allvar?>	$type <?if not_modeldatatype?><?if dynamic_array?>* <?end if?><?end if?><?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?>$name<?if not_modeldatatype?><?if static_array?>[$arraylength]<?end if?><?end if?>;
+<?foreach allvar?>//	$type <?if not_modeldatatype?><?if dynamic_array?>* <?end if?><?end if?><?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?>$name<?if not_modeldatatype?><?if static_array?>[$arraylength]<?end if?><?end if?>;
 <?end foreach?>
-<?foreach allvar?><?if modeldatatype?><?if array?>	//$notarraytype * current_$name;
-<?end if?><?end if?><?end foreach?>
+
+<?foreach xagent?>	xmachine_memory_$name * current_$name_agent;
+<?end foreach?>
+
 	/* Open config file to read-only */
 	if((file = fopen(filename, "r"))==NULL)
 	{
@@ -76,32 +346,33 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 	in_agent = 0;
 	in_name = 0;
 	in_environment = 0;
-<?foreach allvar?>	in_$name = 0;
-<?end foreach?>
-<?foreach envvar?>	in_$name = 0;
+	in_memory = 0;
+	in_functions = 0;
+<?foreach xagent?>	in_$name_agent = 0;
+<?end foreach?><?foreach allvar?>	in_$name = 0;
+<?end foreach?><?foreach envvar?>	in_$name = 0;
 <?end foreach?>
 	/* Default variables for memory */
 	/* Not implemented static arrays */
-<?foreach allvar?><?if not_array?><?if not_modeldatatype?>	$name = $default_value;
-<?end if?><?end if?><?if modeldatatype?><?if array?>
-//current_$name = ($notarraytype *)malloc(sizeof($notarraytype));
-//CHECK_POINTER(current_$name);
-<?end if?><?end if?><?end foreach?>
+<?foreach allvar?>//<?if not_modeldatatype?><?if not_array?>	$name = $default_value;
+<?end if?><?if dynamic_array?>	$name = init_$type();
+<?end if?><?end if?><?if modeldatatype?>	$name = init_$type<?if static_array?>_static_array<?end if?>(<?if static_array?>$arraylength<?end if?>);
+<?end if?><?end foreach?>
 <?foreach envvar?>	$name = $default_value;
 <?end foreach?>
 
 <?if parallel?>
 /* Initialisation */
-     MPI_Comm_size (MPI_COMM_WORLD, &number_partitions);
-     MPI_Comm_rank (MPI_COMM_WORLD, &node_number);
-     agent_count = node_number;
+	 MPI_Comm_size (MPI_COMM_WORLD, &number_partitions);
+	 MPI_Comm_rank (MPI_COMM_WORLD, &node_number);
+	 agent_count = node_number;
 <?end if?>
 
 <?if parallel?>
 	if(node_number==0 && flag==0){
-	    if(partition_method==geometric) printf("%d> xml: Geometric partitioning\n",node_number);
-    	else if(partition_method==other) printf("%d> xml: Round-robin partitioning\n",node_number);
-    	else printf("%d> xml: Error - invalid partitioning method\n",node_number);
+		if(partition_method==geometric) printf("%d> xml: Geometric partitioning\n",node_number);
+		else if(partition_method==other) printf("%d> xml: Round-robin partitioning\n",node_number);
+		else printf("%d> xml: Error - invalid partitioning method\n",node_number);
 	}
 <?end if?>
 <?if serial?>
@@ -110,13 +381,13 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 	else printf("xml: Error - invalid partitioning method\n");
 <?end if?>
 
-    /* Set p_xmachine to the agent list passed in then new agents are added to this list 
-     * Will be set to agent list for specific node is space partitions are already known (flag=1)
-     */ 
-    p_xmachine = agent_list;
-    /* If we're reading without knowing partitions already then use the dummy current node (it's not in the list of nodes)*/
-    if (flag == 0) current_node = &temp_node;
-    
+	/* Set p_xmachine to the agent list passed in then new agents are added to this list 
+	 * Will be set to agent list for specific node is space partitions are already known (flag=1)
+	 */ 
+	p_xmachine = agent_list;
+	/* If we're reading without knowing partitions already then use the dummy current node (it's not in the list of nodes)*/
+	if (flag == 0) current_node = &temp_node;
+	
 	/* Read file until end of xml */
 	while(reading==1)
 	{
@@ -134,68 +405,99 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 			if(strcmp(buffer, "itno") == 0) in_itno = 1;
 			if(strcmp(buffer, "/itno") == 0) in_itno = 0;
 			if(strcmp(buffer, "name") == 0) in_name = 1;
-			if(strcmp(buffer, "/name") == 0) in_name = 0;
+			if(strcmp(buffer, "/name") == 0)
+			{
+				in_name = 0;
+				
+				if(in_agent && !in_memory && !in_functions)
+				{
+					/*printf("in agent: %s\n", agentname);*/
+<?foreach xagent?>					<?if notfirst?>else <?end if?>if(strcmp(agentname, "$name") == 0)
+					{
+						current_$name_agent = init_$name_agent();
+						in_$name_agent = 1;
+					}
+<?end foreach?>
+				}
+			}
 			if(strcmp(buffer, "environment") == 0) in_environment = 1;
 			if(strcmp(buffer, "/environment") == 0) in_environment = 0;
+			if(strcmp(buffer, "memory") == 0) in_memory = 1;
+			if(strcmp(buffer, "/memory") == 0) in_memory = 0;
+			if(strcmp(buffer, "functions") == 0) in_functions = 1;
+			if(strcmp(buffer, "/functions") == 0) in_functions = 0;
 			if(strcmp(buffer, "xagent") == 0) in_agent = 1;
 			if(strcmp(buffer, "/xagent") == 0)
 			{
 				in_agent = 0;
+				<?foreach xagent?>in_$name_agent = 0;
+<?end foreach?>
 				
 <?foreach xagent?>				<?if notfirst?>else <?end if?>if(strcmp(agentname, "$name") == 0)
 				{
+					posx = current_$name_agent->$xvar;
+					posy = current_$name_agent->$yvar;
+					posz = <?if use_zvar?>current_$name_agent->$zvar<?end if?><?if no_zvar?>0.0<?end if?>;
+					
 					/* If flag is zero just read the data. We'll partition later.
 					 * If flag is not zero we aleady have partition data so can read and distribute to the current node.*/
 					if( flag == 0 )
 					{
-						add_$name_agent(<?foreach xagentvar?>$name<?if notlast?>, <?end if?><?end foreach?>);
-        				/* Update the cloud data */
-                        if ( $xvar < cloud_data[0]) cloud_data[0] = $xvar ;
-                        if ( $xvar > cloud_data[1]) cloud_data[1] = $xvar ;
-                        if ( $yvar < cloud_data[2]) cloud_data[2] = $yvar ;
-                        if ( $yvar > cloud_data[3]) cloud_data[3] = $yvar ;
-                        if ( $zvar < cloud_data[2]) cloud_data[4] = $zvar ;
-                        if ( $zvar > cloud_data[3]) cloud_data[5] = $zvar ;
+						//add_$name_agent(<?foreach xagentvar?>$name<?if notlast?>, <?end if?><?end foreach?>);
+						add_$name_agent_internal(current_$name_agent);
+						
+						/* Update the cloud data */
+						if ( posx < cloud_data[0] ) cloud_data[0] = posx;
+						if ( posx > cloud_data[1] ) cloud_data[1] = posx;
+						if ( posy < cloud_data[2] ) cloud_data[2] = posy;
+						if ( posy > cloud_data[3] ) cloud_data[3] = posy;
+						if ( posz < cloud_data[2] ) cloud_data[4] = posz;
+						if ( posz > cloud_data[3] ) cloud_data[5] = posz ;
 					}
 
 					else if (flag != 0)
 					{
-					    if(partition_method == geometric) {
-					        if (
-    				    	    ((current_node->partition_data[0] == SPINF) || (current_node->partition_data[0] != SPINF && $xvar >= current_node->partition_data[0])) &&
-    					        ((current_node->partition_data[1] == SPINF) || (current_node->partition_data[1] != SPINF && $xvar < current_node->partition_data[1])) &&
-        					    ((current_node->partition_data[2] == SPINF) || (current_node->partition_data[2] != SPINF && $yvar >= current_node->partition_data[2])) &&
-        					    ((current_node->partition_data[3] == SPINF) || (current_node->partition_data[3] != SPINF && $yvar < current_node->partition_data[3])) &&
-        					    ((current_node->partition_data[4] == SPINF) || (current_node->partition_data[4] != SPINF && $zvar >= current_node->partition_data[4])) &&
-        					    ((current_node->partition_data[5] == SPINF) || (current_node->partition_data[5] != SPINF && $zvar < current_node->partition_data[5]))
-        					)
-        					{
-        					    p_xmachine = &(current_node->agents);
-        					    add_$name_agent(<?foreach xagentvar?>$name<?if notlast?>, <?end if?><?end foreach?>);
-        					} 
-	    				}
-	    				else if (partition_method == other){
-	    				    if (agent_count % number_partitions == 0) {
-                    			/* Compute centre of partition */
-		                       	xmin=current_node->partition_data[0];
-                        		xmax=current_node->partition_data[1];
-                       			ymin=current_node->partition_data[2];
-                       			ymax=current_node->partition_data[3];
+						if(partition_method == geometric)
+						{
+							if (
+								((current_node->partition_data[0] == SPINF) || (current_node->partition_data[0] != SPINF && posx >= current_node->partition_data[0])) &&
+								((current_node->partition_data[1] == SPINF) || (current_node->partition_data[1] != SPINF && posx < current_node->partition_data[1])) &&
+								((current_node->partition_data[2] == SPINF) || (current_node->partition_data[2] != SPINF && posy >= current_node->partition_data[2])) &&
+								((current_node->partition_data[3] == SPINF) || (current_node->partition_data[3] != SPINF && posy < current_node->partition_data[3])) &&
+								((current_node->partition_data[4] == SPINF) || (current_node->partition_data[4] != SPINF && posz >= current_node->partition_data[4])) &&
+								((current_node->partition_data[5] == SPINF) || (current_node->partition_data[5] != SPINF && posz < current_node->partition_data[5]))
+							)
+							{
+								p_xmachine = &(current_node->agents);
+								//add_$name_agent(<?foreach xagentvar?>$name<?if notlast?>, <?end if?><?end foreach?>);
+								add_$name_agent_internal(current_$name_agent);
+							} 
+						}
+						else if (partition_method == other)
+						{
+							if (agent_count % number_partitions == 0)
+							{
+								/* Compute centre of partition */
+								xmin=current_node->partition_data[0];
+								xmax=current_node->partition_data[1];
+								ymin=current_node->partition_data[2];
+								ymax=current_node->partition_data[3];
 
-			                    xcentre=xmin+(xmax-xmin)/2.0;
-                    			ycentre=ymin+(ymax-ymin)/2.0;
-                    			rrange=1.5;
+								xcentre=xmin+(xmax-xmin)/2.0;
+								ycentre=ymin+(ymax-ymin)/2.0;
+								rrange=1.5;
 
-                    			p_xmachine = &(current_node->agents);
-                    			add_$name_agent(<?foreach xagentvar?>$name<?if notlast?>, <?end if?><?end foreach?>);
+								p_xmachine = &(current_node->agents);
+								//add_$name_agent(<?foreach xagentvar?>$name<?if notlast?>, <?end if?><?end foreach?>);
+								add_$name_agent_internal(current_$name_agent);
 
-                    			set_$xvar(xcentre);
-                    			set_$yvar(ycentre);
-                    			set_$rangevar(rrange);
+								current_$name_agent->$xvar = xcentre;
+								current_$name_agent->$yvar = ycentre;
+								current_$name_agent->$rangevar = rrange;
 
-					        }
-    					    ++agent_count;
-					    } /* if partition */
+							}
+							++agent_count;
+						} /* if partition */
 
 					} /* if flag */
 
@@ -209,8 +511,9 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 				
 				/* Reset xagent variables */
 				/* Not implemented static arrays */
-<?foreach allvar?><?if not_array?><?if not_modeldatatype?>				$name = $default_value;
-<?end if?><?end if?><?end foreach?>			}
+<?foreach allvar?>//<?if not_array?><?if not_modeldatatype?>				$name = $default_value;
+<?end if?><?end if?><?end foreach?>
+	}
 <?foreach allvar?>			if(strcmp(buffer, "$name") == 0) in_$name = 1;
 			if(strcmp(buffer, "/$name") == 0) in_$name = 0;
 <?end foreach?>
@@ -229,6 +532,7 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 			buffer[i] = 0;
 			/* Flag in tag */
 			in_tag = 1;
+			j = 0;
 			
 			if(in_itno) *itno = atoi(buffer);
 			if(in_name) strcpy(agentname, buffer);
@@ -236,98 +540,11 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 			{
 <?foreach envvar?>				if(in_$name) $name = ato$c_type(buffer);
 <?end foreach?>			}
-			else
+			<?foreach xagent?>else if(in_$name_agent == 1)
 			{
-<?foreach allvar?>				if(in_$name)<?if not_array?><?if not_modeldatatype?> $name = <?if not_char?>ato$c_type<?end if?>(buffer<?if char?>[0]<?end if?>);<?end if?><?if modeldatatype?>
-				{
-					j = 0;
-					$name = ($type *)malloc(sizeof($type));<?foreach datatypevar?>
-					CHECK_POINTER($name);
-					$datatypevarname->$name = $default_value;
-					array_k = 0;
-					j++;
-					<?if notlast?>while(buffer[j] != ',')<?end if?><?if last?>while(buffer[j] != '}')<?end if?>
-					{
-						arraydata[array_k] = buffer[j];
-						array_k++;
-						j++;
-					}
-					arraydata[array_k] = 0;
-					$datatypevarname->$name = <?if not_char?>ato$c_type<?end if?>(arraydata<?if char?>[array_k-1]<?end if?>);<?end foreach?>
-				}<?end if?><?end if?><?if array?><?if not_modeldatatype?>
-				{
-					<?if char?>j = 0;
-					<?if dynamic_array?>$name = init_$type();<?end if?>
-					while(buffer[j] != '\0')
-					{
-						<?if notchar_array?>/* Add check here for buffer overrun */
-						$name[j] = buffer[j];<?end if?>
-						<?if char_array?>add_char($name, buffer[j]);<?end if?>
-						j++;
-					}
-				}<?end if?><?if not_char?>j = 1;
-					arraycount = 0;
-					<?if dynamic_array?>$name = init_$type();<?end if?>
-					while(buffer[j] != '}')
-					{
-						array_k = 0;
-						while(buffer[j] != ',' && buffer[j] != '}')
-						{
-							arraydata[array_k] = buffer[j];
-							array_k++;
-							j++;
-						}
-						arraydata[array_k] = 0;
-						<?if int_array?>add_int($name, <?end if?><?if float_array?>add_float($name, <?end if?><?if double_array?>add_double($name, <?end if?><?if static_array?>$name[arraycount] = <?end if?>ato$c_type(arraydata)<?if dynamic_array?>)<?end if?>;
-						arraycount++;
-						if(buffer[j] != '}') j++;
-					}
-				}<?end if?><?end if?><?if modeldatatype?>
-				{
-					<?if dynamic_array?>$name = init_$type();<?end if?>
-					<?if static_array?>
-                    $name = ($notarraytype **)malloc(ARRAY_BLOCK_SIZE * sizeof($notarraytype *));<?end if?>
-                    CHECK_POINTER($name);
-					j = 1;
-					arraycount = 0;
-					
-					while(buffer[j] == '{')
-					{
-						<?if static_array?>
-                        $name[arraycount] = ($notarraytype *)malloc(sizeof($notarraytype));
-                        CHECK_POINTER($name[arraycount]);
-                        <?foreach datatypevar?>
-						$datatypevarname[arraycount]->$name = $default_value;<?end foreach?>
-						<?foreach datatypevar?>
-						array_k = 0;
-						j++;
-						<?if notlast?>while(buffer[j] != ',')<?end if?><?if last?>while(buffer[j] != '}')<?end if?>
-						{
-							arraydata[array_k] = buffer[j];
-							array_k++;
-							j++;
-						}
-						arraydata[array_k] = 0;
-						$datatypevarname[arraycount]->$name = <?if not_char?>ato$c_type<?end if?>(arraydata<?if char?>[array_k-1]<?end if?>);<?end foreach?><?end if?>
-						<?if dynamic_array?>add_$notarraytype($name<?foreach datatypevar?>, $default_value<?end foreach?>);
-						<?foreach datatypevar?>
-						array_k = 0;
-						j++;
-						<?if notlast?>while(buffer[j] != ',')<?end if?><?if last?>while(buffer[j] != '}')<?end if?>
-						{
-							arraydata[array_k] = buffer[j];
-							array_k++;
-							j++;
-						}
-						arraydata[array_k] = 0;
-						$datatypevarname->array[arraycount]->$name = <?if not_char?>ato$c_type<?end if?>(arraydata<?if char?>[array_k-1]<?end if?>);<?end foreach?><?end if?>
-						arraycount++;
-						j++;
-						if(buffer[j] == ',') j += 2;
-					}
-				}<?end if?><?end if?>
+<?foreach xagentvar?>				if(in_$name) <?if not_array?><?if not_modeldatatype?>current_$agent_name_agent->$name = <?if not_char?>ato$c_type<?end if?>(buffer<?if char?>[0]<?end if?>);<?end if?><?if modeldatatype?>read_$type(buffer, &j, &current_$agent_name_agent->$name);<?end if?><?end if?><?if array?><?if static_array?><?if modeldatatype?><?end if?>read_$type_static_array(buffer, &j, current_$agent_name_agent->$name, $arraylength);<?end if?><?if dynamic_array?>read_$notarraytype_dynamic_array(buffer, &j, &current_$agent_name_agent->$name);<?end if?><?end if?>
 <?end foreach?>			}
-			
+			<?end foreach?>
 			/* Reset buffer */
 			i = 0;
 		}
@@ -344,27 +561,28 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 			i++;
 		}
 	}
-    /* Make sure cloud data makes sense if any of x,y,z coords were all the same */
-    if ( partition_method == geometric ) {
-        if ( cloud_data[0] == cloud_data[1] ) {
-            cloud_data[0] = -SPINF;
-            cloud_data[1] = SPINF;
-        }
-        if ( cloud_data[2] == cloud_data[3] ) {
-            cloud_data[2] = -SPINF;
-            cloud_data[3] = SPINF;
-        }
-        if ( cloud_data[4] == cloud_data[5] ) {
-            cloud_data[4] = -SPINF;
-            cloud_data[5] = SPINF;
-        }
-    }
+	/* Make sure cloud data makes sense if any of x,y,z coords were all the same */
+	if ( partition_method == geometric ) {
+		if ( cloud_data[0] == cloud_data[1] ) {
+			cloud_data[0] = -SPINF;
+			cloud_data[1] = SPINF;
+		}
+		if ( cloud_data[2] == cloud_data[3] ) {
+			cloud_data[2] = -SPINF;
+			cloud_data[3] = SPINF;
+		}
+		if ( cloud_data[4] == cloud_data[5] ) {
+			cloud_data[4] = -SPINF;
+			cloud_data[5] = SPINF;
+		}
+	}
 
 	/* Close the file */
 	fclose(file);
 	/* Free temp data structures */
-	<?foreach allvar?><?if modeldatatype?><?if array?>//free(current_$name);
-<?end if?><?end if?><?end foreach?>
+<?foreach allvar?>//<?if not_modeldatatype?><?if dynamic_array?>	free_$type($name);
+<?end if?><?end if?><?if modeldatatype?>	free_$type<?if not_array?>_datatype<?end if?><?if static_array?>_static_array<?end if?>($name<?if static_array?>, $arraylength<?end if?>);
+<?end if?><?end foreach?>
 }
 
 /** \fn void saveiterationdata_binary(int iteration_number)
@@ -375,8 +593,8 @@ void saveiterationdata_binary(int iteration_number)
 {
 	/* Pointer to file */
 	FILE *file;
-	char data[100];
-    int i;
+	char data[1000];
+	int i;
 	int agentcount = 0;
 <?foreach xagent?>	xmachine_memory_$name * current_$name;
 <?end foreach?><?foreach allvar?><?if static_array?>	/*$type * $name;*/
@@ -416,6 +634,190 @@ void saveiterationdata_binary(int iteration_number)
 	fclose(file);
 }
 
+/** \fn void write_int_static_array(FILE *file, $name * temp)
+ * \brief Writes int.
+ */
+void write_int_static_array(FILE *file, int * temp, int size)
+{
+	int i;
+	char data[1000];
+	
+	fputs("{", file);
+	for(i=0; i<size; i++)
+	{
+		sprintf(data, "%i", temp[i]);
+		fputs(data, file);
+		if(i < size-1) fputs(", ", file);
+	}
+	fputs("}", file);
+}
+
+/** \fn void write_float_static_array(FILE *file, float * temp)
+ * \brief Writes float.
+ */
+void write_float_static_array(FILE *file, float * temp, int size)
+{
+	int i;
+	char data[1000];
+	
+	fputs("{", file);
+	for(i=0; i<size; i++)
+	{
+		sprintf(data, "%f", temp[i]);
+		fputs(data, file);
+		if(i < size-1) fputs(", ", file);
+	}
+	fputs("}", file);
+}
+
+/** \fn void write_double_static_array(FILE *file, double * temp)
+ * \brief Writes double.
+ */
+void write_double_static_array(FILE *file, double * temp, int size)
+{
+	int i;
+	char data[1000];
+	
+	for(i=0; i<size; i++)
+	{
+		sprintf(data, "%f", temp[i]);
+		fputs(data, file);
+		if(i < size-1) fputs(", ", file);
+	}
+	fputs("}", file);
+}
+
+/** \fn void write_char_static_array(FILE *file, char * temp)
+ * \brief Writes char.
+ */
+void write_char_static_array(FILE *file, char * temp, int size)
+{
+	int i;
+	char data[1000];
+	
+	//fputs("{", file);
+	for(i=0; i<size; i++)
+	{
+		sprintf(data, "%c", temp[i]);
+		fputs(data, file);
+		//if(i < size-1) fputs(", ", file);
+	}
+	//fputs("}", file);
+}
+
+/** \fn void write_int_dynamic_array(FILE *file, int_array* temp)
+ * \brief Writes int.
+ */
+void write_int_dynamic_array(FILE *file, int_array * temp)
+{
+	int i;
+	char data[1000];
+	
+	fputs("{", file);
+	for(i=0; i<(*temp).size; i++)
+	{
+		sprintf(data, "%i", (*temp).array[i]);
+		fputs(data, file);
+		if(i < ((*temp).size-1)) fputs(", ", file);
+	}
+	fputs("}", file);
+}
+
+/** \fn void write_float_dynamic_array(FILE *file, float_array* temp)
+ * \brief Writes float.
+ */
+void write_float_dynamic_array(FILE *file, float_array * temp)
+{
+	int i;
+	char data[1000];
+	
+	fputs("{", file);
+	for(i=0; i<(*temp).size; i++)
+	{
+		sprintf(data, "%f", (*temp).array[i]);
+		fputs(data, file);
+		if(i < ((*temp).size-1)) fputs(", ", file);
+	}
+	fputs("}", file);
+}
+
+/** \fn void write_double_dynamic_array(FILE *file, double_array* temp)
+ * \brief Writes double.
+ */
+void write_double_dynamic_array(FILE *file, double_array * temp)
+{
+	int i;
+	char data[1000];
+	
+	fputs("{", file);
+	for(i=0; i<(*temp).size; i++)
+	{
+		sprintf(data, "%f", (*temp).array[i]);
+		fputs(data, file);
+		if(i < ((*temp).size-1)) fputs(", ", file);
+	}
+	fputs("}", file);
+}
+
+/** \fn void write_char_dynamic_array(FILE *file, char_array* temp)
+ * \brief Writes char.
+ */
+void write_char_dynamic_array(FILE *file, char_array * temp)
+{
+	int i;
+	char data[1000];
+	
+	for(i=0; i<(*temp).size; i++)
+	{
+		sprintf(data, "%c", (*temp).array[i]);
+		fputs(data, file);
+	}
+}
+
+<?foreach datatype?>/** \fn void write_$name(FILE *file, $name * temp_datatype)
+ * \brief Writes $name datatype.
+ */
+void write_$name(FILE *file, $name * temp_datatype)
+{
+	<?if single_vars?>char data[1000];<?end if?>
+	
+	fputs("{", file);
+<?foreach datatypevar?>	<?if not_modeldatatype?><?if not_array?>sprintf(data, "%$c_type", (*temp_datatype).$name);
+	fputs(data, file);<?end if?><?if static_array?>write_$type_static_array(file, (*temp_datatype).$name, $arraylength);<?end if?><?if dynamic_array?>write_$notarraytype_dynamic_array(file, &(*temp_datatype).$name);<?end if?><?end if?><?if modeldatatype?><?if not_array?>write_$type(file, &(*temp_datatype).$name);<?end if?><?if static_array?>write_$type_static_array(file, (*temp_datatype).$name, $arraylength);<?end if?><?if dynamic_array?>write_$notarraytype_dynamic_array(file, &(*temp_datatype).$name);<?end if?><?end if?><?if notlast?>
+	fputs(", ", file);<?end if?><?end foreach?>
+	fputs("}", file);
+}
+
+void write_$name_static_array(FILE *file, $name * temp_datatype, int size)
+{
+	int i;
+	
+	fputs("{", file);
+	for(i = 0; i < size; i++)
+	{
+		write_$name(file, &temp_datatype[i]);
+		
+		if(i < size - 1) fputs(", ", file);
+	}
+	fputs("}", file);
+}
+
+void write_$name_dynamic_array(FILE *file, $name_array * temp_datatype)
+{
+	int i;
+	
+	fputs("{", file);
+	for(i = 0; i < (*temp_datatype).size; i++)
+	{
+		write_$name(file, &(*temp_datatype).array[i]);
+		
+		if(i < (*temp_datatype).size - 1) fputs(", ", file);
+	}
+	fputs("}", file);
+}
+
+<?end foreach?>
+
 /** \fn void saveiterationdata(int iteration_number)
  * \brief Save X-machine memory to a file.
  * \param iteration_number The current iteration number.
@@ -424,8 +826,7 @@ void saveiterationdata(int iteration_number)
 {
 	/* Pointer to file */
 	FILE *file;
-	char data[100];
-	<?if use_arrays?>int i;<?end if?>
+	char data[1000];
 <?foreach xagent?>	xmachine_memory_$name * current_$name;
 <?end foreach?><?foreach allvar?><?if not_modeldatatype?><?if dynamic_array?>	//$type * $name;
 <?end if?><?end if?><?end foreach?>	
@@ -448,8 +849,7 @@ void saveiterationdata(int iteration_number)
 	while(current_node)
 	{
 		p_xmachine = &current_node->agents;
-<?end if?>
-		current_xmachine = *p_xmachine;
+<?end if?>		current_xmachine = *p_xmachine;
 	while(current_xmachine)
 	{
 		fputs("<xagent>\n" , file);
@@ -458,34 +858,8 @@ void saveiterationdata(int iteration_number)
 			current_$name = current_xmachine->xmachine_$name;
 			fputs("<name>$name</name>\n", file);
 <?foreach xagentvar?>			fputs("<$name>", file);
-<?if not_modeldatatype?><?if not_array?>			sprintf(data, "%$c_type", current_$agent_name->$name);
-			fputs(data, file);<?end if?><?if array?><?if dynamic_array?>			//$name = current_$agent_name->$name;
-<?end if?><?if notchar_array?>			fputs("{", file);<?end if?>
-			for(i=0; i<<?if static_array?>$arraylength<?end if?><?if dynamic_array?>current_$agent_name->$name->size<?end if?>; i++)
-			{
-				sprintf(data, "%$c_type", current_$agent_name->$name<?if dynamic_array?>->array<?end if?>[i]);
-				fputs(data, file);
-				<?if static_array?>/*$name++;*/<?end if?>
-				<?if notchar_array?>if(i < <?if static_array?>$arraylength-1<?end if?><?if dynamic_array?>(current_$agent_name->$name->size-1)<?end if?>) fputs(", ", file);<?end if?>
-			}
-			<?if notchar_array?>fputs("}", file);<?end if?><?end if?><?end if?><?if modeldatatype?>			fputs("{", file);
-<?if not_array?><?foreach datatypevar?>			sprintf(data, "%$c_type", current_$agent_name->$datatypevarname->$name);
-			fputs(data, file);<?if notlast?>
-			fputs(", ", file);
-<?end if?><?end foreach?><?end if?><?if array?>			for(i = 0; i < <?if static_array?>$arraylength<?end if?><?if dynamic_array?>current_$agent_name->$name->size<?end if?>; i++)
-			{
-				fputs("{", file);
-				<?if dynamic_array?><?foreach datatypevar?>sprintf(data, "%$c_type", current_$agent_name->$datatypevarname->array[i]->$name);
-				fputs(data, file);<?if notlast?>
-				fputs(", ", file);
-				<?end if?><?end foreach?><?end if?><?if static_array?><?foreach datatypevar?>sprintf(data, "%$c_type", current_$agent_name->$datatypevarname[i]->$name);
-				fputs(data, file);<?if notlast?>
-				fputs(", ", file);
-				<?end if?><?end foreach?><?end if?>
-				fputs("}", file);
-				if(i < <?if static_array?>$arraylength<?end if?><?if dynamic_array?>current_$agent_name->$name->size<?end if?> - 1) fputs(", ", file);
-			}<?end if?>
-			fputs("}", file);<?end if?>
+			<?if not_array?><?if not_modeldatatype?>sprintf(data, "%$c_type", current_$agent_name->$name);
+			fputs(data, file);<?end if?><?if modeldatatype?>write_$type(file, &current_$agent_name->$name);<?end if?><?end if?><?if static_array?>write_$type_static_array(file, current_$agent_name->$name, $arraylength);<?end if?><?if dynamic_array?>write_$notarraytype_dynamic_array(file, &current_$agent_name->$name);<?end if?>
 			fputs("</$name>\n", file);
 <?end foreach?>		}
 <?end foreach?>	
