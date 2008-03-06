@@ -20,7 +20,7 @@ LIBS=-lm
 #FLAME source files
 FLAME   = main.c memory.c xml.c messageboards.c partitioning.c <?if parallel?>propagate_messages.c propagate_agents.c <?end if?>
 #FLAME auxilary files
-AUX 	= dgraph.dot dgraph.svg
+AUX 	= dgraph.dot dgraph.svg Doxyfile
 
 # FLAME generated model files
 SOURCES = <?foreach functionfiles?> $filepath <?end foreach?>
