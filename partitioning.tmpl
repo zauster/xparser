@@ -422,7 +422,7 @@ void broadcast_node_data(int totalnodes, int node_number)
         }
     }
     
-    printf("Node %d found its partition data :  %f, %f, %f, %f\n", node_number, 
+    printf("%d> Node %d found its partition data :  %f, %f, %f, %f\n", node_number, node_number, 
             pdata[(node_number * 6) + 0],  /* x min */
             pdata[(node_number * 6) + 1],  /* x min */
             pdata[(node_number * 6) + 2],  /* x min */
