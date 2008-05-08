@@ -353,7 +353,7 @@ void propagate_agents() {
         {
             add_$name_agent( \
     <?foreach xagentvar?>
-                    agent_$agent_name_list[i].$name<?if notlast?>,<?end if?> \
+            <?if dynamic_array?>&<?end if?>agent_$agent_name_list[i].$name<?if notlast?>,<?end if?> \
     <?end foreach?>
                     );
 
