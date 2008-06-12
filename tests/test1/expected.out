@@ -1,0 +1,53 @@
+FLAME Application: test_model_simple_everthing 
+Iterations: 11
+Initial states: models/test_model_1/its/0.xml
+Ouput dir: models/test_model_1/its/
+Using output frequency of: 12
+xml: Geometric partitioning
+Iteration - 1
+iteration_loop5 = 1
+my_constant = 6
+my_int_array = {1, 2}
+my_dyn_int_array = {}
+var_my_datatype_1 = {1, 2}
+var_my_datatype_2 = {{3, 4}}
+2 - m_sub_1 from 0
+2 - m_sub_1 from 0
+1 - m_sub_2 from 2
+Iteration - 2
+1 - m_sub_2 from 2
+Iteration - 3
+1 - m_sub_2 from 2
+Iteration - 4
+1 - m_sub_2 from 2
+Iteration - 5
+1 - m_sub_2 from 2
+Iteration - 6
+iteration_loop5 = 1
+my_constant = 6
+my_int_array = {8, 9}
+my_dyn_int_array = {9}
+var_my_datatype_1 = {8, 9}
+var_my_datatype_2 = {{7, 8}}
+2 - m_sub_1 from 0
+2 - m_sub_1 from 0
+1 - m_sub_2 from 2
+Iteration - 7
+1 - m_sub_2 from 2
+Iteration - 8
+1 - m_sub_2 from 2
+Iteration - 9
+1 - m_sub_2 from 2
+Iteration - 10
+1 - m_sub_2 from 2
+Iteration - 11
+iteration_loop5 = 1
+my_constant = 6
+my_int_array = {8, 9}
+my_dyn_int_array = {9, 9}
+var_my_datatype_1 = {8, 9}
+var_my_datatype_2 = {{7, 8}}
+2 - m_sub_1 from 0
+2 - m_sub_1 from 0
+1 - m_sub_2 from 2
+Execution time - 0:00:1 [mins:secs:msecs]

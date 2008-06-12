@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE xmodel SYSTEM "http://eurace.cs.bilgi.edu.tr/XMML.dtd">
+<xmodel version="2">
+
+<name>test_model_simple_everthing_sub_1</name>
+<version>01</version>
+<description></description>
+
+<agents>
+
+<xagent>
+<name>agent_a</name>
+<description></description>
+
+<functions>
+
+<function><name>agent_a_1</name>
+<description></description>
+<currentState>start</currentState>
+<nextState>1</nextState>
+<condition><time><period>weekly</period><phase>1</phase></time></condition>
+<outputs>
+<output><messageName>m_sub_1</messageName></output>
+</outputs>
+</function>
+
+<function><name>idle</name>
+<description></description>
+<currentState>start</currentState>
+<nextState>1</nextState>
+<condition><not><time><period>weekly</period><phase>1</phase></time></not></condition>
+</function>
+
+</functions>
+
+</xagent>
+
+<xagent>
+<name>agent_b</name>
+<description></description>
+
+<functions>
+<function><name>agent_b_1</name>
+<description></description>
+<currentState>start</currentState>
+<nextState>1</nextState>
+<inputs>
+<input><messageName>m_sub_1</messageName>
+<filter>
+  <lhs><value>0</value></lhs>
+  <op>EQ</op>
+  <rhs><value>m.id</value></rhs>
+</filter></input>
+</inputs>
+</function>
+</functions>
+</xagent>
+
+</agents>
+
+<messages>
+
+<message>
+<name>m_sub_1</name>
+<description></description>
+<variables>
+<variable><type>int</type><name>id</name><description></description></variable>
+</variables>
+</message>
+
+</messages>
+
+</xmodel>

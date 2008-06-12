@@ -1,0 +1,27 @@
+<states>
+<itno>0</itno>
+<environment>
+<my_constant>6</my_constant>
+</environment>
+<xagent>
+<name>agent_a</name>
+<id>1</id>
+<my_int_array>{1, 2}</my_int_array>
+<my_dyn_int_array>{}</my_dyn_int_array>
+<var_my_datatype_1>{1, 2}</var_my_datatype_1>
+<var_my_datatype_2>{{3, 4}}</var_my_datatype_2>
+</xagent>
+
+<xagent>
+<name>agent_b</name>
+<id>2</id>
+<type>1</type>
+</xagent>
+
+<xagent>
+<name>agent_b</name>
+<id>2</id>
+<type>0</type>
+</xagent>
+
+</states>
