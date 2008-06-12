@@ -1,13 +1,14 @@
 \section{Model Description}
 
-Models descriptions are formated in XML to be human and computer readable.
+Models descriptions are formatted in XML tag structures to allow
+easy human and computer readability.
 
 The DTD (Document Type Definition) of the XML document is currently located
 here:
 
 http://eurace.cs.bilgi.edu.tr/XMML.dtd
 
-The start and end of a model file should be formatted thus:
+The start and end of a model file should be formatted as follows:
 
 \begin{mylisting}
 \begin{verbatim}
@@ -40,7 +41,7 @@ Models can contain:
 % \item name
 % \item description
 % \item variables
-% \end{itemize} 
+% \end{itemize}
 \end{itemize}
 \item \textbf{agents}
 \begin{itemize}
@@ -103,36 +104,71 @@ They are included in the compilation script (Makefile) of the produced model.
 \end{verbatim}
 \end{mylisting}
 
-\subsubsection{Time Rules}
+\subsubsection{Time Rules}\label{timeunit}
 
-Time rules refer to the possibility of restricting the functions to only function at particular iterations. An iteration refers to the smallest unit the models are set up on. In EURACE, we are assuming every iteration to represent one day in the calender.
+Time rules allow the possibility of restricting the functions to
+only execute during particular iterations. An iteration refers to
+the smallest unit the models are set up on. In EURACE, we are
+assuming every iteration to represent one day in the calender.
 
-Following table represents how these time units can be defined in the model.xml file
-(example to appear)
+Time rules can be applied to function conditions instead of a
+condition rule and are defined by a time period and a phase. A time
+phase is the offset from the start of a period.
 
-Thus if there is any function which functions at only particular days of the calender, we can define them as a condition rule in the function definitions.
 
-The example below depicts a function which executes every... (example to appear).
 
-The condition for which iteration to execute can also be given as part of the agent memory.
-The following example depicts this:
 
-(example to appear)
+A time unit would contain:
+\begin{itemize}
+\item name - name of the time unit.
+\item unit - can contain the iteration or other time units.
+\item period - offset by which to skip the unit in every iteration.
+\end{itemize}
 
-Time rules can be applied to function conditions instead of a condition rule.
+A time period needs to be defined as a time unit in the environment
+of a model. Time units can be described as:
 
-Time rules are defined by a time period and a phase.
+\begin{mylisting}
+\begin{verbatim}
+<timeUnits>
+  <timeUnit>
+    <name>daily</name>
+    <unit>iteration</unit>
+    <period>1</period>
+  </timeUnit>
 
-A time period needs to be defined as a time unit in the environment of a model.
+  <timeUnit>
+    <name>weekly</name>
+    <unit>daily</unit>
+    <period>5</period>
+  </timeUnit>
 
-For example: daily, monthly, yearly.
+  <timeUnit>
+    <name>monthly</name>
+    <unit>weekly</unit>
+    <period>4</period>
+  </timeUnit>
 
-A time phase is the offset from the start of a period.
+  <timeUnit>
+    <name>quarterly</name>
+    <unit>monthly</unit>
+    <period>3</period>
+  </timeUnit>
 
-For example: an integer or an integer agent memory variable.
+  <timeUnit>
+    <name>yearly</name>
+    <unit>monthly</unit>
+    <period>12</period>
+  </timeUnit>
 
-It can be defined thus:
+</timeUnits>
+\end{verbatim}
+\end{mylisting}
 
+A condition can then be added to the function definition to make the
+parser aware that this particular function only has to be called at
+certain times of the simulation. The condition can be added as
+follows:
 \begin{mylisting}
 \begin{verbatim}
  <condition>
@@ -144,7 +180,17 @@ It can be defined thus:
 \end{verbatim}
 \end{mylisting}
 
-These rules are then parsed into rule functions and placed in a file called rules.c.
+The condition allows the function to run \emph{monthly} at the phase
+of \emph{day\_of\_month\_to\_act}. The
+\emph{day\_of\_month\_to\_act} is a variable extracted from the
+agent memory and is thus defined as
+\emph{a.day\_of\_month\_to\_act}.
+
+Refer to section \ref{functioncond} for more details on function
+condition definitions.
+
+These rules are then parsed into rule functions and placed in a file
+called rules.c
 
 \subsubsection{Data Types}
 
@@ -155,6 +201,7 @@ Data types can contain C data types or other predefined user data types.
 \begin{mylisting}
 \begin{verbatim}
 <dataTypes>
+
  <dataType>
   <name>Histogram</name>
   <description>ADT Histogram</description>
@@ -167,6 +214,7 @@ Data types can contain C data types or other predefined user data types.
    </variable>
   </variables>
  </dataType>
+
  <dataType>
   <name>Belief</name>
   <description>ADT Belief</description>
@@ -183,13 +231,93 @@ Data types can contain C data types or other predefined user data types.
    </variable>
   </variables>
  </dataType>
+
 </dataTypes>
 \end{verbatim}
 \end{mylisting}
 
+In the example above the datatype \emph{Belief} contains a variable
+of datatype \emph{Histogram}
+
 \subsection{Agent}
 
-\subsubsection{Function Condition and Message Input Filter Rule Tags}
+An agent can be defined as follows:
+\begin{mylisting}
+\begin{verbatim}
+<agents>
+
+  <xagent>
+    <name>Firm</name>
+    <description></description>
+
+    <memory>
+      <variable><type>int</type><name>id</name><description></description></variable>
+      <variable><type>int</type><name>region_id</name><description></description></variable>
+      <variable><type>int</type><name>gov_id</name><description></description></variable>
+      <variable><type>int</type><name>day_of_month_to_act</name><description></description></variable>
+      <variable><type>double</type><name>payment_account</name><description></description></variable>
+    </memory>
+
+    <functions>
+      .....
+    </functions>
+
+  </xagent>
+
+  <xagent>
+    <name>Household</name>
+    <description></description>
+
+    <memory>
+      <variable><type>int</type><name>id</name><description></description></variable>
+      <variable><type>int</type><name>region_id</name><description></description></variable>
+      <variable><type>int_array</type><name>neighboring_region_ids</name><description></description></variable>
+      <variable><type>int</type><name>gov_id</name><description></description></variable>
+      <variable><type>int</type><name>day_of_month_to_act</name><description></description></variable>
+      <variable><type>double</type><name>payment_account</name><description></description></variable>
+    </memory>
+
+    <functions>
+      <function>
+        <name>Household_read_firing_messages</name>
+        <description>The household checks whether is is fired or not</description>
+        <currentState>EXIT_FINANCIAL_MARKET</currentState>
+        <nextState>01d</nextState>
+        <condition><lhs><value>a.employee_firm_id</value></lhs><op>NEQ</op><rhs><value>-1</value></rhs></condition>
+        <inputs>
+          <input><messageName>firing</messageName></input>
+        </inputs>
+      </function>
+    </functions>
+
+  </xagent>
+</agents>
+\end{verbatim}
+\end{mylisting}
+
+\subsubsection{Agent Functions}
+An agent function contains:
+\begin{itemize}
+\item name
+\item description
+\item current state - The current state point the agent is in, in
+the branch.
+\item next state - the next state point it has to move to, in the
+branch.
+\item condition - condition which tells the parser when this
+function can be executed.
+\item inputs - the messages this function is reading.
+\item outputs - the messages this function is sending.
+\end{itemize}
+
+\subsubsection{Function Condition and Message Input Filter Rule
+Tags}\label{functioncond}
+
+The agent functions can be accompanied by conditions telling the
+parser when these functions have to be executed during the
+iterations. Condition on the basis of time have been explained in
+section \ref{timeunit} but these can also be associated with
+comparison rules.
 
 \paragraph{Comparison Rules}
 
@@ -213,8 +341,8 @@ Values can include agent and message memory variables, which are denoted by eith
 
 \begin{mylisting}
 \begin{verbatim}
-a->agent_var
-m->message_var
+a.agent_var
+m.message_var
 \end{verbatim}
 \end{mylisting}
 
@@ -251,7 +379,17 @@ the operator NOT is used by placing `not' tags around a rule:
   </not>
  </rhs>
 </condition>
+\end{verbatim}
+\end{mylisting}
 
+\paragraph{Message Filter}
+Message filters allow the messages to be filtered before being
+provided to the function. This allows the messages to be checked
+according to a condition before being read by the function. The
+message filter can be added as follows:
+
+\begin{mylisting}
+\begin{verbatim}
 <input>
  <messageName>firing</messageName>
  <filter>
@@ -263,5 +401,39 @@ the operator NOT is used by placing `not' tags around a rule:
 \end{verbatim}
 \end{mylisting}
 
-\subsection{Messages}
+Thus in the above example messages will be filtered according to the
+message variable \emph{worker\_id} (defined as m.<varname>) to be EQ
+(equal) to the agent \emph{id} (defined as a.<varname>).
 
+\subsection{Messages}
+The agents are communicating with each other through messages being
+sent in the system. The messages being processed have to be defined
+in the XML file. All message lists are emptied at the end of the
+iteration.
+
+\begin{mylisting}
+\begin{verbatim}
+<messages>
+
+ <message>
+  <name>bank_account_update</name>
+  <description>Sent by household. Household informs the bank about the actual payment account</description>
+  <variables>
+    <variable><type>int</type><name>id</name><description></description></variable>
+    <variable><type>int</type><name>bank_id</name><description></description></variable>
+    <variable><type>double</type><name>payment_account</name><description></description></variable>
+  </variables>
+ </message>
+
+ <message>
+  <name>application_rejection</name>
+  <description>Send by firms. Includes the id and the id of the refused applicant.</description>
+  <variables>
+    <variable><type>int</type><name>firm_id</name><description></description></variable>
+    <variable><type>int</type><name>worker_id</name><description></description></variable>
+  </variables>
+ </message>
+
+</messages>
+\end{verbatim}
+\end{mylisting}
