@@ -1,0 +1,267 @@
+\section{Model Description}
+
+Models descriptions are formated in XML to be human and computer readable.
+
+The DTD (Document Type Definition) of the XML document is currently located
+here:
+
+http://eurace.cs.bilgi.edu.tr/XMML.dtd
+
+The start and end of a model file should be formatted thus:
+
+\begin{mylisting}
+\begin{verbatim}
+ <?xml version="1.0" encoding="ISO-8859-1"?>
+ <!DOCTYPE xmodel SYSTEM "http://eurace.cs.bilgi.edu.tr/XMML.dtd">
+ <xmodel version="2">
+ <name>Model_name</name>
+ <version>the version</version>
+ <description>a description</description>
+ ...
+ </xmodel>
+\end{verbatim}
+\end{mylisting}
+
+Models can contain:
+\begin{itemize}
+\item other models (enabled or disabled)
+\item \textbf{environment}
+\begin{itemize}
+\item constant variables
+\item function files
+\item time units
+% \begin{itemize}
+% \item name
+% \item *** unit
+% \item *** period
+% \end{itemize}
+\item data types
+% \begin{itemize}
+% \item name
+% \item description
+% \item variables
+% \end{itemize} 
+\end{itemize}
+\item \textbf{agents}
+\begin{itemize}
+\item name
+\item description
+\item memory
+% *** variables
+\item functions
+% *** name
+% *** description
+% *** current state
+% *** next state
+% *** condition
+% *** inputs
+% **** filter
+% *** outputs
+\end{itemize}
+\item \textbf{messages}
+\begin{itemize}
+\item name
+\item description
+\item variables
+\end{itemize}
+\end{itemize}
+
+\subsection{Environment}
+The environment tag in the model.xml file hosts additional tags for information that may be required by
+the parser for efficient simulation of the model.
+Following are the tags that can be defined in it.
+
+
+\subsubsection{Constant Variables}
+
+Constant Variables refers to the global values used in the model.
+These can me defined in a separate header file which can then be included in one of the functions file.
+
+The header file would look as follows:
+
+\begin{mylisting}
+\begin{verbatim}
+#define <varname> <value>
+\end{verbatim}
+\end{mylisting}
+
+If this file was saved as a `my\_header.h' file, include this file into one of
+the function files so that the compiler knows about these arguments.
+
+\subsubsection{Function Files}
+
+Function files are where you can place source code for the implementation of the agent functions.
+
+They are included in the compilation script (Makefile) of the produced model.
+
+\begin{mylisting}
+\begin{verbatim}
+ <functionFiles>
+ <file>function_source_code_1.c</file>
+ <file>function_source_code_2.c</file>
+ </functionFiles>
+\end{verbatim}
+\end{mylisting}
+
+\subsubsection{Time Rules}
+
+Time rules refer to the possibility of restricting the functions to only function at particular iterations. An iteration refers to the smallest unit the models are set up on. In EURACE, we are assuming every iteration to represent one day in the calender.
+
+Following table represents how these time units can be defined in the model.xml file
+(example to appear)
+
+Thus if there is any function which functions at only particular days of the calender, we can define them as a condition rule in the function definitions.
+
+The example below depicts a function which executes every... (example to appear).
+
+The condition for which iteration to execute can also be given as part of the agent memory.
+The following example depicts this:
+
+(example to appear)
+
+Time rules can be applied to function conditions instead of a condition rule.
+
+Time rules are defined by a time period and a phase.
+
+A time period needs to be defined as a time unit in the environment of a model.
+
+For example: daily, monthly, yearly.
+
+A time phase is the offset from the start of a period.
+
+For example: an integer or an integer agent memory variable.
+
+It can be defined thus:
+
+\begin{mylisting}
+\begin{verbatim}
+ <condition>
+     <time>
+     <period>monthly</period>
+     <phase>a.day_of_month_to_act</phase>
+     </time>
+ </condition>
+\end{verbatim}
+\end{mylisting}
+
+These rules are then parsed into rule functions and placed in a file called rules.c.
+
+\subsubsection{Data Types}
+
+Data types are user defined data types that can be used in a model.
+
+Data types can contain C data types or other predefined user data types.
+
+\begin{mylisting}
+\begin{verbatim}
+<dataTypes>
+ <dataType>
+  <name>Histogram</name>
+  <description>ADT Histogram</description>
+  <variables>
+   <variable><type>double</type><name>prob[30]</name><description></description>
+   </variable>
+   <variable><type>double</type><name>values[30]</name><description></description>
+   </variable>
+   <variable><type>double</type><name>max</name><description></description>
+   </variable>
+  </variables>
+ </dataType>
+ <dataType>
+  <name>Belief</name>
+  <description>ADT Belief</description>
+  <variables>
+   <variable><type>double</type><name>expectedPriceReturns</name><description></description>
+   </variable>
+   <variable><type>double</type><name>expectedTotalReturns</name><description></description>
+   </variable>
+   <variable><type>double</type><name>expectedCashFlowYield</name><description></description>
+   </variable>
+   <variable><type>double</type><name>volatility</name><description></description>
+   </variable>
+   <variable><type>Histogram</type><name>hist</name><description></description>
+   </variable>
+  </variables>
+ </dataType>
+</dataTypes>
+\end{verbatim}
+\end{mylisting}
+
+\subsection{Agent}
+
+\subsubsection{Function Condition and Message Input Filter Rule Tags}
+
+\paragraph{Comparison Rules}
+
+\begin{mylisting}
+\begin{verbatim}
+<lhs></lhs><op></op><rhs></rhs>
+\end{verbatim}
+\end{mylisting}
+
+lhs and rhs can be either a value, denoted by value tags:
+
+\begin{mylisting}
+\begin{verbatim}
+<value></value>
+\end{verbatim}
+\end{mylisting}
+
+or another rule.
+
+Values can include agent and message memory variables, which are denoted by either:
+
+\begin{mylisting}
+\begin{verbatim}
+a->agent_var
+m->message_var
+\end{verbatim}
+\end{mylisting}
+
+op can be either comparison functions:
+
+\begin{itemize}
+\item EQ -- equal to
+\item NEQ -- not equal to
+\item LEQ -- less than or equal to
+\item GEQ -- greater than or equal to
+\item LT -- less then
+\item GT -- greater than
+\end{itemize}
+or logic operators:
+\begin{itemize}
+\item AND
+\item OR
+\end{itemize}
+the operator NOT is used by placing `not' tags around a rule:
+\begin{mylisting}
+\begin{verbatim}
+<condition>
+ <lhs>
+  <lhs><value>a.employee_firm_id</value></lhs>
+  <op>GT</op>
+  <rhs><value>-1</value></rhs>
+ </lhs>
+ <op>AND</op>
+ <rhs>
+  <not>
+  <lhs><value>a.on_the_job_search</value></lhs>
+  <op>EQ</op>
+  <rhs><value>0</value></rhs>
+  </not>
+ </rhs>
+</condition>
+
+<input>
+ <messageName>firing</messageName>
+ <filter>
+  <lhs><value>a.id</value></lhs>
+  <op>EQ</op>
+  <rhs><value>m.worker_id</value></rhs>
+ </filter>
+</input>
+\end{verbatim}
+\end{mylisting}
+
+\subsection{Messages}
+

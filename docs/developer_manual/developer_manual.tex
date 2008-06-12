@@ -1,0 +1,66 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{fullpage}
+\usepackage{tabularx}
+\usepackage{graphics,lscape}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{verbatim}
+
+\vfuzz2pt % Don't report over-full v-boxes if over-edge is small
+\hfuzz2pt % Don't report over-full h-boxes if over-edge is small
+
+\begin{document}
+
+\title{Xparser 2}
+
+\author{Simon Coakley}
+\maketitle
+
+\begin{abstract}
+
+Abstract.
+
+\end{abstract}
+
+\section{Introduction}
+
+Intro.
+
+\section{Memory Allocation}
+
+Allocation of memory for agents and messages should be in one continuous area of memory. This is so that the command \textit{sizeof} can return the byte size of agent and message memory in one execution. This is important when sending agents and messages in parallel using MPI. The main problem is the use of dynamic arrays because the memory allocated for them is not going to be apart of the continuous memory allocated for agents and messages. It is possible to handle this but it is expensive. Because messages are continuously being sent and received they should not contain any dynamic arrays. It is only when agents are being load balanced that they need to be sent in parallel.
+
+Currently user-defined data types are allocated as pointers in agent memory but this has been modified in a new version to be released. This means that instead of user using an arrow '-\textgreater' to dereference variables, a dot '.' is used to access the data structure.
+
+Dynamic array data structures are also not allocated as a pointer (but the actual dynamic array is) which means functions to interact with a dynamic array data structure need to pass a pointer. This means the use of the ampersand '\&' to reference the data structure.
+
+\section{Agent Memory Management}
+
+Each agent has an associated memory data structure. Since early versions of the framework all agents have been managed in one list. This was so that the list could be randomised and therefore remove any artifacts of agents having priority over other agents by always being executed first. In essence the only effect this has is to randomise the message output and therefore the message input to agents. The current framework has a generic agent memory stucture that can point to any specific agent type.
+
+With the introduction of the new message board library the action of randomising (or now also sorting and filtering) messages the need to randomise the agent list is redundant. Also redundant is the need to have a single list of all the agents. The generic agent memory structure is therefore not needed and each agent type can have it's only seperate list.
+
+\section{Agent Function Execution}
+
+Agents have associated functions. The order that these functions are run are currently defined by dependencies on other functions. If they are within the same agent they are internal and if they are between agents, i.e. messages, they are communication dependencies. All functions of all agents are executed in this prescribed order.
+
+But there are many instances when functions should not be run. By returning to the original basis of defining agents as extended finite state machines or X-Machines, this can be incorporated. Instead of defining function order using dependencies, functions are transitions between states. The order of functions is the transitions between states, from the start state(s) to the end state(s). There can be many paths through these transitions which are governed by conditions of their traversal. 
+
+Each transition function should be defined using:
+
+\begin{itemize}
+\item current state: the current state of the agent
+\item input: the inputs the function is expecting
+\item m$_{pre}$: the conditions on memory of executing the function
+\item name: the name of the function
+\item m$_{post}$: the changes in the memory (i.e. the function code)
+\item output: possible outputs of the function
+\item next state: the next state to move the agent to
+\end{itemize}
+
+By graphing all the possible transition routes of agents from the start state(s) to end state(s) the order of function execution can be created. This also provides a way to manage the processing of agents. By providing a link to an agent list for each possible agent state, agents can be moved between these agent state lists until they reach an end state.
+
+%\bibliographystyle{plain}
+%\bibliography{EURACE_refs}
+
+\end{document}

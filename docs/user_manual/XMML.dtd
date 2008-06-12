@@ -1,0 +1,56 @@
+<!ELEMENT xmodel (name,version,description,models?,environment?,agents,contexts?,messages?)>
+<!ATTLIST xmodel version CDATA #REQUIRED>
+
+<!ELEMENT models (model*)>
+<!ELEMENT model (file,enabled)>
+
+<!ELEMENT environment (constants?,functionFiles?,timeUnits?,dataTypes?)>
+<!ELEMENT dataTypes (dataType*)>
+<!ELEMENT dataType (name,description,variables)>
+<!ELEMENT variables (variable*)>
+<!ELEMENT variable (type,name,description)>
+<!ELEMENT constants (variable*)>
+<!ELEMENT functionFiles (file*)>
+<!ELEMENT timeUnits (timeUnit*)>
+<!ELEMENT timeUnit (name,unit,period)>
+
+<!ELEMENT agents (xagent*)>
+<!ELEMENT xagent (name,description,memory?,roles?,functions?)>
+<!ELEMENT memory (variable*)>
+<!ELEMENT roles (role*)>
+<!ELEMENT role (name,description,functions)>
+<!ELEMENT functions (function*)>
+<!ELEMENT function (name,description,code?,currentState,nextState,condition?,inputs?,outputs?)>
+<!ELEMENT condition ((not)|(lhs,op,rhs)|(time))>
+<!ELEMENT not ((lhs,op,rhs)|(time))>
+<!ELEMENT lhs ((not)|(lhs,op,rhs)|(value)|(time))>
+<!ELEMENT rhs ((not)|(lhs,op,rhs)|(value)|(time))>
+<!ELEMENT time (period,phase,duration?)>
+<!ELEMENT inputs (input*)>
+<!ELEMENT input (messageName,filter?,sort?)>
+<!ELEMENT filter (lhs,op,rhs)>
+<!ELEMENT outputs (output*)>
+<!ELEMENT output (messageName)>
+<!ELEMENT contexts (xcontext*)>
+<!ELEMENT xcontext (name,description,messages)>
+<!ELEMENT messages (message*)>
+<!ELEMENT message (name,description,variables)>
+
+<!ELEMENT code (#PCDATA)>
+<!ELEMENT currentState (#PCDATA)>
+<!ELEMENT description (#PCDATA)>
+<!ELEMENT enabled (#PCDATA)>
+<!ELEMENT file (#PCDATA)>
+<!ELEMENT messageName (#PCDATA)>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT nextState (#PCDATA)>
+<!ELEMENT op (#PCDATA)>
+<!ELEMENT sort (#PCDATA)>
+<!ELEMENT statement (#PCDATA)>
+<!ELEMENT type (#PCDATA)>
+<!ELEMENT value (#PCDATA)>
+<!ELEMENT version (#PCDATA)>
+<!ELEMENT unit (#PCDATA)>
+<!ELEMENT period (#PCDATA)>
+<!ELEMENT phase (#PCDATA)>
+<!ELEMENT duration (#PCDATA)>

@@ -1,0 +1,65 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage{t1enc}
+\usepackage[latin1]{inputenc}
+\usepackage[english]{babel}
+\usepackage{url,graphics,lscape}
+\usepackage{a4wide}
+\usepackage{graphicx}
+\usepackage{color}
+%\usepackage{fancyheadings}
+\usepackage{verbatim}
+
+\newenvironment{mylisting}
+{\begin{list}{}{\setlength{\leftmargin}{1em}}\item\small\bfseries}
+{\end{list}}
+
+\parskip 6pt         % sets spacing between paragraphs
+\parindent 0pt       % sets leading space for paragraphs
+%\pagestyle{fancy}
+\begin{document}
+
+
+
+\title{FLAME
+\\User Manual}
+\author{Simon Coakley\\Mariam Kiran
+\\
+\\ Unit - USFD}
+%\date{17 May 2006}
+
+\maketitle
+
+
+\begin{abstract}
+The report presents a manual for the FLAME framework. How to design a model,
+create a description of the model, and write the implementation of the model.
+Details are also included about how to execute a model.
+\end{abstract}
+\tableofcontents
+\pagebreak
+
+\section{Introduction}
+
+The FLAME framework is an enabling tool to create agent-based models that can
+be run on high performance computers (HPCs). Models are created based upon
+extended finite state machines that include message inputs and outputs. This information
+is used by the framework to automatically generate a simulation program that
+can run models efficiently on HPCs.
+
+\include{model_design}
+\include{model_description}
+\include{model_implementation}
+\include{model_execution}
+
+\appendix
+
+\section{XML DTD}                       % B
+\label{cha_xmldtd}
+
+\small{{\tt \verbatiminput{xmml.dtd}}}
+
+
+\bibliographystyle{alpha}
+\bibliography{eurace_refs}
+
+\end{document}

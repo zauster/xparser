@@ -1,0 +1,95 @@
+\section{Model Design}
+
+Extended finite state machines or X-Machines are used to define agents within a
+model. 
+The basic definition of an
+agent would thus, in accordance to the computational model, contain
+the following components:
+\begin{enumerate}
+ \item A finite set of internal states.
+ \item A set of transition functions that operate between states.
+ \item An internal memory set. In practice, the memory would be a finite set and can be structured in any way required.
+ \item A language for sending and receiving messages between other agents.
+\end{enumerate}
+
+\begin{equation}\label{streamxmachine}
+    X = (\Sigma, \Gamma, Q, M, \Phi, F, q_{0}, m_{0})
+\end{equation}
+where,
+\begin{itemize}
+\item $\Sigma$ are the set of input alphabets
+\item $\Gamma$ are the set of output alphabets
+\item $Q$ denotes the set of states
+\item $M$ denotes the variables in the memory.
+\item $\Phi$ denotes the set of partial functions $\phi$ that map
+and input and memory variable to an output and a change on the
+memory variable. The set $\phi$: $\Sigma \times M\ \longrightarrow\
+\Gamma\times M$
+\item $F$ in the next state transition function, $F : Q \times\phi\longrightarrow
+Q$
+\item $q_{0}$ is the initial state and $m_{0}$ is the initial memory
+of the machine.
+\end{itemize}
+
+\subsection{Transition Function}
+The transition functions allow the agents to change the state in
+which they are in, modifying their behaviour accordingly. These would
+require as inputs their current state $s_{1}$, current memory value
+$m_{1}$, and the possible arrival of a message that the agent is able to
+read, $t_{1}$. Depending on these three values the agent can then
+change to another state $s_{2}$, updates the memory to $m_{2}$ and
+optionally sends a message, $t_{2}$. Figure
+\ref{fig:trans} depicts how the transition function
+works within the agent.
+
+% \begin{figure}
+% \begin{center}
+% \includegraphics*[scale=0.5]{transfn.eps}
+% \caption{Transition function} \label{fig:trans}
+% \end{center}
+% \end{figure}
+
+Some of the transition functions may not depend on the incoming
+message. Thus the message would then be represented as:
+\begin{equation}\label{msg}
+    Message = \{ \emptyset, <data> \}
+\end{equation}
+
+These agent transition functions may be expressed in terms of
+stochastic rules, thus allowing the multi-agent systems to be termed
+as stochastic systems.
+
+\subsubsection{Memory and States}
+The difference between the internal set of states and the internal
+memory set allows for added flexibility when modelling systems.
+There can be agents with one internal state and all the complexity
+defined in the memory or equivalently, there could be agents with
+a trivial memory with the complexity then bound up in a large state
+space. There are good examples of choosing an appropriate balance
+between these two as this enables the complexity of the models to be
+better managed.
+
+% \begin{figure}
+% \begin{center}
+% \includegraphics*[width = 4in]{X-Machine_agent.eps}
+% \caption{X-Machine agent} \label{fig:xmachine}
+% \end{center}
+% \end{figure}
+
+Specifying software behaviour have traditionally involved finite state
+machines which allow modelling a system in terms of its inputs and outputs.
+More abstract system descriptions include UML which has already been proposed as a way to design agent-based models \cite{BAUER:2000,BAUER:2001,HUGET:2002,WEISBUCH:2000} but these techniques lack precise descriptions needed for generating simulation code and for testing.
+Testing a system specified as a finite state machine makes it easier for the behaviour to be expressed as a graph
+and allow traversals of all possible and impossible executions of the system \footnote{This is similar to branch traversal testing.}. Conventional state machines describe the state-dependent behaviour of a system in terms of its inputs, but this fails to include the effect of data.
+X-Machines are an extension to conventional state machines that
+include the manipulation of memory as part of the system behaviour,
+and thus are a suitable way to specify agents. The advantages of this
+approach have been highlighted in Section \ref{xmachine}. Describing a system would thus include the following individual
+stages for creating a model:
+
+\begin{itemize}
+\item Identifying the system functions
+\item Identify the states which impose some order of function execution
+\item Identify the input messages and output messages
+\item For each state identify the memory as the set of variables that are accessed by outgoing and incoming transition functions
+\end{itemize}
