@@ -1,11 +1,23 @@
 all: dvi ps
 
-spell:
-	ispell user_manual.tex
+swarm_1.ps: swarm_1.dot
+	dot -Tps swarm_1.dot -o swarm_1.ps
 
-dvi:
-	latex user_manual
-	bibtex user_manual
+swarm_2.ps: swarm_2.dot
+	dot -Tps swarm_2.dot -o swarm_2.ps
+
+spell:
+	aspell user_manual.tex
+	aspell model_design.tex
+	apsell model_description.tex
+	aspell model_implementation.tex
+	apsell model_execution.tex
+
+images: swarm_1.ps swarm_2.ps
+
+dvi: images
+	#latex user_manual
+	#bibtex user_manual
 	latex user_manual
 	latex user_manual
 

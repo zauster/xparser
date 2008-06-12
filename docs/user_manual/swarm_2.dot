@@ -1,0 +1,28 @@
+digraph state_graph {
+	rankdir=LR;
+	size="8,5;"
+	
+	/* States */
+	swarm_start [label = "start"];
+	swarm_1 [label = "1"];
+	swarm_2 [label = "2"];
+	swarm_end [label = "end"];
+	
+	/* Functions */
+	signal  [label = "signal", shape = rect];
+	observe  [label = "observe", shape = rect];
+	respond    [label = "respond", shape = rect];
+	
+	/* Transitions */
+	swarm_start -> signal [ label = ""];
+	signal -> swarm_1;
+	
+	swarm_1 -> observe [ label = ""];
+	observe -> swarm_2;
+	
+	swarm_2 -> respond [ label = ""];
+	respond -> swarm_end;
+	
+	/* Communications */
+	signal -> observe [ label = "signal" color="#00ff00" constraint=false];
+}
