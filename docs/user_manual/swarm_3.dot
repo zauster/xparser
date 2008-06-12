@@ -10,7 +10,7 @@ digraph state_graph {
 	
 	/* Functions */
 	signal  [label = "signal", shape = rect];
-	observe [label = "observe", shape = rect];
+	observe  [label = "observe", shape = rect];
 	flying  [label = "flying", shape = rect];
 	resting [label = "resting", shape = rect];
 	
@@ -26,4 +26,7 @@ digraph state_graph {
 	
 	swarm_2 -> resting [ label = "z == 0"];
 	resting -> swarm_end;
+	
+	/* Communications */
+	signal -> observe [ label = "signal" color="#00ff00" constraint=false];
 }

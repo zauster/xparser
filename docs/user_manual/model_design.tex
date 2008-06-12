@@ -45,14 +45,32 @@ states.
 \end{center}
 \end{figure}
 
-The messages required for communication are a signal message, which is output
-from signal and input to observe.
+Functions can also have conditions on the memory of an agent. For instance lets
+say we have a response function for flying and a response function when resting
+on the ground. The condition on the flying response function would be that the
+z-axis position of the agent be greather than zero while the resting response
+function condition would be when the z-axis position was zero.
 
 \begin{figure}[h]
 \begin{center}
 \includegraphics*[scale=0.5]{swarm_2.ps}
+\caption{Swarm model including function conditions}
+\label{fig:swarm_2}
+\end{center}
+\end{figure}
+
+The messages required for communication are a signal message, which is output
+from signal and input to observe. A feature of swarm models and most
+agent-based models is that there is generally a limit on incoming
+communication. In the swarm case this is the percevied distance of sight that
+an agent can view the location of other agents. This feature can be added to
+the model as a filter on inputs to a function.
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics*[scale=0.5]{swarm_3.ps}
 \caption{Swarm model including messages}
-\label{fig:swarm_1}
+\label{fig:swarm_3}
 \end{center}
 \end{figure}
 
