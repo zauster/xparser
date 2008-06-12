@@ -57,6 +57,8 @@ int main(int argc, char * argv[])
 	/* Variables for parsing directories */
 	int lastd;
 	int i;
+	/* Error value */
+	int rc;
 	
 	/* Variable to read in command line input */
 	char inputfile[1000];
@@ -65,40 +67,40 @@ int main(int argc, char * argv[])
 	char templatename[1000];
 	char templatedirectory[1000];
 	
+	/* For reading input files */
+	input_file * current_input_file;
+	/* Structure to hold model data */
 	model_data * modeldata;
 	
-	/* Hold model data */
+	/* Hold modeldata data */
 	xmachine * xmachines;
-	/*xmachine_memory * xmemory;*/
 	xmachine_message * xmessage;
-	/*xmachine_state * xstates;*/
-	/*xmachine_function * xfunctions;*/
 	variable * envvar;
 	env_func * envfunc;
 	variable * envdefine;
 	variable * allvars;
 	f_code * it_end_code;
-	communication_layer * communication_layers;
+	layer * layers;
+	flame_communication * communications;
 	model_datatype * datatypes;
+	time_data * time_units;
+	input_file * temp_input_file;
 	
+	/* Allocate memory for modeldata */
 	modeldata = (model_data *)malloc(sizeof(model_data));
-	/* Variable for code type */
 	/* 0=serial(default) 1=parallel 2=grid */
 	modeldata->code_type = 0;
+	/* 0=dgraph.dot 1=stategraph.dot */
+	modeldata->depends_style = 0;
 
 	inputfile[1]='\0';
 	
 	/* Initialise pointers */
+	modeldata->name = NULL;
 	modeldata->p_xmachines = &xmachines;
 	xmachines = NULL;
-	/*modeldata->p_xmemory = &xmemory;*/
-	/*xmemory = NULL;*/
 	modeldata->p_xmessages = &xmessage;
 	xmessage = NULL;
-	/*modeldata->p_xstates = &xstates;*/
-	/*xstates = NULL;*/
-	/*modeldata->p_xfunctions = &xfunctions;*/
-	/*xfunctions = NULL;*/
 	modeldata->p_envvars = &envvar;
 	envvar = NULL;
 	modeldata->p_envfuncs = &envfunc;
@@ -109,16 +111,24 @@ int main(int argc, char * argv[])
 	allvars = NULL;
 	modeldata->p_it_end_code = &it_end_code;
 	it_end_code = NULL;
-	modeldata->p_com_layers = &communication_layers;
-	communication_layers = NULL;
+	modeldata->p_layers = &layers;
+	layers = NULL;
+	modeldata->p_communications = &communications;
+	communications = NULL;
 	modeldata->p_datatypes = &datatypes;
 	datatypes = NULL;
+	modeldata->p_time_units = &time_units;
+	time_units = NULL;
+	modeldata->p_files = &temp_input_file;
+	temp_input_file = NULL;
 	
 	printf("xparser: Version %d.%d.%d\n", VERSIONMAJOR, VERSIONMINOR, VERSIONMICRO);
 	
 	/* Must be at least the input file name */
-	if(argc < 2) {
+	if(argc < 2)
+	{
 		printf("Usage: xparser [XMML file] [-s | -p]\n");
+		free_modeldata(modeldata);
 		return 0;
 	}
 	
@@ -134,7 +144,8 @@ int main(int argc, char * argv[])
 			case 'p': modeldata->code_type = 1;
 				  break;
 			default:  printf("xparser: Error - unknown option %s\n",argv[1]);
-				  return 0;
+				free_modeldata(modeldata);
+				return 0;
 			}
 		}
 		else
@@ -148,6 +159,7 @@ int main(int argc, char * argv[])
 	
 	if(inputfile[1] == '\0') {
 		printf("xparser: Error - XMML must be specified\n");
+		free_modeldata(modeldata);
 		return 0;
 	}
 	
@@ -196,11 +208,34 @@ int main(int argc, char * argv[])
 	printf("directory: %s\n", directory);
 	printf("templates: %s\n", templatedirectory);
 	
+	current_input_file = add_input_file(modeldata->p_files);
+	current_input_file->fullfilepath = copystr(inputfile);
+	current_input_file->fulldirectory = copystr(directory);
+	current_input_file->localdirectory = copystr("");
+	
 	/* Read model from model xml file */
-	readModel(inputfile, directory, modeldata);
+	current_input_file = * modeldata->p_files;
+	while(current_input_file)
+	{
+		if(current_input_file->enabled == 1)
+			readModel(current_input_file, directory, modeldata);
+		
+		current_input_file = current_input_file->next;
+	}
+	rc = checkmodel(modeldata);
+	if(rc == -1)
+	{
+		free_modeldata(modeldata);
+		return 0;
+	}
 	
 	/* Calculate dependency graph for model functions */
-	create_dependency_graph(directory, modeldata);
+	rc = create_dependency_graph(directory, modeldata);
+	if(rc == -1)
+	{
+		free_modeldata(modeldata);
+		return 0;
+	}
 	
 	strcpy(filename, directory); strcat(filename, "Makefile");
 	strcpy(templatename, templatedirectory); strcat(templatename, "Makefile.tmpl");
@@ -239,15 +274,12 @@ int main(int argc, char * argv[])
 	strcpy(templatename, templatedirectory); strcat(templatename, "Doxyfile.tmpl");
 	parseTemplate(filename, templatename, modeldata);
 	parseAgentHeaderTemplate(directory, modeldata);
+	parseRuleFunctionsTemplate(directory, modeldata);
+	/*parseUnittest(directory, modeldata);*/
 	
-	freexmachines(modeldata->p_xmachines);
-	freexmessages(modeldata->p_xmessages);
-	freeenvfunc(modeldata->p_envfuncs);
-	freevariables(modeldata->p_envvars);
-	freevariables(modeldata->p_envdefines);
-	freecommunication_layers(modeldata->p_com_layers);
-	freedatatypes(modeldata->p_datatypes);
-	free(modeldata);
+	free_modeldata(modeldata);
+	
+	printf("xparser finished\n");
 	
 	/* Exit successfully by returning zero to Operating System */
 	return 0;

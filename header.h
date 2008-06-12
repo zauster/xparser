@@ -10,10 +10,10 @@
 #define VERSIONMAJOR 0
 /** \def VERSIONMINOR
  * \brief New features. */
-#define VERSIONMINOR 14
+#define VERSIONMINOR 15
 /** \def VERSIONMICRO
  * \brief Bug fixes. */
-#define VERSIONMICRO 0
+#define VERSIONMICRO 10
 /** \def DEBUG
  * \brief Debug output. */
 #define DEBUG 0
@@ -80,6 +80,19 @@ struct char_array
 	char * array;
 };
 
+struct input_file
+{
+	char * file;
+	char * fullfilepath;
+	char * fulldirectory;
+	char * localdirectory;
+	int enabled;
+	
+	struct input_file * next;
+};
+
+typedef struct input_file input_file;
+
 /** \struct variable
  * \brief Holds variable data from xmachine memory and messages.
  *
@@ -97,6 +110,7 @@ struct variable
 	char defaultvalue[5];			/**< Default value for the type. */
 	char c_type[5];				/**< Variable C type, e.g 'i' or 'f'. */
 	int ismodeldatatype;			/**< Flag for model defined data type. */
+	char * file;			/**< File from where element read. */
 	
 	struct variable * next;		/**< Pointer to next variable in list. */
 };
@@ -113,40 +127,36 @@ struct xmachine_memory
 	struct xmachine_memory * next;	/**< Pointer to next X-machine memory in list. */
 };
 
-/** \struct s_attrib
- * \brief Holds names of attribute of a state.
- *
- * Holds names of attribute of a state using a linked list.
- */
-struct s_attrib
-{
-	char * attrib;	/**< Pointer to attribute name. */
-	
-	struct s_attrib * next;	/**< Pointer to next attribute name. */
-};
-
-/** \struct s_trans
- * \brief Holds transistion function and destination of a state transition.
- */
-struct s_trans
-{
-	char *  func;	/**< Pointer to function name. */
-	char *  dest;	/**< Pointer to destination state name. */
-	
-	struct s_trans * next;		/**< Pointer to next transition in list. */
-};
-
 /** \struct xmachine_state
  * \brief Holds state name, attributes and transistions.
  */
 struct xmachine_state
 {
 	char * name;		/**< Pointer to state name. */
-	struct s_attrib * attributes;	/**< Pointer to state attributes. */
-	struct s_trans * transitions;	/**< Pointer to state transitions. */
 	
 	struct xmachine_state * next;	/**< Pointer to next state in list. */
 };
+
+/** \struct xmachine_state
+ * \brief Holds state name, attributes and transistions.
+ */
+struct xmachine_state_holder
+{
+	struct xmachine_state * state;
+	
+	struct xmachine_state_holder * next;	/**< Pointer to next state in list. */
+};
+
+typedef struct xmachine_state_holder xmachine_state_holder;
+
+struct state_pointer
+{
+	struct xmachine_state * state;
+	
+	struct state_pointer * next;
+};
+
+typedef struct state_pointer state_pointer;
 
 /** \struct f_code
  * \brief Holds code.
@@ -158,6 +168,38 @@ struct f_code
 	struct f_code * next;		/**< Pointer to next code in list. */
 };
 
+
+/** \struct rule_data
+ * \brief Holds rule data.
+ */
+struct rule_data
+{
+	char * lhs;
+	char * op;
+	char * rhs;
+	struct rule_data * lhs_rule; /* If rule==NULL then use lhs,op,rhs data */
+	struct rule_data * rhs_rule; /* If rule==NULL then use lhs,op,rhs data */
+	int time_rule;
+	int not;
+	int has_agent_var;
+	int has_message_var;
+	
+	struct rule_data * next;
+};
+
+typedef struct rule_data rule_data;
+
+struct xmachine_ioput
+{
+	char * messagetype;
+	char * filter_function;		/**< The filter rule function name. */
+	struct rule_data * filter_rule;
+	
+	struct xmachine_ioput * next;
+};
+
+typedef struct xmachine_ioput xmachine_ioput;
+
 /** \struct xmachine_function
  * \brief Holds transistion name, note and code.
  */
@@ -166,10 +208,51 @@ struct xmachine_function
 	char * name;		/**< Pointer to function name. */
 	char * note;		/**< Pointer to function note. */
 	struct f_code * code;			/**< Pointer to function code. */
-	struct s_trans * depends;		/**< Pointer to function note. */
+	
+	char * agent_name;
+	
+	char * file;		/**< File from where element read from. */
+	
+	double x;
+	double y;
+	int rank_in;
+	int rank_out;
+	
+	struct rule_data * condition_rule;	/**< The condition rule function name. */
+	char * condition_function;
+	
+	char * current_state;
+	char * next_state;
+	struct xmachine_ioput * inputs;
+	struct xmachine_ioput * outputs;
+	
+	/* Holds first inputs and last outputs of specific message types */
+	struct xmachine_ioput * first_inputs;
+	struct xmachine_ioput * last_outputs;
+	
+	struct adj_function * dependson;	/**< Node list of dependencies. */
+	struct adj_function * dependants;	/**< Node list of dependants. */
+	
+	struct adj_function * alldepends;
+	struct adj_function * recentdepends;
+	
+	/* To hold depends tag info */
+	struct adj_function * depends;		/**< Pointer to function note. */
 	
 	struct xmachine_function * next;	/**< Pointer to next function in list. */
 };
+
+struct adj_function
+{
+	struct xmachine_function * function;
+	char * type;
+	
+	char * name;
+	
+	struct adj_function * next;
+};
+
+typedef struct adj_function adj_function;
 
 /** \struct env_func
  * \brief Holds environment functions.
@@ -194,6 +277,9 @@ struct xmachine_message
 	struct variable * vars;			/**< Pointer to message variables. */
 	struct env_func * functions;		/**< Pointer to dependency functions. */
 	int var_number;						/**< Number of variables in memory. */
+	int first;
+	int last;
+	char * file;
 	
 	struct xmachine_message * next;	/**< Pointer to next message in list.*/
 };
@@ -204,10 +290,13 @@ struct xmachine_message
 struct xmachine
 {
 	int number;								/**< X-machine number !check. */
-	char * name;				/**< Pointer X-machine name. */
+	char * name;							/**< Pointer X-machine name. */
 	struct xmachine_memory * memory;		/**< Pointer X-machine memory. */
-	struct xmachine_state * states;		/**< Pointer X-machine states. */
+	struct xmachine_state * states;			/**< Pointer X-machine states. */
 	struct xmachine_function * functions;	/**< Pointer X-machine functions. */
+	
+	struct xmachine_state * start_state;
+	struct xmachine_state_holder * end_states;
 	
 	char rangevar[50];						/**< Variable name for range */
 	char idvar[50]; 						/**< Variable name for agent id. */
@@ -220,23 +309,24 @@ struct xmachine
 };
 
 /** \struct layer
- * \brief Holds layers of functions between sync points.
+ * \brief Holds layers of functions.
  */
 struct layer
 {
-	struct xmachine_function * functions;	/**< Pointer to list of functions. */
+	int number;
+	struct function_pointer * functions;	/**< Pointer to list of functions. */
 	
 	struct layer * next;					/**< Pointer next X-machine in list. */
 };
 
-/** \struct communication_layer
- * \brief Holds communication layers which hold function layers.
+/** \struct function_pointer
+ * \brief Holds pointer to a function.
  */
-struct communication_layer
+struct function_pointer
 {
-	struct layer * layers;					/**< Pointer to list of layers. */
-	
-	struct communication_layer * next;		/**< Pointer next X-machine in list. */
+	struct xmachine_function * function;	/**< Pointer to list of functions. */
+		
+	struct function_pointer * next;		/**< Pointer next X-machine in list. */
 };
 
 /** \struct model_datatype
@@ -253,6 +343,32 @@ struct model_datatype
 	struct model_datatype * next;		/**< Pointer next model datatype. */
 };
 
+struct flame_communication
+{
+	char * messagetype;
+	struct xmachine_function * output_function;
+	struct xmachine_function * input_function;
+	
+	struct flame_communication * next;
+};
+
+typedef struct flame_communication flame_communication;
+
+/** \struct time_data
+ * \brief Holds time data.
+ */
+struct time_data
+{
+	char * name;
+	int period;
+	struct time_data * unit;
+	int iterations;
+	
+	struct time_data * next;
+};
+
+typedef struct time_data time_data;
+
 /** \struct model_data
  * \brief Holds model data.
  */
@@ -268,10 +384,15 @@ struct model_data
 	struct env_func ** p_envfuncs;
 	struct variable ** p_allvars;
 	struct f_code ** p_it_end_code;
-	struct communication_layer ** p_com_layers;
+	struct layer ** p_layers;
+	struct flame_communication ** p_communications;
 	int number_messages;
 	int number_xmachines;
 	int agents_include_array_variables;
+	int layer_total;
+	struct time_data ** p_time_units;
+	int depends_style;
+	input_file ** p_files;
 };
 
 /* explicit define datatypes so dont need to use struct anymore */
@@ -343,22 +464,29 @@ typedef struct env_func env_func;
  * \brief Typedef for layer struct.
  */
 typedef struct layer layer;
-/** \typedef struct communication_layer communication_layer
- * \brief Typedef for communication_layer struct.
+/** \typedef struct function_pointer function_pointer
+ * \brief Typedef for function_pointer struct.
  */
-typedef struct communication_layer communication_layer;
+typedef struct function_pointer function_pointer;
 /** \typedef struct model_datatype model_datatype
  * \brief Typedef for model_datatype struct.
  */
 typedef struct model_datatype model_datatype;
 
 /* memory.c */
+void free_modeldata(model_data * modeldata);
+input_file * add_input_file(input_file ** p_files);
+void free_input_files(input_file ** p_files);
+void addstateholder(xmachine_state * state, xmachine_state_holder ** p_list);
+void freestateholder(xmachine_state_holder ** p_list);
+rule_data * add_rule_data(rule_data ** p_data);
+void free_rule_data(rule_data ** p_data);
+void add_time_unit(char * name, char * unit_name, int period, time_data ** p_time_units);
+void free_time_units(time_data ** p_time_units);
+xmachine_ioput * addioput(xmachine_ioput ** p_ioput);
+void free_ioput(xmachine_ioput ** p_ioput);
 f_code * addfcode(f_code ** p_code);
 void freefcode(f_code ** p_code);
-s_trans * addtrans(s_trans ** p_transitions);
-void freetrans(s_trans ** p_transitions);
-s_attrib * addsattrib(s_attrib ** p_attrib);
-void freeattribute(s_attrib ** p_attrib);
 variable * addvariable(variable ** p_vars);
 void freevariables(variable ** p_vars);
 xmachine_memory * addxmemory(xmachine_memory ** p_xmemory);
@@ -367,18 +495,27 @@ env_func * addenvfunc(env_func ** p_env_funcs);
 void freeenvfunc(env_func ** p_env_funcs);
 xmachine_message * addxmessage(xmachine_message ** p_xmessage);
 void freexmessages(xmachine_message ** p_xmessage);
-xmachine_state * addxstate(xmachine_state ** p_xstates);
+void addxstate(char * name, xmachine_state ** p_xstates);
 void freexstates(xmachine_state ** p_xstates);
 xmachine_function * addxfunction(xmachine_function ** p_xfunctions);
 void freexfunctions(xmachine_function ** p_xfunctions);
-xmachine * addxmachine(xmachine ** p_xmachines);
+xmachine * addxmachine(xmachine ** p_xmachines, char * name);
 void freexmachines(xmachine ** p_xmachines);
-layer * addlayer(communication_layer * com_layer);
-void freelayers(layer * layers);
-communication_layer * addcommunication_layer(communication_layer ** p_com_layers);
-void freecommunication_layers(communication_layer ** p_com_layers);
+layer * addlayer(layer ** p_layer);
+void freelayers(layer ** p_layers);
+void addfunction_pointer(function_pointer ** p_function_pointers, xmachine_function * function);
+void freefunction_pointers(function_pointer ** p_function_pointers);
 model_datatype * adddatatype(model_datatype ** p_datatypes);
 void freedatatypes(model_datatype ** p_datatypes);
+void add_flame_communication(char * messagetype, xmachine_function * function1, xmachine_function * function2, flame_communication ** communications);
+void free_flame_communications(flame_communication ** communications);
+adj_function * add_depends_adj_function(xmachine_function * current_function);
+void add_adj_function_simple(xmachine_function * function1, xmachine_function * function2);
+void remove_adj_function_simple(xmachine_function * function1);
+void add_adj_function_recent(xmachine_function * function1, xmachine_function * function2);
+void remove_adj_function_recent(xmachine_function * function1);
+void add_adj_function(xmachine_function * function1, xmachine_function * function2, char * type);
+void free_adj_function(adj_function *adj_functions);
 /* charlist.c */
 void ws(int tabcount, char * string);
 void printcharlist(char_list ** p_charlist);
@@ -408,10 +545,13 @@ void print_double_array(double_array * array);
 void add_double(double_array * array, double new_double);
 void remove_double(double_array * array, int index);
 /* readmodel.c */
-void readModel(char * inputfile, char * directory, model_data * modeldata);
+void readModel(input_file * inputfile, char * directory, model_data * modeldata);
+int checkmodel(model_data * modeldata);
 /* dependencygraph.c */
 char * copystr(char * string);
-void create_dependency_graph(char * filepath, model_data * modeldata);
+int create_dependency_graph(char * filepath, model_data * modeldata);
 /* parsetemplate.c */
 void parseTemplate(char * filename, char * templatename, model_data * modeldata);
 void parseAgentHeaderTemplate(char * directory, model_data * modeldata);
+void parseRuleFunctionsTemplate(char * directory, model_data * modeldata);
+void parseUnittest(char * directory, model_data * modeldata);

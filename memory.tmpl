@@ -10,10 +10,31 @@
  */
 void initialise_pointers()
 {
-	temp_xmachine = NULL;
-	p_xmachine = &temp_xmachine;
-<?foreach message?>	temp_$name_message = NULL;
-	p_$name_message = &temp_$name_message;
+    int rc;
+	//temp_xmachine = NULL;
+	//p_xmachine = &temp_xmachine;
+<?foreach xagent?><?foreach state?>	//temp_xmachine_$agent_name_$name = NULL;
+	$agent_name_$name_state = init_$agent_name_state();//&temp_xmachine_$agent_name_$name;
+<?end foreach?><?end foreach?>	
+<?foreach message?>
+    rc = MB_Create(&b_$name, sizeof(m_$name));
+    #ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not create '$name' board\n");
+       switch(rc) {
+           case MB_ERR_INVALID:
+               fprintf(stderr, "\t reason: Invalid message size\n");
+               break;
+           case MB_ERR_MEMALLOC:
+               fprintf(stderr, "\t reason: out of memory\n");
+               break;
+           case MB_ERR_INTERNAL:
+               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+               break;
+       }
+    }
+    #endif
 <?end foreach?>	temp_node_info = NULL;
 	p_node_info = &temp_node_info;
 }
@@ -24,11 +45,12 @@ void initialise_pointers()
 void initialise_unit_testing()
 {
 	initialise_pointers();
-	add_node(0, -SPINF, SPINF, -SPINF, SPINF, -SPINF, SPINF);
-	current_node = *p_node_info;
-	p_xmachine = &current_node->agents;
-	current_xmachine = *p_xmachine;
-<?foreach message?>	p_$name_message = &current_node->$name_messages;
+	//add_node(0, -SPINF, SPINF, -SPINF, SPINF, -SPINF, SPINF);
+	//current_node = *p_node_info;
+	//p_xmachine = &current_node->agents;
+	//current_xmachine = *p_xmachine;
+	// todo fix pointer to current agent types
+<?foreach message?>	//p_$name_message = &current_node->$name_messages;
 <?end foreach?>}
 
 /* add_location */
@@ -88,28 +110,6 @@ void freelocations(location ** p_location)
 	}
 	
 	*p_location = NULL;
-}
-
-/* add_xmachine */
-/** \fn xmachine * add_xmachine()
- * \brief Add an X-machine to the current being used X-machine list.
- * \return Pointer to the added X-machine.
- */
-xmachine * add_xmachine()
-{
-	xmachine * current = (xmachine *)malloc(sizeof(xmachine));
-	CHECK_POINTER(current);
-
-<?foreach xagent?>	current->xmachine_$name = NULL;
-<?end foreach?>	current->next = *p_xmachine;
-	*p_xmachine = current;
-	
-	current_node->agent_total++;
-
-/* add by cg for round-robin so that set_ has something to point at */
-	//current_xmachine = current;
-	
-	return current;
 }
 
 void init_int_static_array(int * array, int size)
@@ -195,6 +195,17 @@ void copy_$name_static_array($name * from, $name * to, int size)
 <?end foreach?>
 
 <?foreach xagent?>
+xmachine_memory_$name_state * init_$name_state()
+{
+	xmachine_memory_$name_state * current = (xmachine_memory_$name_state *)malloc(sizeof(xmachine_memory_$name_state));
+	CHECK_POINTER(current);
+	
+	current->agents = NULL;
+	current->count = 0;
+	
+	return current;
+}
+
 xmachine_memory_$name * init_$name_agent()
 {
 	xmachine_memory_$name * current = (xmachine_memory_$name *)malloc(sizeof(xmachine_memory_$name));
@@ -208,18 +219,80 @@ xmachine_memory_$name * init_$name_agent()
 	return current;
 }
 
-void free_$name_agent(xmachine_memory_$name * tmp)
+void free_$name_agent(xmachine_memory_$name_holder * tmp, xmachine_memory_$name_state * state)
 {
-	<?foreach xagentvar?><?if modeldatatype?><?if not_array?>free_$type(&tmp->$name);
-	<?end if?><?if static_array?>free_$type_static_array(tmp->$name, $arraylength);
-	<?end if?><?end if?><?if dynamic_array?>free_$type(&tmp->$name);
+	if(tmp->prev == NULL) state->agents = tmp->next;
+	else tmp->prev->next = tmp->next;
+	if(tmp->next != NULL) tmp->next->prev = tmp->prev;
+	
+	<?foreach xagentvar?><?if modeldatatype?><?if not_array?>free_$type(&tmp->agent->$name);
+	<?end if?><?if static_array?>free_$type_static_array(tmp->agent->$name, $arraylength);
+	<?end if?><?end if?><?if dynamic_array?>free_$type(&tmp->agent->$name);
 	<?end if?><?end foreach?>
+	
+	free(tmp->agent);
+	free(tmp);
 }
 
-void add_$name_agent_internal(xmachine_memory_$name * current)
+void unittest_init_$name_agent()
 {
-	xmachine * new_xmachine = add_xmachine();
-	new_xmachine->xmachine_$name = current;
+	current_xmachine_$name = (xmachine_memory_$name *)malloc(sizeof(xmachine_memory_$name));
+	CHECK_POINTER(current);
+	
+	<?foreach xagentvar?><?if modeldatatype?><?if not_array?>	init_$type(&current_xmachine_$agent_name->$name);
+	<?end if?><?end if?><?if static_array?>	init_$type_static_array(current_xmachine_$agent_name->$name, $arraylength);
+	<?end if?><?if dynamic_array?>	init_$type(&current_xmachine_$agent_name->$name);
+	<?end if?><?if not_modeldatatype?><?if not_array?>	current_xmachine_$agent_name->$name = $default_value;
+	<?end if?><?end if?><?end foreach?>	
+}
+
+void unittest_free_$name_agent()
+{
+	<?foreach xagentvar?><?if modeldatatype?><?if not_array?>free_$type(&current_xmachine_$agent_name->$name);
+	<?end if?><?if static_array?>free_$type_static_array(current_xmachine_$agent_name->$name, $arraylength);
+	<?end if?><?end if?><?if dynamic_array?>free_$type(&current_xmachine_$agent_name->$name);
+	<?end if?><?end foreach?>
+	free(current_xmachine_$name);
+}
+
+void free_$name_agents()
+{
+<?foreach state?>	current_xmachine_$agent_name_holder = $agent_name_$name_state->agents;
+	while(current_xmachine_$agent_name_holder)
+	{
+		temp_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
+		free_$agent_name_agent(current_xmachine_$agent_name_holder, $agent_name_$name_state);
+		current_xmachine_$agent_name_holder = temp_xmachine_$agent_name_holder;
+	}
+<?end foreach?>}
+
+void free_$name_states()
+{
+<?foreach state?>	free($agent_name_$name_state);
+<?end foreach?>}
+
+void transition_$name_agent(xmachine_memory_$name_holder * tmp, xmachine_memory_$name_state * from_state, xmachine_memory_$name_state * to_state)
+{
+	if(tmp->prev == NULL) from_state->agents = tmp->next;
+	else tmp->prev->next = tmp->next;
+	if(tmp->next != NULL) tmp->next->prev = tmp->prev;	
+	
+	add_$name_agent_internal(tmp->agent, to_state);
+	free(tmp);
+}
+
+void add_$name_agent_internal(xmachine_memory_$name * agent, xmachine_memory_$name_state * state)
+{
+	xmachine_memory_$name_holder * current = (xmachine_memory_$name_holder *)malloc(sizeof(xmachine_memory_$name_holder));
+	CHECK_POINTER(current);
+	
+	current->next = state->agents;
+	current->prev = NULL;
+	state->agents = current;
+	if(current->next != NULL) current->next->prev = current;
+	current->agent = agent;
+	
+	state->count++;
 }
 
 /** \fn void add_$name_agent(<?foreach xagentvar?>$type <?if not_modeldatatype?><?if dynamic_array?>* <?end if?><?end if?><?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?>$name<?if not_modeldatatype?><?if static_array?>[]<?end if?><?end if?><?if notlast?>, <?end if?><?end foreach?>)
@@ -228,11 +301,10 @@ void add_$name_agent_internal(xmachine_memory_$name * current)
 <?end foreach?> */
 void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>)
 {
-	xmachine * new_xmachine = add_xmachine();
 	xmachine_memory_$name * current;
 	
 	current = init_$name_agent();
-	new_xmachine->xmachine_$name = current;
+	add_$name_agent_internal(current, current_xmachine_$name_next_state);
 	
 <?foreach xagentvar?>	<?if modeldatatype?><?if not_array?>copy_$type(&$name, &current->$name);
 <?end if?><?if dynamic_array?>copy_$type($name, &current->$name);
@@ -242,38 +314,6 @@ void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>
 <?end if?><?if static_array?>memcpy(current->$name, $name, $arraylength*sizeof($type));
 <?end if?><?end if?><?end foreach?>}
 <?end foreach?>
-/** \fn void free_agent()
- * \brief Free the currently being used X-machine.
- */
-/* free_agent */
-void free_agent()
-{
-	xmachine * head = *p_xmachine;
-	xmachine * tmp = NULL;
-	
-	while(head)
-	{
-		if(head == current_xmachine)
-		{
-			if(tmp) tmp->next = head->next;
-			else *p_xmachine = head->next;
-<?foreach xagent?>			if(head->xmachine_$name)
-			{
-				free_$name_agent(head->xmachine_$name);
-				free(head->xmachine_$name);
-			}
-<?end foreach?>		free(head);
-		head = NULL;
-	}
-	else
-	{
-		tmp = head;
-		head = tmp->next;
-	}
-}
-	
-	current_node->agent_total--;
-}
 
 /* freexmachines */
 /** \fn void freexmachines()
@@ -281,22 +321,8 @@ void free_agent()
  */
 void freexmachines()
 {
-	xmachine * head = *p_xmachine;
-	xmachine * tmp = NULL;
-	
-	while(head)
-	{
-		tmp = head->next;
-<?foreach xagent?>		if(head->xmachine_$name)
-		{
-			free_$name_agent(head->xmachine_$name);
-			free(head->xmachine_$name);
-		}
-<?end foreach?>		free(head);
-		head = tmp;
-	}
-	
-	*p_xmachine = NULL;
+	<?foreach xagent?>free_$name_agents();
+	<?end foreach?>
 }
 
 <?foreach allvar?><?if not_modeldatatype?><?if not_array?>
@@ -330,7 +356,7 @@ $type <?if modeldatatype?>* <?end if?><?if not_modeldatatype?><?if array?>* <?en
 double agent_get_range()
 {
     double value = 0.0;
-<?foreach xagent?>    if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$rangevar;
+<?foreach xagent?>    /*if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$rangevar;*/
 <?end foreach?>
     return value;
 }
@@ -342,7 +368,7 @@ double agent_get_range()
 int agent_get_id()
 {
     int value = 0;
-<?foreach xagent?>    if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$idvar;
+<?foreach xagent?>    /*if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$idvar;*/
 <?end foreach?>
     return value;
 }
@@ -354,7 +380,7 @@ int agent_get_id()
 double agent_get_x()
 {
     double value = 0.0;
-<?foreach xagent?>    if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$xvar;
+<?foreach xagent?>    /*if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$xvar;*/
 <?end foreach?>
     return value;
 }
@@ -365,7 +391,7 @@ double agent_get_x()
 double agent_get_y()
 {
     double value = 0.0;
-<?foreach xagent?>    if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$yvar; 
+<?foreach xagent?>    /*if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$yvar;*/ 
 <?end foreach?>
     return value;
 }
@@ -376,66 +402,10 @@ double agent_get_y()
 double agent_get_z()
 {
     double value = 0.0;
-<?foreach xagent?><?if use_zvar?>    if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$zvar; 
+<?foreach xagent?><?if use_zvar?>    /*if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$zvar;*/ 
 <?end if?><?end foreach?>
     return value;
 }
-/** \fn void randomisexagent()
- * \brief Randomise the current X-machine list.
- * 
- * \author LS Chin (CCLRC)
- * \date March 2007
- */
-void randomisexagent() {
-
-    int i, rnd;
-    int xm_count;
-    xmachine *current;
-    xmachine **address_list;
-    
-    xm_count = current_node->agent_total;
-
-    /* allocate mem for dynamic temp array */
-    address_list = (xmachine **)malloc(sizeof(xmachine *) * xm_count);
-	CHECK_POINTER(address_list);
-
-    p_xmachine = &current_node->agents;
-    
-    /* populate address list */
-    i = 0;
-    current = *p_xmachine;
-    while(current)
-    {
-        address_list[i] = current;
-        current = current->next;
-        i++;
-    }
-
-    /* randomise address list */
-    for (i = xm_count - 1; i > 0; i--)
-    {
-        /* get random number */
-        rnd = (int)((double)i * rand() / (RAND_MAX + 1.0));
-
-        if (rnd == i) continue;
-
-        /* use 'current' as temp var to swap addresses */
-        current = address_list[i];
-        address_list[i] = address_list[rnd];
-        address_list[rnd] = current;
-    }
-
-    /* build new xmachine list from randomised address list */
-    *p_xmachine = NULL;
-    for (i = 0; i < xm_count; i++)
-    {
-        address_list[i]->next = *p_xmachine;
-        *p_xmachine = address_list[i];
-    }
-
-    free(address_list);
-}
-
 
 /** \fn void add_node(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz)
  * \brief Add a node to the node list.
@@ -508,39 +478,46 @@ void free_node_info()
 	*p_node_info = NULL;
 }
 
-/**\fn void free_messages()
- * \brief Frees all the message lists (of the current node if in serial).
- */
-void free_messages()
-{
-<?foreach message?>	free$namemessages();<?end foreach?>
-}
-
 /** \fn void clean_up(int code)
  * \brief Add a node to the node list.
  * \param code The error code (zero is no error).
  */
 void clean_up(int code)
 {
+    int rc;
 	FILE *file;
 	char data[100];
 	
-	
+	free(current_xmachine);
 	/* Free x-machine memory */
-<?if serial?>
-	current_node = *p_node_info;
-	while(current_node)
-	{
-		p_xmachine = &current_node->agents;
-<?end if?>
 	freexmachines();
-	current_node->agent_total = 0;
-<?if serial?>
-		current_node = current_node->next;
-	}
-<?end if?>
 	/* Free space partitions linked list */
 	free_node_info();
+	/* Free agent states */
+<?foreach xagent?>	free_$name_states();
+<?end foreach?>	
+	
+	/* Free message boards */
+<?foreach message?>
+	rc = MB_Delete(&b_$name);
+	#ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not delete '$name' board\n");
+       switch(rc) {
+           case MB_ERR_INVALID:
+               fprintf(stderr, "\t reason: '$name' board has not been created?\n");
+               break;
+           case MB_ERR_LOCKED:
+               fprintf(stderr, "\t reason: '$name' board is locked\n");
+               break;
+           case MB_ERR_INTERNAL:
+               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+               break;
+       }
+    }
+    #endif
+<?end foreach?>
 	
 <?if parallel?>
         /* Clear MPI_Datatypes */
@@ -591,7 +568,7 @@ void clean_up(int code)
  */
 void propagate_agents()
 {
-	node_information * node_info;
+/*	node_information * node_info;
 	xmachine * before_xmachine, * temp_xmachine;
 	xmachine ** p_temp_xmachine;
 	double x_xmachine, y_xmachine, z_xmachine;
@@ -621,11 +598,11 @@ void propagate_agents()
 				node_info->partition_data[2] < y_xmachine && node_info->partition_data[3] > y_xmachine &&
 				node_info->partition_data[4] < z_xmachine && node_info->partition_data[5] > z_xmachine)
 				{
-                    /* Remove agent */
+                    // Remove agent
                     if(before_xmachine) before_xmachine->next = current_xmachine->next;
                     else *p_xmachine = current_xmachine->next;
                     current_node->agent_total--;
-                    /* Add agent */
+                    // Add agent
                     p_temp_xmachine = &node_info->agents;
                     temp_xmachine = *p_temp_xmachine;
                     current_xmachine->next = temp_xmachine;
@@ -640,7 +617,7 @@ void propagate_agents()
 			
 			if(before_xmachine) current_xmachine = before_xmachine->next;
 			else current_xmachine = NULL;
-		}
+		}*/
 }
 <?end if?>
 
@@ -1284,3 +1261,10 @@ void remove_$name($name_array * array, int index)
 	}
 }
 <?end foreach?>
+/** \fn int idle()
+ * \brief an idle function for use by agents.
+ */
+int idle()
+{
+	return 0;
+}

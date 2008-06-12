@@ -6,31 +6,34 @@
 # The assumption is that the user only provides C files
 # and a model files <file>.xml
 #
-DEFINES=-DNONE
-<?if serial?>
-CC=gcc
-<?end if?>
-<?if parallel?>
-CC=mpicc
-<?end if?>
-CFLAGS=-c -std=c99 -Wall ${DEFINES}
-LDFLAGS = 
-LIBS=-lm
+DEFINES       = -DNONE
+LIBMBOARD_DIR = libmboard
+LIBMBOARD_INC = $(LIBMBOARD_DIR)/include
+LIBMBOARD_LIB = $(LIBMBOARD_DIR)/lib
+
+CC      = <?if serial?>gcc<?end if?><?if parallel?>mpicc<?end if?>
+CFLAGS  = -c -std=c99 -Wall -I$(LIBMBOARD_INC) ${DEFINES} 
+
+CFLAGS += -D_DEBUG_MODE -g # uncomment this line for DEBUG runs
+#CFLAGS += -DNDEBUG -O3     # uncomment this line for PRODUCTION runs
+
+LDFLAGS = -L$(LIBMBOARD_LIB)
+LIBS    = -lm <?if serial?>-lmboard_s <?end if?><?if parallel?>-lmboard_p <?end if?>
 
 #FLAME source files
-FLAME   = main.c memory.c xml.c messageboards.c partitioning.c <?if parallel?>propagate_messages.c propagate_agents.c <?end if?>
+FLAME   = main.c memory.c xml.c messageboards.c partitioning.c rules.c <?if parallel?>propagate_messages.c propagate_agents.c <?end if?>
 #FLAME auxilary files
-AUX 	= dgraph.dot dgraph.svg Doxyfile
+AUX 	= stategraph.dot Doxyfile
 
 # FLAME generated model files
 SOURCES = <?foreach functionfiles?> $filepath <?end foreach?>
-HEADERS = header.h low_primes.h <?foreach xagent?> $name_agent_header.h <?end foreach?> 
+HEADERS = header.h low_primes.h mboard.h <?foreach xagent?> $name_agent_header.h <?end foreach?> 
 
-DEPS=Makefile header.h low_primes.h
+DEPS    = Makefile header.h low_primes.h
 
-OBJECTS=$(SOURCES:.c=.o) $(FLAME:.c=.o)
-EXECUTABLE=main
-RM=rm -f
+OBJECTS = $(SOURCES:.c=.o) $(FLAME:.c=.o)
+EXECUTABLE = main
+RM = rm -f
 
 all: $(SOURCES) $(FLAME) $(EXECUTABLE)
 

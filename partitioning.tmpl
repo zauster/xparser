@@ -264,94 +264,7 @@ void generate_partitions(double cloud_data[6], int partitions, int partition_met
  */
 void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6], int partition_method)
 {
-    /* Data to loop through agents and copy data into nodes*/
-    xmachine * current_xmemory, *next_agent;
-    /* Data to loop through nodes*/
-    node_information* current_partition;
-    /* Limits of this space partition*/
-    double xmin,xmax,ymin,ymax;
-    double x_centre,y_centre;
     
-    int geometric = 1;
-    int other = 2;
-
-
-    if(partition_method == geometric){
-
-        printf("Geometric partitioning\n");
-
-        current_xmachine = *agent_list;
-        while(current_xmachine)
-        {
-            /* Loop through nodes */
-            current_partition = *p_node_info;
-            while (current_partition)
-            {
-                /* Check if agent in this space partition. If so add it to agent list */
-                xmin=current_partition->partition_data[0];
-                xmax=current_partition->partition_data[1];
-                ymin=current_partition->partition_data[2];
-                ymax=current_partition->partition_data[3];
-                /* Use get_ methods since current_agent global variable is set*/
-                if((agent_get_x() >= xmin) && (agent_get_x() < xmax) &&
-                   (agent_get_y() >= ymin) && (agent_get_y() < ymax))
-                {
-                    current_xmemory = current_partition->agents;
-                    current_partition->agents = current_xmachine;
-                    next_agent = current_xmachine->next;
-                     current_xmachine->next = current_xmemory;
-                    current_partition->agent_total++;
-                     /* Stop the loop over nodes*/
-                     current_partition = NULL;
-                }
-                else {
-                    current_partition = current_partition->next;
-                }
-            } /* end of partition while */
-            current_xmachine = next_agent;
-        } /* end of xmachine while */
-    }
-    else if(partition_method == other){/* Round Robin allocation */
-
-        printf("Round robin partitioning\n");
-
-        /* Loop through agents */
-        current_xmachine = *agent_list;
-        while(current_xmachine){
-            /* Loop through nodes */
-            current_partition = *p_node_info;
-            while(current_partition && current_xmachine){
-            
-                /* Compute centre of partition */
-                xmin=current_partition->partition_data[0];
-                xmax=current_partition->partition_data[1];
-                ymin=current_partition->partition_data[2];
-                ymax=current_partition->partition_data[3];
-                x_centre=xmin+(xmax-xmin)/2.0;
-                y_centre=ymin+(ymax-ymin)/2.0;
-                /*_centre=zmin+(zmax-zmin)/2.0;*/
-
-                /* Allocation current agent to current node */
-                current_xmemory = current_partition->agents;
-<?foreach xagent?>
-                /* Change agent position to centre */
-                set_$rangevar(1.5);
-                set_$xvar(x_centre);
-                set_$yvar(y_centre);
-<?end foreach?>
-                current_partition->agents = current_xmachine;
-                next_agent = current_xmachine->next;
-                current_xmachine->next = current_xmemory;
-                current_partition->agent_total++;
-
-                /* Select next agent and next node */
-                current_xmachine = next_agent;
-                current_partition = current_partition->next;
-            } /* End of node loop */
-            current_xmachine = next_agent;
-        } /* End of agent loop */
-    }
-
 }
 <?end if?>
 
@@ -422,7 +335,7 @@ void broadcast_node_data(int totalnodes, int node_number)
         }
     }
     
-    printf("%d> Node %d found its partition data :  %f, %f, %f, %f\n", node_number, node_number, 
+    printf("Node %d found its partition data :  %f, %f, %f, %f\n", node_number, 
             pdata[(node_number * 6) + 0],  /* x min */
             pdata[(node_number * 6) + 1],  /* x min */
             pdata[(node_number * 6) + 2],  /* x min */

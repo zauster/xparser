@@ -18,13 +18,18 @@ int main(int argc, char * argv[])
 	char data[100];
 	char logfilepath[100];
 	char inputpath[100];
+	char * c;
 	int lastd = 0;
 	int i;
+	int rc;
 	int iteration_number;
 	int iteration_total;
 	int * p_iteration_number;
-	xmachine * temp_free_xmachine;
-	xmachine **agent_list;
+	/* For backwards compatabilty allocate current_xmachine */
+	current_xmachine = (xmachine *)malloc(sizeof(xmachine));
+	CHECK_POINTER(current_xmachine);
+<?foreach xagent?>	//xmachine_memory_$name * temp_xmachine_$name;
+<?end foreach?>	
 	/* Ratio for calculating time in milliseconds */
     /* (lsc) changed from long to double
      * if "long", time_ratio == 0 when CLOCKS_PER_SEC > 1000
@@ -48,37 +53,54 @@ int main(int argc, char * argv[])
 	MPI_Datatype array_of_types[2] = {MPI_INT, MPI_DOUBLE};
 <?end if?>
 	
-	/* Don't use binary output as default */
-	use_binary_output = 0;
 	/* Output frequency is 1 as default */
 	output_frequency = 1;
 	/* Set random seed */
 /*	srand(time(NULL)); */
 	
+	<?if parallel?>
+	/* MPI initialisation routine */
+        err = MPI_Init(&argc, &argv);
+        if (err != MPI_SUCCESS)
+        {
+            printf("MPI initialization failed!\n");
+            exit(1);
+        }
+        
+        /* Get total number of nodes and own node number */
+        MPI_Comm_size(MPI_COMM_WORLD, &totalnodes);
+        MPI_Comm_rank(MPI_COMM_WORLD, &node_number);
+        /* Initialise spacePartitionType */
+        MPI_Address(&tmp_space_partition, &baseaddress);
+        MPI_Address(&tmp_space_partition.node_id, &array_of_displacements[0]);
+        array_of_displacements[0] -= baseaddress;
+        MPI_Address(&tmp_space_partition.partition_data[0], &array_of_displacements[1]);
+        array_of_displacements[1] -= baseaddress;
+        MPI_Type_struct(2, array_of_block_lengths, array_of_displacements, array_of_types, &spacePartitionType);
+        MPI_Type_commit(&spacePartitionType);
+    <?end if?>
+    
+	rc = MB_Env_Init();
+	#ifdef ERRCHECK
+	if (rc != MB_SUCCESS)
+	{
+	   fprintf(stderr, "ERROR: Failed to initialise Message Board environment\n");
+	   switch(rc) {
+	       case MB_ERR_MPI:
+	           fprintf(stderr, "\t reason: MPI library not initialised\n");
+	           break;
+	       case MB_ERR_MEMALLOC:
+	           fprintf(stderr, "\t reason: out of memory\n");
+	           break;
+            default: break;
+	   }
+	   
+	}
+	#endif
+	
 	/* Initialise pointers */
 	initialise_pointers();
 	p_iteration_number = &iteration_number;
-	<?if parallel?>
-		
-		/* MPI initialisation routine */
-		err = MPI_Init(&argc, &argv);
-  		if (err != MPI_SUCCESS)
-		{
-			printf("MPI initialization failed!\n");
-			exit(1);
-		}
-		/* Get total number of nodes and own node number */
-		MPI_Comm_size(MPI_COMM_WORLD, &totalnodes);
-		MPI_Comm_rank(MPI_COMM_WORLD, &node_number);
-		/* Initialise spacePartitionType */
-		MPI_Address(&tmp_space_partition, &baseaddress);
-		MPI_Address(&tmp_space_partition.node_id, &array_of_displacements[0]);
-		array_of_displacements[0] -= baseaddress;
-		MPI_Address(&tmp_space_partition.partition_data[0], &array_of_displacements[1]);
-		array_of_displacements[1] -= baseaddress;
-		MPI_Type_struct(2, array_of_block_lengths, array_of_displacements, array_of_types, &spacePartitionType);
-		MPI_Type_commit(&spacePartitionType);
-<?end if?>	
 
 <?if serial?>
 	printf("FLAME Application: $model_name \n");
@@ -141,15 +163,32 @@ if(argc < 2)
 	i = 3;
 	while(argc > i)
 	{
-		/* Use binary format for results */
-		if(strcmp(argv[i],"-b") == 0) use_binary_output = 1;
-		if(use_binary_output) printf("Using binary output for results\n");
 		if(strcmp(argv[i],"-f") == 0)
 		{
 			if(argc > (i+1))
 			{
-				output_frequency = atoi(argv[(i+1)]);
-				printf("Using output frequency of: %i\n", output_frequency);
+				output_offset = 0;
+				/* Find offset, seperated by the char '+' */
+				c = strchr(argv[(i+1)], '+');
+				if(c == NULL)
+				{
+					output_frequency = atoi(argv[(i+1)]);
+					printf("Using output frequency of: %d\n", output_frequency);
+				}
+				else
+				{
+					output_offset = atoi(argv[(i+1)]+(c-argv[(i+1)])+1);
+					argv[(i+1)][c-argv[(i+1)]] = 0;
+					output_frequency = atoi(argv[(i+1)]);
+					printf("Using output frequency of: %d with offset %d\n", output_frequency, output_offset);
+				}
+				
+				if(output_frequency == 0)
+				{
+					printf("Output frequency cannot be zero\n");
+					exit(0);
+				}
+				
 				i++;
 			}
 			else
@@ -169,11 +208,11 @@ if(argc < 2)
     if (node_number == 0)
     {
 <?end if?>
-       agent_list = p_xmachine;
-       readinitialstates(inputpath, p_iteration_number, agent_list, cloud_data, partition_method, 0);
+       //agent_list = p_xmachine;
+       readinitialstates(inputpath, p_iteration_number, cloud_data, partition_method, 0);
        /* Generate partitions */
-       generate_partitions(cloud_data,totalnodes,partition_method);
-       save_partition_data();
+//       generate_partitions(cloud_data,totalnodes,partition_method);
+//       save_partition_data();
 <?if parallel?>
     }
 <?end if?> 
@@ -186,7 +225,8 @@ if(argc < 2)
 
 <?if serial?>
     /* Partition data */
-    partition_data(totalnodes, agent_list, cloud_data, partition_method);
+    /* stc: no partitions in serial */
+	//partition_data(totalnodes, agent_list, cloud_data, partition_method);
 <?end if?>
 <?if parallel?>
     /* Clear previously populated agent list before readinitialstates()
@@ -201,7 +241,7 @@ if(argc < 2)
 <?end if?>
 
 <?if serial?>
-		i = 0;
+		/*i = 0;
 		current_node = *p_node_info;
 		while(current_node)
 		{
@@ -209,10 +249,10 @@ if(argc < 2)
 			i += current_node->agent_total;
 			current_node = current_node->next;
 		}
-		printf("Agent total check: %d\n", i);
+		printf("Agent total check: %d\n", i);*/
 
         /* restore current_node pointer */
-		current_node = *p_node_info;
+		//current_node = *p_node_info;
 <?end if?>
 <?if parallel?>
 		/* Print processor name */
@@ -250,7 +290,7 @@ if(argc < 2)
 	start = clock();
 
     /* pre-randomise agents for first iteration */
-    randomisexagent();
+    //randomisexagent();
 	
 	for(iteration_loop=iteration_number+1; iteration_loop < iteration_number+iteration_total+1; iteration_loop++)
 	{
@@ -258,77 +298,169 @@ if(argc < 2)
 		/* Print out iteration number */
 <?if serial?>		<?end if?><?if parallel?>		if(node_number == 0) <?end if?>printf("Iteration - %d\n", iteration_loop);
 		/* START OF ITERATION */
-<?foreach comlayer?>
-/* Start of communications layer loop */
-	<?if serial?>
-		current_node = *p_node_info;
-		while(current_node)
+<?foreach layer?><?foreach function?><?foreach first_input?>
+	rc = MB_SyncComplete(b_$name);
+	#ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not complete sync of '$name' board\n");
+       switch(rc) {
+            case MB_ERR_INVALID:
+               fprintf(stderr, "\t reason: '$name' board is invalid\n");
+               break;
+           case MB_ERR_MEMALLOC:
+               fprintf(stderr, "\t reason: out of memory\n");
+               break;
+           case MB_ERR_INTERNAL:
+               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+               break;
+       }
+    }
+    #endif
+	<?end foreach?>
+	
+	current_xmachine_$agent_name_holder = $agent_name_$current_state_state->agents;
+	while(current_xmachine_$agent_name_holder)
+	{
+		temp_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
+		current_xmachine_$agent_name = current_xmachine_$agent_name_holder->agent;
+		current_xmachine_$agent_name_next_state = $agent_name_$next_state_state;
+		/* For backwards compatability set current_xmachine */
+		<?foreach xagent?>current_xmachine->xmachine_$name = NULL;
+		<?end foreach?>current_xmachine->xmachine_$agent_name = current_xmachine_$agent_name;
+		
+		<?if condition?>if($condition(current_xmachine_$agent_name))
+		{<?end if?>
+		
+		<?foreach function_input?>
+		<?if filter?>rc = MB_Iterator_CreateFiltered(b_$name, &i_$name, &$filter, current_xmachine_$agent_name);<?end if?>
+		<?if no_filter?>rc = MB_Iterator_Create(b_$name, &i_$name);<?end if?>
+		#ifdef ERRCHECK
+		if (rc != MB_SUCCESS)
 		{
-		<?foreach message?>		
-			p_$name_message = &current_node->$name_messages;
-		<?end foreach?>		
-		p_xmachine = &current_node->agents;
-	<?end if?>
-	<?if parallel?>		/* Barrier synchronisation */
-        /* (lsc) removed barriers. message propagation should already synchronise all nodes */
-		/* MPI_Barrier(MPI_COMM_WORLD); */
-	<?end if?>
-	<?foreach funclayer?>
-		/* Loop through x-machines */
-		current_xmachine = *p_xmachine;
-		while(current_xmachine)
-		{
-			i = 0;
-		<?foreach function?>
-			if(current_xmachine->xmachine_$note != NULL)
-			{
-				i = $name();
-			}
-		<?end foreach?>	
-			/* If agent is freed */
+		   fprintf(stderr, "ERROR: Could not create Iterator for '$name'\n");
+		   switch(rc) {
+		       case MB_ERR_INVALID:
+		           fprintf(stderr, "\t reason: '$name' board is invalid\n");
+		           break;
+		       case MB_ERR_LOCKED:
+	               fprintf(stderr, "\t reason: '$name' board is locked\n");
+	               break;
+	           case MB_ERR_MEMALLOC:
+	               fprintf(stderr, "\t reason: out of memory\n");
+	               break;
+	           case MB_ERR_INTERNAL:
+	               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+	               break;
+		   }
+		}
+		#endif
+		<?end foreach?>
+		
+			i = $name();
+			
+		<?foreach function_input?>
+		    rc = MB_Iterator_Delete(&i_$name);
+		    #ifdef ERRCHECK
+		    if (rc != MB_SUCCESS)
+		    {
+		       fprintf(stderr, "ERROR: Could not delete '$name' iterator\n");
+		       switch(rc) {
+		           case MB_ERR_INVALID:
+		               fprintf(stderr, "\t reason: '$name' iterator is invalid\n");
+		               break;
+		           case MB_ERR_INTERNAL:
+		               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+		               break;
+		       }
+		    }
+		    #endif
+		<?end foreach?>
+		
 			if(i == 1)
 			{
-				temp_free_xmachine = current_xmachine->next;
-				free_agent();
-				current_xmachine = temp_free_xmachine;
+				free_$agent_name_agent(current_xmachine_$agent_name_holder, $agent_name_$current_state_state);
 			}
 			else
 			{
-				current_xmachine = current_xmachine->next;
+				transition_$agent_name_agent(current_xmachine_$agent_name_holder, $agent_name_$current_state_state, $agent_name_$next_state_state);
 			}
-		}
-	<?end foreach?>
-	<?if parallel?>		/* Propagate messages between nodes */
-		propagate_messages_init();
-	<?end if?>
-        randomisexagent();  /* randomise x-agents while waiting for communication to complete */
-        <?if parallel?>
-		propagate_messages_complete();
-	<?end if?>
-	<?if serial?>		
-		current_node = current_node->next;
-		}
-	<?end if?>		
-/* End of communications layer loop */
-<?end foreach?>
+		<?if condition?>}<?end if?>
+		
+		current_xmachine_$agent_name = NULL;
+		
+		current_xmachine_$agent_name_holder = temp_xmachine_$agent_name_holder;
+	}
 
+<?foreach last_output?>
+    rc = MB_SyncStart(b_$name);
+    #ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not start sync of '$name' board\n");
+       switch(rc) {
+           case MB_ERR_INVALID:
+               fprintf(stderr, "\t reason: '$name' board is invalid\n");
+               break;
+           case MB_ERR_LOCKED:
+               fprintf(stderr, "\t reason: '$name' board is locked\n");
+               break;
+           case MB_ERR_MEMALLOC:
+               fprintf(stderr, "\t reason: out of memory\n");
+               break;
+           case MB_ERR_INTERNAL:
+               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+               break;
+       }
+    }
+    #endif
+<?end foreach?>
+<?end foreach?>
+<?end foreach?>
+<?foreach message?>
+    rc = MB_Clear(b_$name);
+    #ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not clear '$name' board\n");
+       switch(rc) {
+           case MB_ERR_INVALID:
+               fprintf(stderr, "\t reason: '$name' board is invalid\n");
+               break;
+           case MB_ERR_LOCKED:
+               fprintf(stderr, "\t reason: '$name' board is locked\n");
+               break;
+           case MB_ERR_INTERNAL:
+               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+               break;
+       }
+    }
+    #endif
+<?end foreach?>
+	if(iteration_loop%output_frequency == output_offset)
+	{
+		saveiterationdata(iteration_loop);
+	}
+<?foreach xagent?><?foreach state?>
+	/*printf("$agent_name_$name_state->count = %d\n", $agent_name_$name_state->count);*/
+	$agent_name_$name_state->count = 0;
+<?end foreach?><?end foreach?>
+	/* Move agents to their start states */
+<?foreach xagent?><?foreach endstate?>
+	current_xmachine_$agent_name_holder = $agent_name_$name_state->agents;
+	while(current_xmachine_$agent_name_holder)
+	{
+		temp_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
+		transition_$agent_name_agent(current_xmachine_$agent_name_holder, $agent_name_$name_state, $agent_name_$agent_start_state);
+	
+		current_xmachine_$agent_name_holder = temp_xmachine_$agent_name_holder;
+	}
+<?end foreach?><?end foreach?>
 <?foreach enditfunc?>
 		/* End of iteration code */
 		$code<?end foreach?>
-		if(iteration_loop%output_frequency == 0)
-		{
-			if(use_binary_output) saveiterationdata_binary(iteration_loop);
-			else saveiterationdata(iteration_loop);
-		}<?if serial?>		current_node = *p_node_info;
-		while(current_node)
-		{<?end if?><?foreach message?><?if serial?>
-		p_$name_message = &current_node->$name_messages;<?end if?>
-		free$namemessages();<?end foreach?>
-<?if serial?>		p_xmachine = &current_node->agents;<?end if?>
 		/* Calculate if any agents need to jump S.P. */
-		propagate_agents();<?if serial?>
-		current_node = current_node->next;
-		}<?end if?>
+		propagate_agents();
 	/* Save iteration time to log file */
 <?if parallel?>		if(node_number == 0)
 		{<?end if?>
@@ -360,7 +492,19 @@ if(argc < 2)
 <?if serial?>	<?end if?><?if parallel?>	if(node_number == 0) <?end if?>printf("Execution time - %ld:%02ld:%ld [mins:secs:msecs]\n", total_time/60000, ((total_time/1000)%60), total_time%1000);
 	
 	clean_up(0);
-	
+	rc = MB_Env_Finalise();
+	#ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not finalise MB environment\n");
+       switch(rc) {
+           case MB_ERR_ENV:
+               fprintf(stderr, "\t reason: MB environment not yet started?\n");
+               break;
+       }
+    }
+    #endif
+    
 	/* Exit successfully by returning zero to Operating System */
 	return 0;
 }

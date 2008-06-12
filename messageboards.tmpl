@@ -6,129 +6,97 @@
 #include "header.h"
 
 <?foreach message?>
-/** \fn xmachine_message_$name * add_$name_message_internal()
- * \brief Add $name message to the local message list.
- * \return The added message.
- */
-xmachine_message_$name * add_$name_message_internal()
-{
-	xmachine_message_$name * current = (xmachine_message_$name *)malloc(sizeof(xmachine_message_$name));
-	CHECK_POINTER(current);
-
-	current->next = *p_$name_message;
-	*p_$name_message = current;
-	
-	return current;
-}
-
-/** \fn void process_$name_message(xmachine_message_$name * current)
- * \brief Process $name message to calculate if it needs to be sent to another node.
- * \param current The message to be processed.
- */
-void process_$name_message(xmachine_message_$name * current)
-{
-	double x = 0.0;
-	double y = 0.0;
-	double z = 0.0;
-	double max_mess_dist;
-	int in_halo_region = 0;
-	node_information * node_info;
-	xmachine_message_$name * temp_send_message;
-	
-	max_mess_dist = (double)current->range;
-	x = current->x;
-	y = current->y;
-	z = current->z;
-	
-	/* Check x-axis halo region */
-	if((current_node->partition_data[0] != -SPINF && x <= (current_node->partition_data[0]+max_mess_dist)) ||
-	   (current_node->partition_data[1] !=  SPINF && x >= (current_node->partition_data[1]-max_mess_dist)))
-	{ in_halo_region = 1; }
-	/* Check y-axis halo region */
-	if((current_node->partition_data[2] != -SPINF && y <= (current_node->partition_data[2]+max_mess_dist)) ||
-	   (current_node->partition_data[3] !=  SPINF && y >= (current_node->partition_data[3]-max_mess_dist)))
-	{ in_halo_region = 1; }
-	/* Check z-axis halo region (if used) */
-	<?foreach xagent?><?if use_zvar?>if(current_xmachine->xmachine_$name)
-	{
-		if(current_node->partition_data[4] != -SPINF && z <= current_node->partition_data[4]+max_mess_dist)
-		{ in_halo_region = 1; }
-		if(current_node->partition_data[5] != SPINF && z >= current_node->partition_data[5]-max_mess_dist)
-		{ in_halo_region = 1; }
-	}<?end if?><?end foreach?>
-	
-	if(in_halo_region)
-	{
-		node_info = *p_node_info;
-		while(node_info)
-		{
-			if(node_info->node_id != current_node->node_id &&
-			node_info->partition_data[0]-max_mess_dist < x && node_info->partition_data[1]+max_mess_dist > x &&
-			node_info->partition_data[2]-max_mess_dist < y && node_info->partition_data[3]+max_mess_dist > y)
-			{
-				p_$name_message = &node_info->$name_messages;
-				temp_send_message = add_$name_message_internal();
-				
-<?foreach messagevar?>				<?if modeldatatype?><?if not_array?>copy_$type(&current->$name, &temp_send_message->$name);
-<?end if?><?if static_array?>copy_$type_static_array(current->$name, temp_send_message->$name, $arraylength);
-<?end if?><?end if?><?if not_modeldatatype?><?if not_array?>temp_send_message->$name = current->$name;
-<?end if?><?if static_array?>memcpy(temp_send_message->$name, current->$name, $arraylength*sizeof($type));
-<?end if?><?end if?><?end foreach?><?if parallel?>				node_info->$name_message_no++;
-<?end if?>			}
-			node_info = node_info->next;
-		}
-		
-		p_$name_message = &current_node->$name_messages;
-	}
-}
-
 /** \fn void add_$name_message(<?foreach messagevar?>$type $name<?if notlast?>, <?end if?><?end foreach?>)
  * \brief Add $name message by calling internal and processing.
 <?foreach messagevar?> * \param $name Message variable.
 <?end foreach?> */
 void add_$name_message(<?foreach messagevar?>$type $name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>)
 {
-
-	p_$name_message = &current_node->$name_messages;
-	xmachine_message_$name * tmp = add_$name_message_internal();
-	
-<?foreach messagevar?>	<?if modeldatatype?><?if not_array?>copy_$type(&$name, &tmp->$name);
-<?end if?><?if static_array?>copy_$type_static_array($name, tmp->$name, $arraylength);
-<?end if?><?end if?><?if not_modeldatatype?><?if not_array?>tmp->$name = $name;
-<?end if?><?if static_array?>memcpy(tmp->$name, $name, $arraylength*sizeof($type));
-<?end if?><?end if?><?end foreach?>	
-	/* Check if agent in halo region */
-	process_$name_message(tmp);
+    int rc;
+	m_$name msg;
+    
+    <?foreach messagevar?>msg.$name = $name;
+    <?end foreach?>
+    rc = MB_AddMessage(b_$name, &msg);
+    #ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not add message to '$name' board\n");
+       switch(rc) {
+           case MB_ERR_INVALID:
+               fprintf(stderr, "\t reason: '$name' board has not been created?\n");
+               break;
+           case MB_ERR_MEMALLOC:
+               fprintf(stderr, "\t reason: out of memory\n");
+               break;
+           case MB_ERR_LOCKED:
+               fprintf(stderr, "\t reason: '$name' board is locked\n");
+               break;
+           case MB_ERR_INTERNAL:
+               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+               break;
+       }
+    }
+    #endif
 }
 
-xmachine_message_$name * get_next_message_$name_in_range(xmachine_message_$name * current)
+inline static m_$name* getInternalMessage_$name(void)
 {
-	double x = 0.0, y = 0.0, z = 0.0;
-	
-	<?foreach xagent?>
-	if(current_xmachine->xmachine_$name)
-	{
-		x = (double)current_xmachine->xmachine_$name->$xvar;
-		y = (double)current_xmachine->xmachine_$name->$yvar;
-<?if use_zvar?>		z = (double)current_xmachine->xmachine_$name->$zvar;<?end if?><?if no_zvar?>		z = 0.0;<?end if?>
-	}<?end foreach?>
-	
-	while(current)
-	{
-		if( ((x - current->x)*(x - current->x)+(y - current->y)*(y - current->y)) <= current->range*current->range ) return current;
-		else current = current->next;
-	}
-	
-	return current;
+    static m_$name *msg_prev = NULL;
+    m_$name *msg;
+    int rc;
+    
+    /* deallocate previously returned message */
+    if (msg_prev != NULL) 
+    {
+        free(msg_prev);
+    }
+    else 
+    {
+        rc = MB_Iterator_Rewind(i_$name); 
+        #ifdef ERRCHECK
+        if (rc != MB_SUCCESS)
+        {
+            fprintf(stderr, "ERROR: Could not rewind '$name' Iterator\n");
+            switch(rc) {
+                case MB_ERR_INVALID:
+                    fprintf(stderr, "\t reason: '$name' Iterator has not been created?\n");
+                    break;
+            }
+        }
+        #endif
+    }
+    
+    /* get next message from iterator */
+    rc = MB_Iterator_GetMessage(i_$name, (void **)&msg);
+    #ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not get message from '$name' Iterator\n");
+       switch(rc) {
+           case MB_ERR_INVALID:
+               fprintf(stderr, "\t reason: '$name' Iterator has not been created?\n");
+               break;
+           case MB_ERR_MEMALLOC:
+               fprintf(stderr, "\t reason: out of memory\n");
+               break;
+       }
+    }
+    #endif
+    
+    /* store pointer so memory can be deallocated later */
+    msg_prev = msg;
+    
+    return msg;
 }
 
 /** \fn xmachine_message_$name * get_first_$name_message()
  * \brief Get the first $name message in the $name message list.
  * \return The first message in the list.
  */
-xmachine_message_$name * get_first_$name_message()
+m_$name * get_first_$name_message()
 {
-	return get_next_message_$name_in_range(*p_$name_message);
+	return getInternalMessage_$name();
 }
 
 /** \fn xmachine_message_$name * get_next_$name_message(xmachine_message_$name * current)
@@ -136,27 +104,8 @@ xmachine_message_$name * get_first_$name_message()
  * \param current The current message in the list.
  * \return The next message in the list.
  */
-xmachine_message_$name * get_next_$name_message(xmachine_message_$name * current)
+m_$name * get_next_$name_message(m_$name * current)
 {
-	return get_next_message_$name_in_range(current->next);
-}
-
-/** \fn void free$namemessages()
- * \brief Free the $name message list.
- */
-void free$namemessages()
-{
-	xmachine_message_$name * tmp, * head;
-	head = *p_$name_message;
-	
-	while(head)
-	{
-		tmp = head->next;
-		
-		free(head);
-		head = tmp;
-	}
-	
-	*p_$name_message = NULL;
+	return getInternalMessage_$name();
 }
 <?end foreach?>

@@ -2,14 +2,24 @@
  * \file  header.h
  * \brief Header for xmachine data structures and transition functions.
  */
+ 
+#ifdef _DEBUG_MODE
+    #define ERRCHECK
+#else
+    #define NDEBUG
+#endif
 
-#include <stdio.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include "mboard.h"
 
 
+<?if parallel?>#include <mpi.h>
+<?end if?>
 /* Checking macros */
 #ifdef CHECK_MEMORY
 #define CHECK_POINTER(PT) if(PT==NULL){printf("**** ERROR in Memory check 1\n");exit(1);}
@@ -17,13 +27,10 @@
 #define CHECK_POINTER(PT) 
 #endif
 
-
-<?if parallel?>#include <mpi.h>
-<?end if?>
 /** \def ARRAY_BLOCK_SIZE
  * \brief The block size to allocate to dynamic arrays. */
 #define ARRAY_BLOCK_SIZE 5
-<?foreach message?>/** \def e START_$capsname_MESSAGE_LOOP
+<?foreach message?>/** \def START_$capsname_MESSAGE_LOOP
  * \brief Start of loop to process $name messages. */
 #define START_$capsname_MESSAGE_LOOP  $name_message = get_first_$name_message(); while($name_message) {
 /** \def FINISH_$capsname_MESSAGE_LOOP
@@ -136,6 +143,27 @@ struct xmachine_memory_$name
 {<?foreach xagentvar?>
 	$type $name<?if static_array?>[$arraylength]<?end if?>;	/**< X-machine memory variable $name of type $type. */<?end foreach?>
 };
+
+/** \struct xmachine_memory_$name_holder
+ * \brief Holds struct of memory of xmachine $name.
+ */
+struct xmachine_memory_$name_holder
+{
+	struct xmachine_memory_$name * agent;	/**< Pointer to X-machine memory $name. */
+
+	struct xmachine_memory_$name_holder * prev;	/**< Pointer to previous $name agent in the list.  */
+	struct xmachine_memory_$name_holder * next;	/**< Pointer to next $name agent in the list.  */
+};
+
+/** \struct xmachine_memory_$name_holder
+ * \brief Holds struct of memory of xmachine $name.
+ */
+struct xmachine_memory_$name_state
+{
+	struct xmachine_memory_$name_holder * agents;	/**< Pointer to X-machine memory $name. */
+
+	int count;	/**< Number of agents that were in this state.  */
+};
 <?end foreach?>
 /** \struct xmachine
  * \brief Holds xmachines.
@@ -144,26 +172,17 @@ struct xmachine
 {<?foreach xagent?>
 	struct xmachine_memory_$name * xmachine_$name;	/**< Pointer to X-machine memory of type $name.  */<?end foreach?>
 	
-	struct xmachine * next;	/**< Pointer to next X-machine in the list.  */
+	//struct xmachine * prev;	/**< Pointer to previous X-machine in the list.  */
+	//struct xmachine * next;	/**< Pointer to next X-machine in the list.  */
 };
 <?foreach message?>
-/** \struct xmachine_message_$name
+/** \struct m_$name
  * \brief Holds message of type $name_message.
  */
-struct xmachine_message_$name
+struct m_$name
 {<?foreach messagevar?>
 	$type $name<?if static_array?>[$arraylength]<?end if?>;	/**< Message memory variable $name of type $type. */<?end foreach?>
-	
-	struct xmachine_message_$name * next;	/**< Pointer to next message in the list. */
 };
-<?if parallel?>
-/** \struct xmachine_message_$name_data
- * \brief Holds message data of type $name.
- */
-struct xmachine_message_$name_data
-{<?foreach messagevar?>
-	$type $name;	/**< Message memory variable $name of type $type. */<?end foreach?>
-};<?end if?>
 <?end foreach?>
 /** \typedef struct xmachine xmachine
  * \brief Typedef for xmachine struct.
@@ -172,17 +191,24 @@ typedef struct xmachine xmachine;<?foreach xagent?>
 /** \var typedef xmachine_memory_$name xmachine_memory_$name
  * \brief Typedef for xmachine_memory_$name struct.
  */
-typedef struct xmachine_memory_$name xmachine_memory_$name;<?end foreach?><?foreach message?>
-/** \typedef xmachine_message_$name xmachine_message_$name
- * \brief Typedef for xmachine_message_$name struct.
+typedef struct xmachine_memory_$name xmachine_memory_$name;
+/** \var typedef xmachine_memory_$name xmachine_memory_$name
+ * \brief Typedef for xmachine_memory_$name struct.
  */
-typedef struct xmachine_message_$name xmachine_message_$name;
-<?if parallel?>/** \typedef xmachine_message_$name_data xmachine_message_$name_data
- * \brief Typedef for xmachine_message_$name_data struct.
+typedef struct xmachine_memory_$name_holder xmachine_memory_$name_holder;
+/** \var typedef xmachine_memory_$name xmachine_memory_$name
+ * \brief Typedef for xmachine_memory_$name struct.
  */
-typedef struct xmachine_message_$name_data xmachine_message_$name_data;<?end if?><?end foreach?>
+typedef struct xmachine_memory_$name_state xmachine_memory_$name_state;<?end foreach?><?foreach message?>
+/** \typedef m_$name m_$name
+ * \brief Typedef for m_$name struct.
+ */
+typedef struct m_$name m_$name;
+<?end foreach?>
 <?foreach xagent?><?foreach function?>
-int $name(void);<?end foreach?><?end foreach?>
+int $name(void);<?if condition?>
+int $condition(xmachine_memory_$agent_name *a);<?end if?><?foreach function_input?><?if filter?>
+int $filter(const void *msg, const void *params);<?end if?><?end foreach?><?end foreach?><?end foreach?>
 
 /** \struct location
  * \brief Holds location for calculating space partitioning .
@@ -204,7 +230,7 @@ struct node_information
 	int agents_in_halo;	/**< Number of agents in the halo region. */
 	int agent_total;	/**< Total number of agents on the node. */
 	struct xmachine * agents;	/**< Pointer to list of X-machines. */
-<?foreach message?>	struct xmachine_message_$name * $name_messages;	/**< Pointer to $name message list. */
+<?foreach message?>	struct m_$name * $name_messages;	/**< Pointer to $name message list. */
 <?end foreach?><?if parallel?><?foreach message?>	int $name_message_no;	/**< Number of $name messages in list to send. */
 <?end foreach?><?foreach xagent?>	struct xmachine * $name_agents;	/**< Pointer to $name agent list. */
 	int $name_agent_no;	/**< Number of $name agents in list to send. */
@@ -237,9 +263,9 @@ typedef struct node_information node_information;
 * \brief Pointer to xmachine to initialise linked list. */
 xmachine * temp_xmachine;
 <?foreach message?>
-/** \var xmachine_message_$name * temp_$name_message
-* \brief Pointer to xmachine_message_$name to initialise linked list. */
-xmachine_message_$name * temp_$name_message;<?end foreach?>
+/** \var m_$name * temp_$name_message
+* \brief Pointer to m_$name to initialise linked list. */
+m_$name * temp_$name_message;<?end foreach?>
 /** \var node_information * temp_node_info
 * \brief Pointer to node_information to initialise linked list. */
 node_information * temp_node_info;
@@ -257,18 +283,27 @@ int total_messages;
 int totalnodes;
 /** \var xmachine ** p_xmachine
 * \brief Pointer to first pointer of x-machine memory list */
-xmachine ** p_xmachine;
+//xmachine ** p_xmachine;
 /** \var xmachine * current_xmachine
 * \brief Pointer to current x-machine memory that is being processed */
 xmachine * current_xmachine;
+<?foreach xagent?>/* Pointer to current $agent_name agent */
+xmachine_memory_$name * current_xmachine_$name;
+xmachine_memory_$name_holder * temp_xmachine_$name_holder;
+xmachine_memory_$name_holder * current_xmachine_$name_holder;
+xmachine_memory_$name_state * current_xmachine_$name_next_state; /* New agents added to this state */
+<?foreach state?>/* Pointer to list of $agent_name agents in state $name state */
+//xmachine_memory_$agent_name * temp_xmachine_$agent_name_$name;
+xmachine_memory_$agent_name_state * $agent_name_$name_state;
+<?end foreach?><?end foreach?>
 <?foreach message?>
-/** \var xmachine_message_$name ** p_$name_message
-* \brief Pointer to first pointer of $name message list */
-xmachine_message_$name ** p_$name_message;<?end foreach?>
+MBt_Board b_$name;
+MBt_Iterator i_$name;
+<?end foreach?>
 <?foreach message?>
-/** \var xmachine_message_$name * $name_message
+/** \var m_$name * $name_message
 * \brief Pointer to message struct for looping through $name message list */
-xmachine_message_$name * $name_message;<?end foreach?>
+m_$name * $name_message;<?end foreach?>
 /** \var node_information ** p_node_info
 * \brief Pointer to first pointer of node list */
 node_information ** p_node_info;
@@ -302,9 +337,9 @@ int iteration_loop;
 /** \var int output_frequency
 * \brief Frequency to output results */
 int output_frequency;
-/** \var int use_binary_output
-* \brief Tag to save results in a binary file */
-int use_binary_output;
+/** \var int output_offset
+* \brief Offset to output results */
+int output_offset;
 /** \var int next_avaliable_id
 * \brief Next avaliable id number for a new agent */
 int next_avaliable_id;
@@ -330,7 +365,6 @@ void propagate_messages_init(void);
 void propagate_messages_complete(void);
 void create_partitions(char * filename, int * itno);
 void free_node_info(void);
-void randomisexagent(void);
 void free_agent(void);
 void freexmachines(void);
 /* model datatypes */
@@ -378,6 +412,7 @@ void add_char(char_array * array, char new_char);
 void remove_char(char_array * array, int index);
 char * copy_array_to_str(char_array * array);
 void print_char_array(char_array * array);
+int idle();
 /* xml.c */
 void read_int_static_array(char * buffer, int * j, int * int_static_array, int size);
 void read_float_static_array(char * buffer, int * j, float * float_static_array, int size);
@@ -396,9 +431,8 @@ void read_$name_static_array(char * buffer, int * j, $name * temp_datatype_array
 void write_$name(FILE *file, $name * temp_datatype);
 void write_$name_static_array(FILE *file, $name * temp_datatype, int size);
 void write_$name_dynamic_array(FILE *file, $name_array * temp_datatype);<?end foreach?>
-void readinitialstates(char * filename, int * itno, xmachine ** agent_list, double cloud_data[6], 
+void readinitialstates(char * filename, int * itno, double cloud_data[6], 
                        int partition_method, int flag);
-void saveiterationdata_binary(int iteration_number);
 void saveiterationdata(int iteration_number);
 <?foreach datatype?>
 void free_$name($name * temp);
@@ -406,14 +440,19 @@ void free_$name_static_array($name * array, int size);
 void copy_$name($name * from, $name * to);
 void copy_$name_static_array($name * from, $name * to, int size);<?end foreach?>
 <?foreach xagent?>
+xmachine_memory_$name_state * init_$name_state();
 xmachine_memory_$name * init_$name_agent();
-void add_$name_agent_internal(xmachine_memory_$name * current);
-void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>);<?end foreach?>
+void free_$name_agent(xmachine_memory_$name_holder * tmp, xmachine_memory_$name_state * state);
+void transition_$name_agent(xmachine_memory_$name_holder * tmp, xmachine_memory_$name_state * from_state, xmachine_memory_$name_state * to_state);
+void add_$name_agent_internal(xmachine_memory_$name * agent, xmachine_memory_$name_state * state);
+void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>);
+void unittest_init_$name_agent();
+void unittest_free_$name_agent();<?end foreach?>
 <?foreach message?>
 void add_$name_message(<?foreach messagevar?>$type $name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>);
-xmachine_message_$name * add_$name_message_internal(void);
-xmachine_message_$name * get_first_$name_message(void);
-xmachine_message_$name * get_next_$name_message(xmachine_message_$name * current);
+m_$name * add_$name_message_internal(void);
+m_$name * get_first_$name_message(void);
+m_$name * get_next_$name_message(m_$name * current);
 void free$namemessages(void);<?end foreach?>
 <?foreach allvar?><?if not_modeldatatype?><?if not_array?>
 void set_$name($type <?if dynamic_array?>* <?end if?><?if static_array?>*<?end if?>$name<?if static_array?>[]<?end if?>);<?end if?><?end if?>
@@ -430,7 +469,7 @@ void save_partition_data(void);
 void generate_partitions(double cloud_data[6], int partitions, int partition_method);
 
 /* messageboard.c */
-<?foreach message?>xmachine_message_$name * get_next_message_$name_in_range(xmachine_message_$name * current);
+<?foreach message?>m_$name * get_next_message_$name_in_range(m_$name * current);
 <?end foreach?>
 /* memory.c */
 xmachine * add_xmachine(void);

@@ -280,14 +280,14 @@ void read_$name_static_array(char * buffer, int * j, $name * temp_datatype_array
  * \param partition_method Identifies partitioning method: 1 = geometric, 2 = round-robin
  * \param flag Flag for whether to check space partitions.
  */
-void readinitialstates(char * filename, int * itno, xmachine ** agent_list, double cloud_data[6], 
+void readinitialstates(char * filename, int * itno, double cloud_data[6], 
 					   int partition_method, int flag)
 {
 	/* Pointer to file */
 	FILE *file;
 	/* Char and char buffer for reading file to */
 	char c = ' ';
-	char buffer[10000];
+	char buffer[100000];
 	char agentname[1000];
 	//char arraydata[10000];
 	//int array_k=0, arraycount=0;
@@ -301,7 +301,7 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 	double 	xmax=0,xmin=0,ymax=0,ymin=0,
 		xcentre=0,ycentre=0,
 		rrange=1.5;
-	double posx, posy, posz;
+	double posx=0.0, posy=0.0, posz=0.0;
 	<?if parallel?>int node_number;<?end if?>
 	
 	/* Cloud data array initialisation */
@@ -384,7 +384,7 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 	/* Set p_xmachine to the agent list passed in then new agents are added to this list 
 	 * Will be set to agent list for specific node is space partitions are already known (flag=1)
 	 */ 
-	p_xmachine = agent_list;
+	//p_xmachine = agent_list;
 	/* If we're reading without knowing partitions already then use the dummy current node (it's not in the list of nodes)*/
 	if (flag == 0) current_node = &temp_node;
 	
@@ -435,16 +435,16 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 				
 <?foreach xagent?>				<?if notfirst?>else <?end if?>if(strcmp(agentname, "$name") == 0)
 				{
-					posx = current_$name_agent->$xvar;
+					/*posx = current_$name_agent->$xvar;
 					posy = current_$name_agent->$yvar;
-					posz = <?if use_zvar?>current_$name_agent->$zvar<?end if?><?if no_zvar?>0.0<?end if?>;
+					posz = <?if use_zvar?>current_$name_agent->$zvar<?end if?><?if no_zvar?>0.0<?end if?>;*/
 					
 					/* If flag is zero just read the data. We'll partition later.
 					 * If flag is not zero we aleady have partition data so can read and distribute to the current node.*/
 					if( flag == 0 )
 					{
 						//add_$name_agent(<?foreach xagentvar?>$name<?if notlast?>, <?end if?><?end foreach?>);
-						add_$name_agent_internal(current_$name_agent);
+						add_$name_agent_internal(current_$name_agent, $name_$start_state_state);
 						
 						/* Update the cloud data */
 						if ( posx < cloud_data[0] ) cloud_data[0] = posx;
@@ -452,7 +452,7 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 						if ( posy < cloud_data[2] ) cloud_data[2] = posy;
 						if ( posy > cloud_data[3] ) cloud_data[3] = posy;
 						if ( posz < cloud_data[2] ) cloud_data[4] = posz;
-						if ( posz > cloud_data[3] ) cloud_data[5] = posz ;
+						if ( posz > cloud_data[3] ) cloud_data[5] = posz;
 					}
 
 					else if (flag != 0)
@@ -468,9 +468,9 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 								((current_node->partition_data[5] == SPINF) || (current_node->partition_data[5] != SPINF && posz < current_node->partition_data[5]))
 							)
 							{
-								p_xmachine = &(current_node->agents);
+								//p_xmachine = &(current_node->agents);
 								//add_$name_agent(<?foreach xagentvar?>$name<?if notlast?>, <?end if?><?end foreach?>);
-								add_$name_agent_internal(current_$name_agent);
+								add_$name_agent_internal(current_$name_agent, $name_$start_state_state);
 							} 
 						}
 						else if (partition_method == other)
@@ -487,13 +487,13 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 								ycentre=ymin+(ymax-ymin)/2.0;
 								rrange=1.5;
 
-								p_xmachine = &(current_node->agents);
+								//p_xmachine = &(current_node->agents);
 								//add_$name_agent(<?foreach xagentvar?>$name<?if notlast?>, <?end if?><?end foreach?>);
-								add_$name_agent_internal(current_$name_agent);
+								add_$name_agent_internal(current_$name_agent, $name_$start_state_state);
 
-								current_$name_agent->$xvar = xcentre;
+								/*current_$name_agent->$xvar = xcentre;
 								current_$name_agent->$yvar = ycentre;
-								current_$name_agent->$rangevar = rrange;
+								current_$name_agent->$rangevar = rrange;*/
 
 							}
 							++agent_count;
@@ -583,55 +583,6 @@ void readinitialstates(char * filename, int * itno, xmachine ** agent_list, doub
 <?foreach allvar?>//<?if not_modeldatatype?><?if dynamic_array?>	free_$type($name);
 <?end if?><?end if?><?if modeldatatype?>	free_$type<?if not_array?>_datatype<?end if?><?if static_array?>_static_array<?end if?>($name<?if static_array?>, $arraylength<?end if?>);
 <?end if?><?end foreach?>
-}
-
-/** \fn void saveiterationdata_binary(int iteration_number)
- * \brief Save X-machine memory to a binary file.
- * \param iteration_number The current iteration number.
- */
-void saveiterationdata_binary(int iteration_number)
-{
-	/* Pointer to file */
-	FILE *file;
-	char data[1000];
-	int i;
-	int agentcount = 0;
-<?foreach xagent?>	xmachine_memory_$name * current_$name;
-<?end foreach?><?foreach allvar?><?if static_array?>	/*$type * $name;*/
-<?end if?><?end foreach?>
-<?if serial?>	sprintf(data, "%s%i.binary", outputpath, iteration_number);<?end if?><?if parallel?>	sprintf(data, "%snode%i-%i.binary", outputpath, node_number, iteration_number);<?end if?>
-	file = fopen(data, "wb");
-	/* iteration number*/
-	fwrite(&iteration_number ,sizeof(int), 1, file);
-	/* number of xagent memories written (update at end)*/
-	fwrite(&i ,sizeof(int), 1, file);
-	
-<?if parallel?>	if(node_number == 0)
-		{
-<?end if?><?if parallel?>	}<?end if?><?if serial?>	current_node = *p_node_info;
-	while(current_node)
-	{
-	p_xmachine = &current_node->agents;
-<?end if?>	current_xmachine = *p_xmachine;
-	while(current_xmachine)
-	{
-<?foreach xagent?>		<?if notfirst?>else <?end if?>if(current_xmachine->xmachine_$name != NULL)
-		{
-			current_$name = current_xmachine->xmachine_$name;
-			agentcount++;
-		}
-<?end foreach?>		
-		current_xmachine = current_xmachine->next;
-	}
-<?if serial?>		current_node = current_node->next;
-	}<?end if?>
-	
-	/* update agent count\n", file);*/
-	fseek(file,sizeof(int)*1,SEEK_SET);
-	fwrite(&agentcount,sizeof(int),1,file);
-	
-	/* Close the file */
-	fclose(file);
 }
 
 /** \fn void write_int_static_array(FILE *file, $name * temp)
@@ -817,6 +768,20 @@ void write_$name_dynamic_array(FILE *file, $name_array * temp_datatype)
 }
 
 <?end foreach?>
+<?foreach xagent?>
+void write_$name_agent(FILE *file, xmachine_memory_$name * current)
+{
+	char data[1000];
+	fputs("<xagent>\n" , file);
+	fputs("<name>$name</name>\n", file);
+<?foreach xagentvar?>		fputs("<$name>", file);
+	<?if not_array?><?if not_modeldatatype?>sprintf(data, "%$c_type", current->$name);
+	fputs(data, file);<?end if?><?if modeldatatype?>write_$type(file, &current->$name);<?end if?><?end if?><?if static_array?>write_$type_static_array(file, current->$name, $arraylength);<?end if?><?if dynamic_array?>write_$notarraytype_dynamic_array(file, &current->$name);<?end if?>
+	fputs("</$name>\n", file);
+<?end foreach?>		
+	fputs("</xagent>\n", file);
+}
+<?end foreach?>
 
 /** \fn void saveiterationdata(int iteration_number)
  * \brief Save X-machine memory to a file.
@@ -827,8 +792,7 @@ void saveiterationdata(int iteration_number)
 	/* Pointer to file */
 	FILE *file;
 	char data[1000];
-<?foreach xagent?>	xmachine_memory_$name * current_$name;
-<?end foreach?><?foreach allvar?><?if not_modeldatatype?><?if dynamic_array?>	//$type * $name;
+<?foreach allvar?><?if not_modeldatatype?><?if dynamic_array?>	//$type * $name;
 <?end if?><?end if?><?end foreach?>	
 <?if serial?>	sprintf(data, "%s%i.xml", outputpath, iteration_number);<?end if?><?if parallel?>	sprintf(data, "%snode%i-%i.xml", outputpath, node_number, iteration_number);<?end if?>
 	file = fopen(data, "w");
@@ -844,31 +808,17 @@ void saveiterationdata(int iteration_number)
 	fputs("</$name>\n", file);
 <?end foreach?>	fputs("</environment>\n" , file);
 <?if parallel?>	}<?end if?>
-<?if serial?>
-	current_node = *p_node_info;
-	while(current_node)
+//	current_xmachine = *p_xmachine;
+// todo loop through all agent types
+<?foreach xagent?><?foreach endstate?>
+current_xmachine_$agent_name_holder = $agent_name_$name_state->agents;
+	while(current_xmachine_$agent_name_holder)
 	{
-		p_xmachine = &current_node->agents;
-<?end if?>		current_xmachine = *p_xmachine;
-	while(current_xmachine)
-	{
-		fputs("<xagent>\n" , file);
-<?foreach xagent?>		<?if notfirst?>else <?end if?>if(current_xmachine->xmachine_$name != NULL)
-		{
-			current_$name = current_xmachine->xmachine_$name;
-			fputs("<name>$name</name>\n", file);
-<?foreach xagentvar?>			fputs("<$name>", file);
-			<?if not_array?><?if not_modeldatatype?>sprintf(data, "%$c_type", current_$agent_name->$name);
-			fputs(data, file);<?end if?><?if modeldatatype?>write_$type(file, &current_$agent_name->$name);<?end if?><?end if?><?if static_array?>write_$type_static_array(file, current_$agent_name->$name, $arraylength);<?end if?><?if dynamic_array?>write_$notarraytype_dynamic_array(file, &current_$agent_name->$name);<?end if?>
-			fputs("</$name>\n", file);
-<?end foreach?>		}
-<?end foreach?>	
-		fputs("</xagent>\n", file);
+		write_$agent_name_agent(file, current_xmachine_$agent_name_holder->agent);
 		
-		current_xmachine = current_xmachine->next;
+		current_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
 	}
-	<?if serial?>		current_node = current_node->next;
-	}<?end if?>
+<?end foreach?><?end foreach?>	
 <?if parallel?>if(node_number == totalnodes-1) <?end if?>fputs("</states>\n" , file);
 	
 	/* Close the file */
