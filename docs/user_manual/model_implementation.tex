@@ -1,8 +1,9 @@
-\section{Model Implementation}
+\section{Model Implementation}\label{model_implementation}
 
-If agent functions are written in a separate functions file a separate file is required for each agent type.
-
-At the top of each file two headers are required:
+If a separate function file is written for every agent, then the
+parser would be generating a header file for every agent. This has
+to be included for processing. Thus, at the top of each file two
+headers are required:
 
 \begin{mylisting}
 \begin{verbatim}
@@ -11,22 +12,24 @@ At the top of each file two headers are required:
 \end{verbatim}
 \end{mylisting}
 
-After this agent functions take the form:
+Agent functions can be defined as a list of functions in the
+function file such as:
 
 \begin{mylisting}
 \begin{verbatim}
 int function_name()
 {
    /* Function code here */
-   
+
    return 0; /* Returning zero means the agent is not removed */
 }
 \end{verbatim}
 \end{mylisting}
 
-\subsection{Accessing agent memory variables}
+\subsection{Accessing Agent Memory Variables}
 
-After including the specific agent header, the variables for the agent can be accessed by capitalising the varaible name.
+After including the specific agent header, the variables in the
+agent memory can be accessed by capitalising the variable name.
 
 \begin{mylisting}
 \begin{verbatim}
@@ -42,7 +45,8 @@ MY_STATIC_ARRAY[index]
 \end{verbatim}
 \end{mylisting}
 
-To access the elements and the size of dynamic array variables use '.size' and '.array[index]'
+To access the elements and the size of dynamic array variables use
+`.size' and `.array[index]'
 
 \begin{mylisting}
 \begin{verbatim}
@@ -51,7 +55,7 @@ MY_DYNAMIC_ARRAY.array[i]
 \end{verbatim}
 \end{mylisting}
 
-To access variables of a model data type use '.variablename'
+To access variables of a model data type use `.variablename'
 
 \begin{mylisting}
 \begin{verbatim}
@@ -59,32 +63,10 @@ MY_DATA_TYPE.variablename
 \end{verbatim}
 \end{mylisting}
 
-\subsubsection{Using dynamic arrays}
+\subsubsection{Using Model Data Types}
 
-Dynamic array types are created by adding '\_array' to a data type.
-When passing a dynamic array variable to the following functions place an \& in
-front of the array.
-
-\begin{mylisting}
-\begin{verbatim}
-/* Allocate own array */
-vacancy_array vacancy_list;
-/* And initialise */
-init_vacancy_array(&vacancy_list);
-/* Reset an array */
-reset_vacancy_array(&vacancy_list);
-/* Free an array */
-free_vacancy_array(&vacancy_list);
-/* Add an element to the array */
-add_vacancy(&vacancy_list, var1, var2, var3);
-/* Remove an element at index index */
-remove_vacancy(&vacancy_list, index);
-/* Copy the array */
-copy_vacancy_array(&from_list, &to_list);
-\end{verbatim}
-\end{mylisting}
-
-\subsubsection{Using model data types}
+Following is an example of how to use a data type called
+\emph{vacancy}.
 
 \begin{mylisting}
 \begin{verbatim}
@@ -105,6 +87,26 @@ copy_vacancy_static_array(&vac_static_array_from, &vac_static_array_to, array_si
 \end{verbatim}
 \end{mylisting}
 
+
+\subsubsection{Using Dynamic Arrays}
+
+Dynamic array types are created by adding `\_array' to a data type.
+When passing a dynamic array variable to the following functions
+place an \& in front of the array.
+
+\begin{mylisting}
+\begin{verbatim}
+/* Allocate own array */
+vacancy_array vacancy_list; /* And
+initialise */ init_vacancy_array(&vacancy_list); /* Reset an array
+*/ reset_vacancy_array(&vacancy_list); /* Free an array */
+free_vacancy_array(&vacancy_list); /* Add an element to the array */
+add_vacancy(&vacancy_list, var1, var2, var3); /* Remove an element
+at index index */ remove_vacancy(&vacancy_list, index); /* Copy the
+array */ copy_vacancy_array(&from_list, &to_list);
+\end{verbatim}
+\end{mylisting}
+
 \subsection{Sending and receiving messages}
 
 Messages can be read using macros to loop through the incoming message list as per the template below.
@@ -115,5 +117,12 @@ Message variables can be accessed using an arrow `->'
 START_MESSAGENAME_MESSAGE_LOOP
  messagename_message->variablename
 FINISH_MESSAGENAME_MESSAGE_LOOP
+\end{verbatim}
+\end{mylisting}
+
+Messages are sent or added to the message list by
+\begin{mylisting}
+\begin{verbatim}
+ add_messagename_message(var1, var2);
 \end{verbatim}
 \end{mylisting}
