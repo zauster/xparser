@@ -12,14 +12,14 @@ The start and end of a model file should be formatted as follows:
 
 \begin{mylisting}
 \begin{verbatim}
- <?xml version="1.0" encoding="ISO-8859-1"?>
- <!DOCTYPE xmodel SYSTEM "http://eurace.cs.bilgi.edu.tr/XMML.dtd">
- <xmodel version="2">
- <name>Model_name</name>
- <version>the version</version>
- <description>a description</description>
- ...
- </xmodel>
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE xmodel SYSTEM "http://eurace.cs.bilgi.edu.tr/XMML.dtd">
+<xmodel version="2">
+<name>Model_name</name>
+<version>the version</version>
+<description>a description</description>
+...
+</xmodel>
 \end{verbatim}
 \end{mylisting}
 
@@ -68,15 +68,16 @@ Models can contain:
 \end{itemize}
 
 \subsection{Environment}
-The environment tag in the model.xml file hosts additional tags for information that may be required by
-the parser for efficient simulation of the model.
+The environment tag in the model.xml file hosts additional tags for information
+that may be required by the parser for efficient simulation of the model.
 Following are the tags that can be defined in it.
 
 
 \subsubsection{Constant Variables}
 
-Constant Variables refers to the global values used in the model.
-These can me defined in a separate header file which can then be included in one of the functions file.
+Constant Variables refers to the global values used in the model. These can me
+defined in a separate header file which can then be included in one of the
+functions file.
 
 The header file would look as follows:
 
@@ -91,7 +92,8 @@ the function files so that the compiler knows about these arguments.
 
 \subsubsection{Function Files}
 
-Function files are where you can place source code for the implementation of the agent functions.
+Function files are where you can place source code for the implementation of the
+agent functions.
 
 They are included in the compilation script (Makefile) of the produced model.
 
@@ -114,9 +116,6 @@ assuming every iteration to represent one day in the calender.
 Time rules can be applied to function conditions instead of a
 condition rule and are defined by a time period and a phase. A time
 phase is the offset from the start of a period.
-
-
-
 
 A time unit would contain:
 \begin{itemize}
@@ -236,8 +235,8 @@ Data types can contain C data types or other predefined user data types.
 \end{verbatim}
 \end{mylisting}
 
-In the example above the datatype \emph{Belief} contains a variable
-of datatype \emph{Histogram}
+In the example above the data type \emph{Belief} contains a variable
+of data type \emph{Histogram}
 
 \subsection{Agent}
 
@@ -400,6 +399,7 @@ message variable \emph{worker\_id} (defined as m.<varname>) to be EQ
 (equal) to the agent \emph{id} (defined as a.<varname>).
 
 \subsection{Messages}
+
 The agents are communicating with each other through messages being
 sent in the system. The messages being processed have to be defined
 in the XML file. All message lists are emptied at the end of the
