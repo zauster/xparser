@@ -1,4 +1,4 @@
-\section{Model Description}
+\section{Model Description}\label{model_description}
 
 Models descriptions are formatted in XML tag structures to allow
 easy human and computer readability.
@@ -249,7 +249,6 @@ An agent can be defined as follows:
   <xagent>
     <name>Firm</name>
     <description></description>
-
     <memory>
       <variable><type>int</type><name>id</name><description></description></variable>
       <variable><type>int</type><name>region_id</name><description></description></variable>
@@ -257,17 +256,14 @@ An agent can be defined as follows:
       <variable><type>int</type><name>day_of_month_to_act</name><description></description></variable>
       <variable><type>double</type><name>payment_account</name><description></description></variable>
     </memory>
-
     <functions>
       .....
     </functions>
-
   </xagent>
 
   <xagent>
     <name>Household</name>
     <description></description>
-
     <memory>
       <variable><type>int</type><name>id</name><description></description></variable>
       <variable><type>int</type><name>region_id</name><description></description></variable>
@@ -276,7 +272,6 @@ An agent can be defined as follows:
       <variable><type>int</type><name>day_of_month_to_act</name><description></description></variable>
       <variable><type>double</type><name>payment_account</name><description></description></variable>
     </memory>
-
     <functions>
       <function>
         <name>Household_read_firing_messages</name>
@@ -289,7 +284,6 @@ An agent can be defined as follows:
         </inputs>
       </function>
     </functions>
-
   </xagent>
 </agents>
 \end{verbatim}
@@ -302,12 +296,12 @@ An agent function contains:
 \item description
 \item current state - The current state point the agent is in, in
 the branch.
-\item next state - the next state point it has to move to, in the
+\item next state - The next state point it has to move to, in the
 branch.
-\item condition - condition which tells the parser when this
+\item condition - Condition which tells the parser when this
 function can be executed.
-\item inputs - the messages this function is reading.
-\item outputs - the messages this function is sending.
+\item inputs - The messages this function is reading.
+\item outputs - The messages this function is sending.
 \end{itemize}
 
 \subsubsection{Function Condition and Message Input Filter Rule
@@ -417,17 +411,20 @@ iteration.
 
  <message>
   <name>bank_account_update</name>
-  <description>Sent by household. Household informs the bank about the actual payment account</description>
+  <description>Sent by household. Household informs the bank about the actual
+                payment account</description>
   <variables>
     <variable><type>int</type><name>id</name><description></description></variable>
     <variable><type>int</type><name>bank_id</name><description></description></variable>
-    <variable><type>double</type><name>payment_account</name><description></description></variable>
+    <variable><type>double</type><name>payment_account</name>
+                <description></description></variable>
   </variables>
  </message>
 
  <message>
   <name>application_rejection</name>
-  <description>Send by firms. Includes the id and the id of the refused applicant.</description>
+  <description>Send by firms. Includes the id and the id of the refused applicant.
+                </description>
   <variables>
     <variable><type>int</type><name>firm_id</name><description></description></variable>
     <variable><type>int</type><name>worker_id</name><description></description></variable>
