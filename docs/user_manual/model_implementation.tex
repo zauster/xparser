@@ -97,13 +97,28 @@ place an \& in front of the array.
 \begin{mylisting}
 \begin{verbatim}
 /* Allocate own array */
-vacancy_array vacancy_list; /* And
-initialise */ init_vacancy_array(&vacancy_list); /* Reset an array
-*/ reset_vacancy_array(&vacancy_list); /* Free an array */
-free_vacancy_array(&vacancy_list); /* Add an element to the array */
-add_vacancy(&vacancy_list, var1, var2, var3); /* Remove an element
-at index index */ remove_vacancy(&vacancy_list, index); /* Copy the
-array */ copy_vacancy_array(&from_list, &to_list);
+vacancy_array vacancy_list;
+
+/* And initialise */
+init_vacancy_array(&vacancy_list);
+
+/* Reset an array */
+reset_vacancy_array(&vacancy_list);
+
+/* Free an array */
+free_vacancy_array(&vacancy_list);
+
+/* Add an element to the array */
+add_vacancy(&vacancy_list, var1,
+var2, var3);
+
+/* Remove an element at index index */
+remove_vacancy(&vacancy_list,
+index);
+
+/* Copy the array */
+
+copy_vacancy_array(&from_list, &to_list);
 \end{verbatim}
 \end{mylisting}
 
