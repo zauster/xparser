@@ -1,4 +1,5 @@
-<!ELEMENT xmodel (name,version,description,models?,environment?,agents,contexts?,messages?)>
+<!ELEMENT xmodel 
+ (name,version,description,models?,environment?,agents,contexts?,messages?)>
 <!ATTLIST xmodel version CDATA #REQUIRED>
 
 <!ELEMENT models (model*)>
@@ -20,7 +21,8 @@
 <!ELEMENT roles (role*)>
 <!ELEMENT role (name,description,functions)>
 <!ELEMENT functions (function*)>
-<!ELEMENT function (name,description,code?,currentState,nextState,condition?,inputs?,outputs?)>
+<!ELEMENT function 
+ (name,description,code?,currentState,nextState,condition?,inputs?,outputs?)>
 <!ELEMENT condition ((not)|(lhs,op,rhs)|(time))>
 <!ELEMENT not ((lhs,op,rhs)|(time))>
 <!ELEMENT lhs ((not)|(lhs,op,rhs)|(value)|(time))>

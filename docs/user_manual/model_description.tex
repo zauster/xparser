@@ -68,34 +68,68 @@ Models can contain:
 \end{itemize}
 \end{itemize}
 
-\subsection{Environment}
-The environment tag in the model.xml file hosts additional tags for information
-that may be required by the parser for efficient simulation of the model.
-Following are the tags that can be defined in it.
+\subsection{Model in Multiple Files}
 
-
-\subsubsection{Constant Variables}
-
-Constant Variables refers to the global values used in the model. These can me
-defined in a separate header file which can then be included in one of the
-functions file.
-
-The header file would look as follows:
+It is possible to define a model in multiple files. FLAME reads a model from
+multiple files as if the model was defined in one file. This capability allows
+different parts of a model to be enabled or disabled easily. For example a
+model includes different versions of a sub-model that can be exchanged, or a
+subsystem of a model can be disabled to see how it affects the model.
+Alternatively this capability could be used as a hierarchy, for example a `body'
+model could include a model of the `cardiovascular system' that includes a
+model of the `heart'. The following tags show the inclusion of two models, one
+enabled and one disabled:
 
 \begin{mylisting}
 \begin{verbatim}
-#define <varname> <value>
+<models>
+  <model><file>sub_model_1.xml</file><enabled>true</enabled></model>
+  <model><file>sub_model_2.xml</file><enabled>false</enabled></model>
+</models>
 \end{verbatim}
 \end{mylisting}
 
-If this file was saved as a `my\_header.h' file, include this file into one of
-the function files so that the compiler knows about these arguments.
+\subsection{Environment}
+
+The environment tag in the model.xml file hosts additional tags for information
+that may be required by the parser for efficient simulation of the model.
+Following are the tags that can be defined within it.
+
+\subsubsection{Constant Variables}
+
+These are constant variables that can be set as part of a simulation run's
+initial starting values, and can be defined as follows:
+
+\begin{mylisting}
+\begin{verbatim}
+<constants>
+  <variable>
+   <type>int</type><name>my_constant</name>
+   <description>value read in inital simulation settings</description>
+  </variable>
+</constants>
+\end{verbatim}
+\end{mylisting}
+
+% Constant Variables refers to the global values used in the model. These can me
+% defined in a separate header file which can then be included in one of the
+% functions file.
+% 
+% The header file would look as follows:
+% 
+% \begin{mylisting}
+% \begin{verbatim}
+% #define <varname> <value>
+% \end{verbatim}
+% \end{mylisting}
+% 
+% If this file was saved as a `my\_header.h' file, include this file into one of
+% the function files so that the compiler knows about these arguments.
 
 \subsubsection{Function Files}
 
-Function files are where you can place source code for the implementation of the
+Function files hold the source code for the implementation of the
 agent functions.
-
 They are included in the compilation script (Makefile) of the produced model.
 
 \begin{mylisting}
@@ -107,12 +141,14 @@ They are included in the compilation script (Makefile) of the produced model.
 \end{verbatim}
 \end{mylisting}
 
-\subsubsection{Time Rules}\label{timeunit}
+\subsubsection{Time Rules}
+\label{timeunit}
 
 Time rules allow the possibility of restricting the functions to
 only execute during particular iterations. An iteration refers to
-the smallest unit the models are set up on. In EURACE, we are
-assuming every iteration to represent one day in the calender.
+the smallest unit the models are set up on.
+%In EURACE, we are assuming every iteration to represent one day in the
+% calender.
 
 Time rules can be applied to function conditions instead of a
 condition rule and are defined by a time period and a phase. A time
@@ -121,8 +157,8 @@ phase is the offset from the start of a period.
 A time unit would contain:
 \begin{itemize}
 \item name - name of the time unit.
-\item unit - can contain the iteration or other time units.
-\item period - offset by which to skip the unit in every iteration.
+\item unit - can contain `iteration' or other time units.
+\item period - the possible offset.
 \end{itemize}
 
 A time period needs to be defined as a time unit in the environment
@@ -206,11 +242,14 @@ Data types can contain C data types or other predefined user data types.
   <name>Histogram</name>
   <description>ADT Histogram</description>
   <variables>
-   <variable><type>double</type><name>prob[30]</name><description></description>
+   <variable><type>double</type><name>prob[30]</name>
+    <description></description>
    </variable>
-   <variable><type>double</type><name>values[30]</name><description></description>
+   <variable><type>double</type><name>values[30]</name>
+    <description></description>
    </variable>
-   <variable><type>double</type><name>max</name><description></description>
+   <variable><type>double</type><name>max</name>
+    <description></description>
    </variable>
   </variables>
  </dataType>
@@ -219,18 +258,20 @@ Data types can contain C data types or other predefined user data types.
   <name>Belief</name>
   <description>ADT Belief</description>
   <variables>
-   <variable><type>double</type><name>expectedPriceReturns</name><description>
-                </description>
+   <variable><type>double</type><name>expectedPriceReturns</name>
+    <description></description>
    </variable>
-   <variable><type>double</type><name>expectedTotalReturns</name><description>
-                </description>
+   <variable><type>double</type><name>expectedTotalReturns</name>
+    <description></description>
    </variable>
-   <variable><type>double</type><name>expectedCashFlowYield</name><description>
-                </description>
+   <variable><type>double</type><name>expectedCashFlowYield</name>
+    <description></description>
    </variable>
-   <variable><type>double</type><name>volatility</name><description></description>
+   <variable><type>double</type><name>volatility</name>
+    <description></description>
    </variable>
-   <variable><type>Histogram</type><name>hist</name><description></description>
+   <variable><type>Histogram</type><name>hist</name>
+    <description></description>
    </variable>
   </variables>
  </dataType>
@@ -253,14 +294,21 @@ An agent can be defined as follows:
     <name>Firm</name>
     <description></description>
     <memory>
-      <variable><type>int</type><name>id</name><description></description></variable>
-      <variable><type>int</type><name>region_id</name><description></description>
-                    </variable>
-      <variable><type>int</type><name>gov_id</name><description></description></variable>
-      <variable><type>int</type><name>day_of_month_to_act</name><description>
-                    </description></variable>
-      <variable><type>double</type><name>payment_account</name><description>
-                    </description></variable>
+      <variable><type>int</type><name>id</name>
+       <description></description>
+      </variable>
+      <variable><type>int</type><name>region_id</name>
+       <description></description>
+      </variable>
+      <variable><type>int</type><name>gov_id</name>
+       <description></description>
+      </variable>
+      <variable><type>int</type><name>day_of_month_to_act</name>
+       <description></description>
+      </variable>
+      <variable><type>double</type><name>payment_account</name>
+       <description></description>
+      </variable>
     </memory>
     <functions>
       .....
@@ -271,27 +319,38 @@ An agent can be defined as follows:
     <name>Household</name>
     <description></description>
     <memory>
-      <variable><type>int</type><name>id</name><description></description></variable>
-      <variable><type>int</type><name>region_id</name><description></description>
-                    </variable>
-      <variable><type>int_array</type><name>neighboring_region_ids</name><description>
-                    </description></variable>
-      <variable><type>int</type><name>gov_id</name><description></description></variable>
-      <variable><type>int</type><name>day_of_month_to_act</name><description>
-                    </description></variable>
-      <variable><type>double</type><name>payment_account</name><description>
-                    </description></variable>
+      <variable><type>int</type><name>id</name>
+       <description></description>
+      </variable>
+      <variable><type>int</type><name>region_id</name>
+       <description></description>
+      </variable>
+      <variable><type>int_array</type><name>neighboring_region_ids</name>
+       <description></description>
+      </variable>
+      <variable><type>int</type><name>gov_id</name>
+       <description></description>
+      </variable>
+      <variable><type>int</type><name>day_of_month_to_act</name>
+       <description></description>
+      </variable>
+      <variable><type>double</type><name>payment_account</name>
+       <description></description>
+      </variable>
     </memory>
     <functions>
-      <function>
-        <name>Household_read_firing_messages</name>
-        <description>The household checks whether is is fired or not</description>
+     <function>
+       <name>Household_read_firing_messages</name>
+        <description>Check for being fired or not</description>
         <currentState>EXIT_FINANCIAL_MARKET</currentState>
         <nextState>01d</nextState>
-        <condition><lhs><value>a.employee_firm_id</value></lhs><op>NEQ</op><rhs>
-                        <value>-1</value></rhs></condition>
+        <condition>
+         <lhs><value>a.employee_firm_id</value></lhs>
+         <op>NEQ</op>
+         <rhs><value>-1</value></rhs>
+        </condition>
         <inputs>
-          <input><messageName>firing</messageName></input>
+         <input><messageName>firing</messageName></input>
         </inputs>
       </function>
     </functions>
@@ -423,23 +482,34 @@ iteration.
 
  <message>
   <name>bank_account_update</name>
-  <description>Sent by household. Household informs the bank about the actual
-                payment account</description>
+  <description>
+   Household informs the bank about the actual payment account
+  </description>
   <variables>
-    <variable><type>int</type><name>id</name><description></description></variable>
-    <variable><type>int</type><name>bank_id</name><description></description></variable>
+    <variable><type>int</type><name>id</name>
+     <description></description>
+    </variable>
+    <variable><type>int</type><name>bank_id</name>
+     <description></description>
+    </variable>
     <variable><type>double</type><name>payment_account</name>
-                <description></description></variable>
+     <description></description>
+    </variable>
   </variables>
  </message>
 
  <message>
   <name>application_rejection</name>
-  <description>Send by firms. Includes the id and the id of the refused applicant.
-                </description>
+  <description>
+   Send by firms. Includes the id and the id of the refused applicant.
+  </description>
   <variables>
-    <variable><type>int</type><name>firm_id</name><description></description></variable>
-    <variable><type>int</type><name>worker_id</name><description></description></variable>
+    <variable><type>int</type><name>firm_id</name>
+     <description></description>
+    </variable>
+    <variable><type>int</type><name>worker_id</name>
+     <description></description>
+    </variable>
   </variables>
  </message>
 

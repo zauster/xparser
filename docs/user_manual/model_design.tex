@@ -1,31 +1,31 @@
 \section{Model Design}
 \label{model_design}
 
-The philosophy of FLAME is to specify an agent-based model as one would
-specify software behaviour, as ultimately the execution of the model will be in
-software. Traditionally specifying software behaviour has used finite state
-machines which allow modelling of a system in terms of its inputs and outputs.
-Testing a system specified as a finite state machine makes it easier for the behaviour to be expressed as a graph
-and allow traversals of all possible and impossible executions of the system.
-Conventional state machines describe the state-dependent behaviour of a system 
-in terms of its inputs, but this fails to include the effect of data.
-X-Machines are an extension to conventional state machines that
-include the manipulation of memory as part of the system behaviour,
-and thus are a suitable way to specify agents.
-Describing a system would thus include the following individual
-stages for creating a model:
+The philosophy of FLAME is to specify an agent-based model as you would specify
+software behaviour, as ultimately the execution of the model will be in software.
+Traditionally specifying software behaviour has used finite state machines which
+allow modelling of a system in terms of its inputs and outputs. Testing a system
+specified as a finite state machine makes it easier for the behaviour to be
+expressed as a graph and allow traversals of all possible and impossible
+executions of the system. Conventional state machines describe the
+state-dependent behaviour of a system in terms of its inputs, but this fails to
+include the effect of data. X-Machines are an extension to conventional state
+machines that include the manipulation of memory as part of the system behaviour,
+and thus are a suitable way to specify agents. Describing a system would thus
+include the following individual stages for creating a model:
 
 \begin{itemize}
 \item Identifying the agent functions
 \item Identify the states which impose some order of function execution
-\item Identify the input messages and output messages of each function,
-including filters on inputs
+\item Identify the input messages and output messages of each function 
+(including possible filters on inputs)
 \item Identify the memory as the set of variables that are accessed by
-transition functions, including conditions on variables for the transition to
-occur
+functions (including possible conditions on variables for the functions to
+occur)
 \end{itemize}
 
-For example a simple swarm model would include agents with the functions:
+For example a simple swarm (flocking) model would include agents with the
+functions:
 
 \begin{itemize}
 \item signal -- send out current position
@@ -34,11 +34,12 @@ For example a simple swarm model would include agents with the functions:
 \end{itemize}
 
 The functions occur in the above order so states are included to impose this
-order. As a requirement for automatic parallel execution functions can only be
-executed once. There can only be one start state, but there can be many end
-states.
+order, see Figure \ref{fig:swarm_1}. As a requirement for automatic parallel
+execution agents can only be in a state once during an iteration. This is so that
+parallel processes can easily stay synchronised. There can only be one start
+state per agent, but there can be many end states.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics*[scale=0.5]{swarm_1.ps}
 \caption{Swarm model including states}
@@ -46,13 +47,14 @@ states.
 \end{center}
 \end{figure}
 
-Functions can also have conditions on the memory of an agent. For instance lets
-say we have a response function for flying and a response function when resting
-on the ground. The condition on the flying response function would be that the
+Functions can also have conditions on the memory of an agent. For instance, a
+response function for flying and a response function when resting on the ground.
+The condition on the flying response function would be that the
 z-axis position of the agent be greater than zero while the resting response
-function condition would be when the z-axis position was zero.
+function condition would be when the z-axis position was zero, see Figure
+\ref{fig:swarm_2}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics*[scale=0.5]{swarm_2.ps}
 \caption{Swarm model including function conditions}
@@ -60,16 +62,16 @@ function condition would be when the z-axis position was zero.
 \end{center}
 \end{figure}
 
-The messages required for communication are a signal message, which is output
-from signal and input to observe. This message would include the position of the
-agent that sent it. A feature of swarm models and most agent-based models is that
+The messages required for communication between agents are a signal message,
+which is output from `signal' and input to `observe'. This message would include
+the position of the agent that sent it. A feature of swarm models and most agent-based models is that
 there is generally a limit on incoming communication. In the swarm case this is
 the perceived distance of sight that an agent can view the location of other
 agents. This feature can be added to the model as a filter on inputs to a
 function, where the filter is a formula involving the position contained in the
 message and the agent position.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics*[scale=0.5]{swarm_3.ps}
 \caption{Swarm model including messages}
@@ -80,7 +82,7 @@ message and the agent position.
 Finally the memory required by the agent functions include the position of the
 agent, and its velocity, as shown in Table \ref{tab:swarm_memory}.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \begin{tabular}{|l||c||l|}
 \hline

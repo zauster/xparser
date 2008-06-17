@@ -29,3 +29,6 @@ ps: dvi
 
 clean:
 	rm -f *.aux user_manual.bbl user_manual.blg user_manual.dvi user_manual.log user_manual.lof user_manual.lot user_manual.toc *.ps
+
+vclean: clean
+	rm -f *.bak
