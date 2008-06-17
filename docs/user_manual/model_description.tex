@@ -218,11 +218,14 @@ Data types can contain C data types or other predefined user data types.
   <name>Belief</name>
   <description>ADT Belief</description>
   <variables>
-   <variable><type>double</type><name>expectedPriceReturns</name><description></description>
+   <variable><type>double</type><name>expectedPriceReturns</name><description>
+                </description>
    </variable>
-   <variable><type>double</type><name>expectedTotalReturns</name><description></description>
+   <variable><type>double</type><name>expectedTotalReturns</name><description>
+                </description>
    </variable>
-   <variable><type>double</type><name>expectedCashFlowYield</name><description></description>
+   <variable><type>double</type><name>expectedCashFlowYield</name><description>
+                </description>
    </variable>
    <variable><type>double</type><name>volatility</name><description></description>
    </variable>
@@ -250,10 +253,13 @@ An agent can be defined as follows:
     <description></description>
     <memory>
       <variable><type>int</type><name>id</name><description></description></variable>
-      <variable><type>int</type><name>region_id</name><description></description></variable>
+      <variable><type>int</type><name>region_id</name><description></description>
+                    </variable>
       <variable><type>int</type><name>gov_id</name><description></description></variable>
-      <variable><type>int</type><name>day_of_month_to_act</name><description></description></variable>
-      <variable><type>double</type><name>payment_account</name><description></description></variable>
+      <variable><type>int</type><name>day_of_month_to_act</name><description>
+                    </description></variable>
+      <variable><type>double</type><name>payment_account</name><description>
+                    </description></variable>
     </memory>
     <functions>
       .....
@@ -265,11 +271,15 @@ An agent can be defined as follows:
     <description></description>
     <memory>
       <variable><type>int</type><name>id</name><description></description></variable>
-      <variable><type>int</type><name>region_id</name><description></description></variable>
-      <variable><type>int_array</type><name>neighboring_region_ids</name><description></description></variable>
+      <variable><type>int</type><name>region_id</name><description></description>
+                    </variable>
+      <variable><type>int_array</type><name>neighboring_region_ids</name><description>
+                    </description></variable>
       <variable><type>int</type><name>gov_id</name><description></description></variable>
-      <variable><type>int</type><name>day_of_month_to_act</name><description></description></variable>
-      <variable><type>double</type><name>payment_account</name><description></description></variable>
+      <variable><type>int</type><name>day_of_month_to_act</name><description>
+                    </description></variable>
+      <variable><type>double</type><name>payment_account</name><description>
+                    </description></variable>
     </memory>
     <functions>
       <function>
@@ -277,7 +287,8 @@ An agent can be defined as follows:
         <description>The household checks whether is is fired or not</description>
         <currentState>EXIT_FINANCIAL_MARKET</currentState>
         <nextState>01d</nextState>
-        <condition><lhs><value>a.employee_firm_id</value></lhs><op>NEQ</op><rhs><value>-1</value></rhs></condition>
+        <condition><lhs><value>a.employee_firm_id</value></lhs><op>NEQ</op><rhs>
+                        <value>-1</value></rhs></condition>
         <inputs>
           <input><messageName>firing</messageName></input>
         </inputs>
