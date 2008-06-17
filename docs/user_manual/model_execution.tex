@@ -1,4 +1,5 @@
 \section{Model Execution}
+\label{model_execution}
 
 FLAME contains a parser program called `xparser' that parses a model
 XML definition into simulation program source code that can be compiled
@@ -28,29 +29,29 @@ as the model file. These files include:
   accessing agent memory variables
   \item rules.c -- the source code file containing the generated rules for
   function conditions and message input filters
-  \item messageboards.c -- depricated?
+  \item messageboards.c -- deprecated?
   \item partitioning.c -- still used?
 \end{itemize}
 
 and in parallel the additional files:
 
 \begin{itemize}
-  \item propagate\_messages.c -- depricated?
+  \item propagate\_messages.c -- deprecated?
   \item propagate\_agents.c -- still used?
 \end{itemize}
 
 The simulation source code files then require compilation, which can be easily
-acheived using the included compilation script `Makefile' using the `make'
+achieved using the included compilation script `Makefile' using the `make'
 build automation tool. The program `make' invokes the `gcc' C compiler, which
-are both free and avaliable on various operating systems. If the parallel
+are both free and available on various operating systems. If the parallel
 version of the simulation was specified the compiler invoked by `make' is
-`mpicc' which is a script usually avalible on parallel systems.
+`mpicc' which is a script usually available on parallel systems.
 
 The compiled program is called `main'. The parameters required to run a
 simulation include the number of iterations to run for and the initial start
 states (memory) of the agents, currently a formatted XML file.
 
-The format of the initial start states XML is given by the folowing example:
+The format of the initial start states XML is given by the following example:
 
 \begin{mylisting}
 \begin{verbatim}
