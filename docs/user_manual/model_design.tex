@@ -47,9 +47,9 @@ state per agent, but there can be many end states.
 \end{center}
 \end{figure}
 
-Functions can also have conditions on the memory of an agent. For instance, a
-response function for flying and a response function when resting on the ground.
-The condition on the flying response function would be that the
+Functions can also have conditions on the memory of an agent. For instance, in
+the swarm model, a response function for flying and a response function when
+resting on the ground. The condition on the flying response function would be that the
 z-axis position of the agent be greater than zero while the resting response
 function condition would be when the z-axis position was zero, see Figure
 \ref{fig:swarm_2}.
@@ -105,10 +105,45 @@ double&vz&velocity in z-axis\\
 \label{tab:swarm_memory}
 \end{table}
 
+The swarm model can be represented as a transition table (see Table
+\ref{tab:swarmtransition}), where:
+
+\begin{itemize}
+  \item Current State -- is the state the agent is currently in.
+  \item Input -- is any inputs into the transition function.
+  \item $M_{pre}$ -- are any preconditions of the memory on the transition.
+  \item Function -- is the function name.
+  \item $M_{post}$ -- is any change in the agent memory.
+  \item Output -- is any outputs from the transition.
+  \item Next State -- is the next state that is entered by the agent.
+\end{itemize}
+
+%\begin{landscape}
+\begin{table}[ht]
+\centering
+\begin{tabular}{|c|c|c||c||c|c|c|}
+\hline
+Current State&Input&$M_{pre}$&Function&$M_{post}$&Output&Next State\\
+\hline
+\hline
+start&&&signal&&signal&1\\
+\hline
+1&signal&&observe&(velocity updated)&&2\\
+\hline
+2&&$x > 0$&flying&(position updated)&&end\\
+\hline
+2&&$x == 0$&resting&(position updated)&&end\\
+\hline
+\end{tabular}
+\caption{Swarm Transition Table}
+\label{tab:swarmtransition}
+\end{table}
+%\end{landscape}
+
 Section \ref{model_description} on model description describes how to write a
 model description into an XML file that FLAME can understand. Section
 \ref{model_implementation} on model implementation describes how to implement
-the individual agent functions. 
+the individual agent functions, i.e. $M_{post}$ from the transition table. 
 
 % \begin{equation}\label{streamxmachine}
 %     X = (\Sigma, \Gamma, Q, M, \Phi, F, q_{0}, m_{0})

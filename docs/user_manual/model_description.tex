@@ -30,7 +30,7 @@ Models can contain:
 \item \textbf{environment}
 \begin{itemize}
 \item constant variables
-\item function files
+\item location of function files
 \item time units
 % \begin{itemize}
 % \item name
@@ -44,7 +44,7 @@ Models can contain:
 % \item variables
 % \end{itemize}
 \end{itemize}
-\item \textbf{agents}
+\item \textbf{agent types}
 \begin{itemize}
 \item name
 \item description
@@ -60,7 +60,7 @@ Models can contain:
 % **** filter
 % *** outputs
 \end{itemize}
-\item \textbf{messages}
+\item \textbf{message types}
 \begin{itemize}
 \item name
 \item description
@@ -72,7 +72,7 @@ Models can contain:
 
 It is possible to define a model in multiple files. FLAME reads a model from
 multiple files as if the model was defined in one file. This capability allows
-different parts of a model to be enabled or disabled easily. For example a
+different parts of a model to be enabled or disabled easily. For example if a
 model includes different versions of a sub-model that can be exchanged, or a
 subsystem of a model can be disabled to see how it affects the model.
 Alternatively this capability could be used as a hierarchy, for example a `body'
@@ -91,13 +91,22 @@ enabled and one disabled:
 
 \subsection{Environment}
 
-The environment tag in the model.xml file hosts additional tags for information
-that may be required by the parser for efficient simulation of the model.
-Following are the tags that can be defined within it.
+The environment of a model holds information required by FLAME but is not part
+of an agent or a message. This includes:
+
+\begin{itemize}
+\item constant variables -- for setting up different simulations easily
+\item location of function files -- the path to the implementations of agent
+functions
+\item time units -- for easily activating agent functions dependent on time
+periods
+\item data types -- user defined data types used by agent memory or
+message variables
+\end{itemize}
 
 \subsubsection{Constant Variables}
 
-These are constant variables that can be set as part of a simulation run's
+These are constant variables that can be set as part of a simulation runs
 initial starting values, and can be defined as follows:
 
 \begin{mylisting}
@@ -105,7 +114,7 @@ initial starting values, and can be defined as follows:
 <constants>
   <variable>
    <type>int</type><name>my_constant</name>
-   <description>value read in inital simulation settings</description>
+   <description>value read in initial simulation settings</description>
   </variable>
 </constants>
 \end{verbatim}
@@ -130,7 +139,7 @@ initial starting values, and can be defined as follows:
 
 Function files hold the source code for the implementation of the
 agent functions.
-They are included in the compilation script (Makefile) of the produced model.
+They are included in the compilation script (Makefile) of the produced model:
 
 \begin{mylisting}
 \begin{verbatim}
@@ -141,28 +150,29 @@ They are included in the compilation script (Makefile) of the produced model.
 \end{verbatim}
 \end{mylisting}
 
-\subsubsection{Time Rules}
+\subsubsection{Time Units}
 \label{timeunit}
 
-Time rules allow the possibility of restricting the functions to
-only execute during particular iterations. An iteration refers to
-the smallest unit the models are set up on.
-%In EURACE, we are assuming every iteration to represent one day in the
-% calender.
+% Time units allow the possibility of restricting the functions to
+% only execute during particular iterations.
+% Time rules can be applied to function conditions instead of a
+% condition rule and are defined by a time period and a phase. A time
+% phase is the offset from the start of a period.
 
-Time rules can be applied to function conditions instead of a
-condition rule and are defined by a time period and a phase. A time
-phase is the offset from the start of a period.
+Time units are used to define time periods that agent functions act within. For
+example a model that uses a calendar based time system could take a day to be
+the smallest time step, i.e. one iteration. Other time units can then use this
+definition to define other time units, for example weeks, months, and years.
 
-A time unit would contain:
+A time unit contains:
+
 \begin{itemize}
-\item name - name of the time unit.
-\item unit - can contain `iteration' or other time units.
-\item period - the possible offset.
+\item name -- name of the time unit.
+\item unit -- can contain `iteration' or other defined time units.
+\item period -- the length of the time unit using the above units.
 \end{itemize}
 
-A time period needs to be defined as a time unit in the environment
-of a model. Time units can be described as:
+An example of a calendar based time unit set up is given below:
 
 \begin{mylisting}
 \begin{verbatim}
@@ -201,77 +211,42 @@ of a model. Time units can be described as:
 \end{verbatim}
 \end{mylisting}
 
-A condition can then be added to the function definition to make the
-parser aware that this particular function only has to be called at
-certain times of the simulation. The condition can be added as
-follows:
-\begin{mylisting}
-\begin{verbatim}
- <condition>
-     <time>
-     <period>monthly</period>
-     <phase>a.day_of_month_to_act</phase>
-     </time>
- </condition>
-\end{verbatim}
-\end{mylisting}
-
-The condition allows the function to run \emph{monthly} at the phase
-of \emph{day\_of\_month\_to\_act}. The
-\emph{day\_of\_month\_to\_act} is a variable extracted from the
-agent memory and is thus defined as
-\emph{a.day\_of\_month\_to\_act}.
-
-Refer to section \ref{functioncond} for more details on function
-condition definitions.
-
-These rules are then parsed into rule functions and placed in a file
-called rules.c
-
 \subsubsection{Data Types}
 
 Data types are user defined data types that can be used in a model.
-
 Data types can contain C data types or other predefined user data types.
+The example below the data type \emph{line} contains a variable
+of data type \emph{position} which is defined above it:
 
 \begin{mylisting}
 \begin{verbatim}
 <dataTypes>
 
  <dataType>
-  <name>Histogram</name>
-  <description>ADT Histogram</description>
+  <name>position/name>
+  <description>position in 3D using doubles</description>
   <variables>
-   <variable><type>double</type><name>prob[30]</name>
-    <description></description>
+   <variable><type>double</type><name>x</name>
+    <description>position on x-axis</description>
    </variable>
-   <variable><type>double</type><name>values[30]</name>
-    <description></description>
+   <variable><type>double</type><name>y</name>
+    <description>position on y-axis</description>
    </variable>
-   <variable><type>double</type><name>max</name>
-    <description></description>
+   <variable><type>double</type><name>z</name>
+    <description>position on z-axis</description>
    </variable>
   </variables>
  </dataType>
 
  <dataType>
-  <name>Belief</name>
-  <description>ADT Belief</description>
+  <name>line</name>
+  <description>a line defined by two points</description>
   <variables>
-   <variable><type>double</type><name>expectedPriceReturns</name>
-    <description></description>
+   <variable><type>position</type><name>start</name>
+    <description>start position of the line</description>
    </variable>
-   <variable><type>double</type><name>expectedTotalReturns</name>
-    <description></description>
-   </variable>
-   <variable><type>double</type><name>expectedCashFlowYield</name>
-    <description></description>
-   </variable>
-   <variable><type>double</type><name>volatility</name>
-    <description></description>
-   </variable>
-   <variable><type>Histogram</type><name>hist</name>
-    <description></description>
+   <variable><type>position</type><name>end</name>
+    <description>end position of the line</description>
    </variable>
   </variables>
  </dataType>
@@ -280,38 +255,22 @@ Data types can contain C data types or other predefined user data types.
 \end{verbatim}
 \end{mylisting}
 
-In the example above the data type \emph{Belief} contains a variable
-of data type \emph{Histogram}
-
 \subsection{Agent}
 
-An agent can be defined as follows:
+An agent type contains a name, a description, memory, and functions. 
+
 \begin{mylisting}
 \begin{verbatim}
 <agents>
 
   <xagent>
-    <name>Firm</name>
+    <name>Agent_Name</name>
     <description></description>
     <memory>
-      <variable><type>int</type><name>id</name>
-       <description></description>
-      </variable>
-      <variable><type>int</type><name>region_id</name>
-       <description></description>
-      </variable>
-      <variable><type>int</type><name>gov_id</name>
-       <description></description>
-      </variable>
-      <variable><type>int</type><name>day_of_month_to_act</name>
-       <description></description>
-      </variable>
-      <variable><type>double</type><name>payment_account</name>
-       <description></description>
-      </variable>
+     ...
     </memory>
     <functions>
-      .....
+      ...
     </functions>
   </xagent>
 
@@ -359,31 +318,57 @@ An agent can be defined as follows:
 \end{verbatim}
 \end{mylisting}
 
+\subsubsection{Agent Memory}
+
+Agent memory defines variables, where variables are defined by their type, C
+data types or user defined data types from the environment, a name, and a
+description:
+
+\begin{mylisting}
+\begin{verbatim}
+memory>
+ <variable><type>int</type><name>id</name>
+  <description>identity number</description>
+ </variable>
+ <variable><type>double</type><name>x</name>
+  <description>position in x-axis</description>
+ </variable>
+</memory>
+\end{verbatim}
+\end{mylisting}
+
 \subsubsection{Agent Functions}
+
 An agent function contains:
+
 \begin{itemize}
 \item name
 \item description
-\item current state - The current state point the agent is in, in
-the branch.
-\item next state - The next state point it has to move to, in the
-branch.
-\item condition - Condition which tells the parser when this
-function can be executed.
-\item inputs - The messages this function is reading.
-\item outputs - The messages this function is sending.
+\item current state - the current state the agent has to be in.
+\item next state - the next state the agent will transition to.
+\item condition - a possible condition of the function transition.
+\item inputs - the possible input messages.
+\item outputs - the possible output messages.
 \end{itemize}
 
-\subsubsection{Function Condition and Message Input Filter Rule
-Tags}\label{functioncond}
+\subsubsection{Function Condition}
+\label{functioncond}
 
-The agent functions can be accompanied by conditions telling the
-parser when these functions have to be executed during the
-iterations. Condition on the basis of time have been explained in
-section \ref{timeunit} but these can also be associated with
-comparison rules.
+A function can have a condition on its transition. This condition can include
+conditions on the agent memory and also on any time units defined in the
+environment. At any state with outgoing transitions with conditions it must be
+possible for a transition to happen, i.e. it must be possible for every agent
+to transition from the start state to an end state.
 
-\paragraph{Comparison Rules}
+Conditions (that are not only time unit based) take the form:
+
+\begin{itemize}
+  \item lhs -- left hand side of comparison
+  \item op -- the comparison operator
+  \item rhs -- the right hand side of the comparison
+\end{itemize}
+
+Or in tags:
 
 \begin{mylisting}
 \begin{verbatim}
@@ -391,26 +376,18 @@ comparison rules.
 \end{verbatim}
 \end{mylisting}
 
-lhs and rhs can be either a value, denoted by value tags:
+Sides to compare (lhs or rhs) can be either a value, denoted by value tags, 
+a formula, currently also in value tags, or another comparion rule.
+Values and formula can include agent variables which are preceded by `a.'.
 
-\begin{mylisting}
-\begin{verbatim}
-<value></value>
-\end{verbatim}
-\end{mylisting}
+% \begin{mylisting}
+% \begin{verbatim}
+% a.agent_var
+% m.message_var
+% \end{verbatim}
+% \end{mylisting}
 
-or another rule.
-
-Values can include agent and message memory variables, which are denoted by either:
-
-\begin{mylisting}
-\begin{verbatim}
-a.agent_var
-m.message_var
-\end{verbatim}
-\end{mylisting}
-
-op can be either comparison functions:
+The comparison operator can be one of the following comparison functions:
 
 \begin{itemize}
 \item EQ -- equal to
@@ -420,31 +397,63 @@ op can be either comparison functions:
 \item LT -- less then
 \item GT -- greater than
 \end{itemize}
-or logic operators:
+
+or can be one of the following logic operators as well:
+
 \begin{itemize}
 \item AND
 \item OR
 \end{itemize}
-the operator NOT is used by placing `not' tags around a rule:
+
+The operator `NOT' is used by placing `not' tags around a comparison rule.
+
 \begin{mylisting}
 \begin{verbatim}
 <condition>
  <lhs>
-  <lhs><value>a.employee_firm_id</value></lhs>
+  <lhs><value>a.z</value></lhs>
   <op>GT</op>
-  <rhs><value>-1</value></rhs>
+  <rhs><value>0</value></rhs>
  </lhs>
  <op>AND</op>
  <rhs>
   <not>
-  <lhs><value>a.on_the_job_search</value></lhs>
-  <op>EQ</op>
-  <rhs><value>0</value></rhs>
+  <lhs><value>a.z</value></lhs>
+  <op>ELT</op>
+  <rhs><value>10.0</value></rhs>
   </not>
  </rhs>
 </condition>
 \end{verbatim}
 \end{mylisting}
+
+A condition can then be added to the function definition to make the
+parser aware that this particular function only has to be called at
+certain times of the simulation. The condition can be added as
+follows:
+
+\begin{mylisting}
+\begin{verbatim}
+ <condition>
+     <time>
+     <period>monthly</period>
+     <phase>a.day_of_month_to_act</phase>
+     </time>
+ </condition>
+\end{verbatim}
+\end{mylisting}
+
+The condition allows the function to run \emph{monthly} at the phase
+of \emph{day\_of\_month\_to\_act}. The
+\emph{day\_of\_month\_to\_act} is a variable extracted from the
+agent memory and is thus defined as
+\emph{a.day\_of\_month\_to\_act}.
+
+Refer to section \ref{functioncond} for more details on function
+condition definitions.
+
+These rules are then parsed into rule functions and placed in a file
+called rules.c
 
 \paragraph{Message Filter}
 Message filters allow the messages to be filtered before being
