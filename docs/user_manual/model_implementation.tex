@@ -2,7 +2,7 @@
 \label{model_implementation}
 
 The implementations of each agent's functions are currently written in separate
-files written in C, usually suffixed with `.c'. Each file must include two
+files written in C, suffixed with `.c'. Each file must include two
 header files, one for the overall framework and one for the particular agent that the functions are for.
 Functions for different agents cannot be contained in the same file.
 Thus, at the top of each file two headers are required:
@@ -41,7 +41,7 @@ the simulation, and one removes the agent immediately from the simulation.
 \subsection{Accessing Agent Memory Variables}
 
 After including the specific agent header, the variables in the
-agent memory can be accessed by capitalising the variable name.
+agent memory can be accessed by capitalising the variable name:
 
 \begin{mylisting}
 \begin{verbatim}
@@ -49,7 +49,7 @@ AGENT_VARIABLE
 \end{verbatim}
 \end{mylisting}
 
-To access elements of a static array just use square brackets and index number as normal.
+To access elements of a static array use square brackets and the index number:
 
 \begin{mylisting}
 \begin{verbatim}
@@ -58,16 +58,16 @@ MY_STATIC_ARRAY[index]
 \end{mylisting}
 
 To access the elements and the size of dynamic array variables use
-`.size' and `.array[index]'
+`.size' and `.array[index]':
 
 \begin{mylisting}
 \begin{verbatim}
 MY_DYNAMIC_ARRAY.size
-MY_DYNAMIC_ARRAY.array[i]
+MY_DYNAMIC_ARRAY.array[index]
 \end{verbatim}
 \end{mylisting}
 
-To access variables of a model data type use `.variablename'
+To access variables of a model data type use `.variablename':
 
 \begin{mylisting}
 \begin{verbatim}
@@ -77,23 +77,29 @@ MY_DATA_TYPE.variablename
 
 \subsubsection{Using Model Data Types}
 
-Following is an example of how to use a data type called
-\emph{vacancy}.
+The following is an example of how to use a data type called
+\emph{vacancy}:
 
 \begin{mylisting}
 \begin{verbatim}
-/* Allocate own data type */
+/* To allocate a local data type */
 vacancy vac;
+
 /* And initialise */
 init_vacancy(&vac);
+
 /* Initialise a static array of the data type */
 init_vacancy_static_array(&vac_static_array, array_size);
+
 /* Free a data type */
 free_vacancy(&vac);
+
 /* Free a static array of a data type */
 free_vacancy_static_array(&vac_static_array, array_size);
+
 /* Copy a data type */
 copy_vacancy(&vac_from, &vac_to);
+
 /* Copy a static array of a data type */
 copy_vacancy_static_array(&vac_static_array_from,
                           &vac_static_array_to, array_size);
@@ -105,34 +111,32 @@ variable name must be capitalised.
 
 \subsubsection{Using Dynamic Arrays}
 
-Dynamic array types are created by adding `\_array' to a data type.
-When passing a dynamic array variable to the following functions
-place an \& in front of the array.
+Dynamic array variables are created by adding `\_array' to the variable type.
+The following is an example of how to use a dynamic array:
+% When passing a dynamic array variable to the following functions
+% place an \& in front of the array.
 
 \begin{mylisting}
 \begin{verbatim}
-/* Allocate own array */
+/* Allocate local dynamic array */
 vacancy_array vacancy_list;
 
 /* And initialise */
 init_vacancy_array(&vacancy_list);
 
-/* Reset an array */
+/* Reset a dynamic array */
 reset_vacancy_array(&vacancy_list);
 
-/* Free an array */
+/* Free a dynamic array */
 free_vacancy_array(&vacancy_list);
 
-/* Add an element to the array */
-add_vacancy(&vacancy_list, var1,
-var2, var3);
+/* Add an element to the dynamic array */
+add_vacancy(&vacancy_list, var1, .. varN);
 
 /* Remove an element at index index */
-remove_vacancy(&vacancy_list,
-index);
+remove_vacancy(&vacancy_list, index);
 
 /* Copy the array */
-
 copy_vacancy_array(&from_list, &to_list);
 \end{verbatim}
 \end{mylisting}
@@ -142,8 +146,9 @@ array variable name must be capitalised.
 
 \subsection{Sending and receiving messages}
 
-Messages can be read using macros to loop through the incoming message list as per the template below.
-Message variables can be accessed using an arrow `->'
+Messages can be read using macros to loop through the incoming message list as
+per the template below, where `messagename' is replaced by the actual message
+name. Message variables can be accessed using an arrow `->':
 
 \begin{mylisting}
 \begin{verbatim}
@@ -156,6 +161,6 @@ FINISH_MESSAGENAME_MESSAGE_LOOP
 Messages are sent or added to the message list by
 \begin{mylisting}
 \begin{verbatim}
- add_messagename_message(var1, var2);
+ add_messagename_message(var1, .. varN);
 \end{verbatim}
 \end{mylisting}
