@@ -10,6 +10,8 @@ The xparser takes as parameters the location of the model file and an option
 for serial or parallel (MPI) version, serial being the default if the option is
 not specified.
 
+\subsection{Generated Files}
+
 The xparser then generates simulation source code files in the same directory
 as the model file. These files include:
 
@@ -50,6 +52,8 @@ version of the simulation was specified the compiler invoked by `make' is
 The compiled program is called `main'. The parameters required to run a
 simulation include the number of iterations to run for and the initial start
 states (memory) of the agents, currently a formatted XML file.
+
+\subsection{Start States Files}
 
 The format of the initial start states XML is given by the following example:
 

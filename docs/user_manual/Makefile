@@ -10,11 +10,11 @@ swarm_3.ps: swarm_3.dot
 	dot -Tps swarm_3.dot -o swarm_3.ps
 
 spell:
-	aspell user_manual.tex
-	aspell model_design.tex
-	apsell model_description.tex
-	aspell model_implementation.tex
-	apsell model_execution.tex
+	aspell -c user_manual.tex
+	aspell -c model_design.tex
+	aspell -c model_description.tex
+	aspell -c model_implementation.tex
+	aspell -c model_execution.tex
 
 images: swarm_1.ps swarm_2.ps swarm_3.ps
 

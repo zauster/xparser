@@ -3,8 +3,8 @@
 
 The philosophy of FLAME is to specify an agent-based model as you would specify
 software behaviour, as ultimately the execution of the model will be in software.
-Traditionally specifying software behaviour has used finite state machines which
-allow modelling of a system in terms of its inputs and outputs. Testing a system
+Traditionally specifying software behaviour has included the use of finite state
+machines which allow modelling of a system in terms of its inputs and outputs. Testing a system
 specified as a finite state machine makes it easier for the behaviour to be
 expressed as a graph and allow traversals of all possible and impossible
 executions of the system. Conventional state machines describe the
@@ -15,29 +15,40 @@ and thus are a suitable way to specify agents. Describing a system would thus
 include the following individual stages for creating a model:
 
 \begin{itemize}
-\item Identifying the agent functions
+\item Identifying the agents and their functions
 \item Identify the states which impose some order of function execution
 \item Identify the input messages and output messages of each function 
-(including possible filters on inputs)
+\\(including possible filters on inputs)
 \item Identify the memory as the set of variables that are accessed by
-functions (including possible conditions on variables for the functions to
+functions \\(including possible conditions on variables for the functions to
 occur)
 \end{itemize}
+
+Agent functions can accept an input stream of messages, which are handled by the
+implementation of each function currently written in source code, and can
+produce a stream of output messages. This provides a level of description that
+FLAME can use to produce a simulation program of the model which can be
+executed on parallel computers. Future work would also allow the
+lower level description of functions that handle individual messages.
+
+\subsection{Swarm Example}
 
 For example a simple swarm (flocking) model would include agents with the
 functions:
 
 \begin{itemize}
 \item signal -- send out current position
-\item observe -- read positions from other agents and change velocity
-\item respond -- update position via velocity
+\item observe -- read positions from other agents and possibly change velocity
+\item respond -- update position via the current velocity
 \end{itemize}
 
-The functions occur in the above order so states are included to impose this
+The functions occur in this order so states are included to impose this
 order, see Figure \ref{fig:swarm_1}. As a requirement for automatic parallel
-execution agents can only be in a state once during an iteration. This is so that
-parallel processes can easily stay synchronised. There can only be one start
-state per agent, but there can be many end states.
+execution agents can only enter particular states once during an iteration,
+i.e. there cannot be any loops back to a state already entered. This is so that
+parallel processes can easily stay synchronised, adding to the efficiently of a
+simulation. There can only be one start state per agent, but there can be many
+possible end states.
 
 \begin{figure}[ht]
 \begin{center}
@@ -47,7 +58,7 @@ state per agent, but there can be many end states.
 \end{center}
 \end{figure}
 
-Functions can also have conditions on the memory of an agent. For instance, in
+Functions can also have conditions. For instance, in
 the swarm model, a response function for flying and a response function when
 resting on the ground. The condition on the flying response function would be that the
 z-axis position of the agent be greater than zero while the resting response
@@ -63,13 +74,30 @@ function condition would be when the z-axis position was zero, see Figure
 \end{figure}
 
 The messages required for communication between agents are a signal message,
-which is output from `signal' and input to `observe'. This message would include
-the position of the agent that sent it. A feature of swarm models and most agent-based models is that
-there is generally a limit on incoming communication. In the swarm case this is
-the perceived distance of sight that an agent can view the location of other
+which is output from `signal' and input to `observe', see Figure
+\ref{fig:swarm_3}. This message would include the position of the agent that
+sent it, see Table \ref{tab:signal_message}. A feature of swarm models and most
+agent-based models is that there is generally a limit on incoming communication. In the swarm case this is the perceived distance of sight that an agent can view the location of other
 agents. This feature can be added to the model as a filter on inputs to a
 function, where the filter is a formula involving the position contained in the
-message and the agent position.
+message (the position of the sending agent) and the receiving agent position.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|l||c||l|}
+\hline
+Type&Name&Description\\
+\hline \hline
+double&px&x-axis position\\
+\hline
+double&py&y-axis position\\
+\hline
+double&pz&z-axis position\\
+\hline
+\end{tabular}
+\caption{Signal Message}
+\label{tab:signal_message}
+\end{table}
 
 \begin{figure}[ht]
 \begin{center}
@@ -78,6 +106,12 @@ message and the agent position.
 \label{fig:swarm_3}
 \end{center}
 \end{figure}
+
+Functions that take a message type as input are only executed once all functions
+that output the same message type have finished. One iteration is taken as a
+standalone run of a simulation, so once all the functions that have a message
+type as an input have been executed, the messages are deleted as they are no
+longer required. Messages cannot be sent between iterations.
 
 Finally the memory required by the agent functions include the position of the
 agent, and its velocity, as shown in Table \ref{tab:swarm_memory}.
@@ -105,8 +139,8 @@ double&vz&velocity in z-axis\\
 \label{tab:swarm_memory}
 \end{table}
 
-The swarm model can be represented as a transition table (see Table
-\ref{tab:swarmtransition}), where:
+The swarm model can also be represented as a transition table, see Table
+\ref{tab:swarmtransition}, where:
 
 \begin{itemize}
   \item Current State -- is the state the agent is currently in.
@@ -135,7 +169,7 @@ start&&&signal&&signal&1\\
 2&&$x == 0$&resting&(position updated)&&end\\
 \hline
 \end{tabular}
-\caption{Swarm Transition Table}
+\caption{Swarm Agent Transition Table}
 \label{tab:swarmtransition}
 \end{table}
 %\end{landscape}
@@ -143,7 +177,9 @@ start&&&signal&&signal&1\\
 Section \ref{model_description} on model description describes how to write a
 model description into an XML file that FLAME can understand. Section
 \ref{model_implementation} on model implementation describes how to implement
-the individual agent functions, i.e. $M_{post}$ from the transition table. 
+the individual agent functions, i.e. $M_{post}$ from the transition table.
+Section \ref{model_execution} on model execution describes how to use the tools
+in FLAME to generate a simulation program, compile it, and run it.
 
 % \begin{equation}\label{streamxmachine}
 %     X = (\Sigma, \Gamma, Q, M, \Phi, F, q_{0}, m_{0})

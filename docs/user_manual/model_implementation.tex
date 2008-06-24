@@ -1,10 +1,11 @@
 \section{Model Implementation}
 \label{model_implementation}
 
-If a separate function file is written for every agent, then the
-parser would be generating a header file for every agent. This has
-to be included for processing. Thus, at the top of each file two
-headers are required:
+The implementations of each agent's functions are currently written in separate
+files written in C, usually suffixed with `.c'. Each file must include two
+header files, one for the overall framework and one for the particular agent that the functions are for.
+Functions for different agents cannot be contained in the same file.
+Thus, at the top of each file two headers are required:
 
 \begin{mylisting}
 \begin{verbatim}
@@ -13,11 +14,15 @@ headers are required:
 \end{verbatim}
 \end{mylisting}
 
-Agent functions can be defined as a list of functions in the
-function file such as:
+Where `<agent\_name>' is replaced with the actual agent name.
+Agent functions can then be written in the following style:
 
 \begin{mylisting}
 \begin{verbatim}
+/*
+ * \fn: int function_name()
+ * \brief: A brief description of the function.
+ */
 int function_name()
 {
    /* Function code here */
@@ -27,6 +32,12 @@ int function_name()
 \end{verbatim}
 \end{mylisting}
 
+The first commented part (four lines) is good practice and can be used to
+auto-generate source code documentation. The function name should coordinate
+with the agent function name and the function should return an integer. The
+functions have no parameters. Returning zero means the agent is not removed from
+the simulation, and one removes the agent immediately from the simulation.
+
 \subsection{Accessing Agent Memory Variables}
 
 After including the specific agent header, the variables in the
@@ -34,7 +45,7 @@ agent memory can be accessed by capitalising the variable name.
 
 \begin{mylisting}
 \begin{verbatim}
-MY_SINGLE_VARIABLE
+AGENT_VARIABLE
 \end{verbatim}
 \end{mylisting}
 
@@ -127,7 +138,7 @@ copy_vacancy_array(&from_list, &to_list);
 \end{mylisting}
 
 If the dynamic array is a variable from the agent memory, then the dynamic
-array variable name must be capitaised.
+array variable name must be capitalised.
 
 \subsection{Sending and receiving messages}
 
