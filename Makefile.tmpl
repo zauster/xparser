@@ -21,7 +21,8 @@ LDFLAGS = -L$(LIBMBOARD_LIB)
 LIBS    = -lm <?if serial?>-lmboard_s <?end if?><?if parallel?>-lmboard_p <?end if?>
 
 #FLAME source files
-FLAME   = main.c memory.c xml.c messageboards.c partitioning.c rules.c <?if parallel?>propagate_messages.c propagate_agents.c <?end if?>
+FLAME   = main.c memory.c xml.c messageboards.c partitioning.c rules.c 
+# <?if parallel?>propagate_agents.c <?end if?>
 #FLAME auxilary files
 AUX 	= stategraph.dot Doxyfile
 

@@ -263,8 +263,10 @@ int main(int argc, char * argv[])
 	parseTemplate(filename, templatename, modeldata);
 	if(modeldata->code_type == 1)
 	{
+        /*
 		strcpy(filename, directory); strcat(filename, "propagate_messages.c");
 		strcpy(templatename, templatedirectory); strcat(templatename, "propagate_messages.tmpl");
+        */
 		parseTemplate(filename, templatename, modeldata);
 		strcpy(filename, directory); strcat(filename, "propagate_agents.c");
 		strcpy(templatename, templatedirectory); strcat(templatename, "propagate_agents.tmpl");

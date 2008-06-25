@@ -237,7 +237,7 @@ if(argc < 2)
     /* Partition the data by reading it in. Partitions are known so get the read function
      * to do the partitioning for us.
      */
-    readinitialstates(inputpath, p_iteration_number, agent_list, cloud_data, partition_method, 1);
+    readinitialstates(inputpath, p_iteration_number, cloud_data, partition_method, 1);
 <?end if?>
 
 <?if serial?>
@@ -460,7 +460,7 @@ if(argc < 2)
 		/* End of iteration code */
 		$code<?end foreach?>
 		/* Calculate if any agents need to jump S.P. */
-		propagate_agents();
+		/* propagate_agents(); */
 	/* Save iteration time to log file */
 <?if parallel?>		if(node_number == 0)
 		{<?end if?>
@@ -492,18 +492,6 @@ if(argc < 2)
 <?if serial?>	<?end if?><?if parallel?>	if(node_number == 0) <?end if?>printf("Execution time - %ld:%02ld:%ld [mins:secs:msecs]\n", total_time/60000, ((total_time/1000)%60), total_time%1000);
 	
 	clean_up(0);
-	rc = MB_Env_Finalise();
-	#ifdef ERRCHECK
-    if (rc != MB_SUCCESS)
-    {
-       fprintf(stderr, "ERROR: Could not finalise MB environment\n");
-       switch(rc) {
-           case MB_ERR_ENV:
-               fprintf(stderr, "\t reason: MB environment not yet started?\n");
-               break;
-       }
-    }
-    #endif
     
 	/* Exit successfully by returning zero to Operating System */
 	return 0;

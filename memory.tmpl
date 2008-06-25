@@ -518,6 +518,20 @@ void clean_up(int code)
     }
     #endif
 <?end foreach?>
+
+    rc = MB_Env_Finalise();
+    #ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not finalise MB environment\n");
+       switch(rc) {
+           case MB_ERR_ENV:
+               fprintf(stderr, "\t reason: MB environment not yet started?\n");
+               break;
+       }
+    }
+    #endif
+
 	
 <?if parallel?>
         /* Clear MPI_Datatypes */
