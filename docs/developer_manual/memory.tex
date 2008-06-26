@@ -1,0 +1,37 @@
+\section{Memory}
+
+Allocation of memory for agents and messages should be in one continuous area of
+memory. This is so that the command \textit{sizeof} can return the byte size of
+agent and message memory in one execution. This is important when sending agents
+and messages in parallel using MPI. The main problem is the use of dynamic arrays
+because the associated memory allocated is not going to be apart of the
+continuous memory allocated for agents and messages. It is possible to handle this but it is
+expensive. Because messages are continuously being sent and received they should
+not contain any dynamic arrays. It is only when agents are being load balanced
+that they need to be sent in parallel.
+
+Currently user-defined data types are allocated as pointers in agent memory but
+this has been modified in a new version to be released. This means that instead
+of user using an arrow '-\textgreater' to dereference variables, a dot '.' is
+used to access the data structure.
+
+Dynamic array data structures are also not allocated as a pointer (but the actual
+dynamic array is) which means functions to interact with a dynamic array data
+structure need to pass a pointer. This means the use of the ampersand '\&' to
+reference the data structure.
+
+\subsection{Agent Memory Management}
+
+Each agent has an associated memory data structure. Since early versions of the
+framework all agents have been managed in one list. This was so that the list
+could be randomised and therefore remove any artifacts of agents having priority
+over other agents by always being executed first. In essence the only effect this
+has is to randomise the message output and therefore the message input to agents.
+The current framework has a generic agent memory stucture that can point to any
+specific agent type.
+
+With the introduction of the new message board library the action of randomising
+(or now also sorting and filtering) messages the need to randomise the agent list
+is redundant. Also redundant is the need to have a single list of all the agents.
+The generic agent memory structure is therefore not needed and each agent type
+can have it's only seperate list.

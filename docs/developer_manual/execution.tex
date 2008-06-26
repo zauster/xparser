@@ -1,0 +1,39 @@
+\section{Execution}
+
+Agents have associated functions. The order that these functions are run are
+currently defined by dependencies on other functions. If they are within the same
+agent they are internal and if they are between agents, i.e. messages, they are
+communication dependencies. All functions of all agents are executed in this
+prescribed order.
+
+But there are many instances when functions should not be run. By returning to
+the original basis of defining agents as extended finite state machines or
+X-Machines, this can be incorporated. Instead of defining function order using
+dependencies, functions are transitions between states. The order of functions is
+the transitions between states, from the start state(s) to the end state(s).
+There can be many paths through these transitions which are governed by
+conditions of their traversal.
+
+Each transition function should be defined using:
+
+\begin{itemize}
+\item current state: the current state of the agent
+\item input: the inputs the function is expecting
+\item m$_{pre}$: the conditions on memory of executing the function
+\item name: the name of the function
+\item m$_{post}$: the changes in the memory (i.e. the function code)
+\item output: possible outputs of the function
+\item next state: the next state to move the agent to
+\end{itemize}
+
+By graphing all the possible transition routes of agents from the start state(s)
+to end state(s) the order of function execution can be created. This also
+provides a way to manage the processing of agents. By providing a link to an
+agent list for each possible agent state, agents can be moved between these agent
+state lists until they reach an end state.
+
+NEW: check to see if agents being transitioned and not left behind in an old
+state
+
+to start a new iteration, agents are moved from the end states into the start
+states.
