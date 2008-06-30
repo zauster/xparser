@@ -1277,6 +1277,8 @@ void handleRuleValue(char ** p_value, xmachine_function * current_function, xmac
 		if(found == 0)
 		{
 			fprintf(stderr, "ERROR: value '%s' in filter rule not in agent memory\n", buffer);
+			fprintf(stderr, "       in function '%s' %s->%s in agent '%s'\n", current_function->name, current_function->current_state, current_function->next_state, current_xmachine->name);
+			fprintf(stderr, "       in file: '%s'\n", current_function->file);
 			exit(0);
 		}
 		
