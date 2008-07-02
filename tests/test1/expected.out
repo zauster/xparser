@@ -1,7 +1,7 @@
 FLAME Application: test_model_simple_everthing 
 Iterations: 11
-Initial states: models/test_model_1/its/0.xml
-Ouput dir: models/test_model_1/its/
+Initial states: test1/0.xml
+Ouput dir: test1/
 Using output frequency of: 12
 xml: Geometric partitioning
 Iteration - 1

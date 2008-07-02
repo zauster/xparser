@@ -190,14 +190,14 @@ void make_and_run_test_model_02(void)
 void test_model_1(void)
 {
 	FILE *out;
-	int n, rc;
+	int rc;
 	char buffer[1000];
 	
-	rc = call_xparser(" models/test_model_1/test_model_1.xml");
+	rc = call_xparser(" test1/test_model_1.xml");
 		
 	CU_ASSERT_EQUAL(rc, 0);
 	
-	rc = call_external("make --directory=models/test_model_1/");
+	rc = call_external("make --directory=test1/");
 	if(rc != 0)
 	{
 		if((out = fopen("stderr.out", "r"))==NULL)
@@ -221,13 +221,11 @@ void test_model_1(void)
 	}
 	else CU_PASS("make test_model_1");
 	
-	CU_ASSERT_EQUAL_FATAL(call_external("make --directory=models/test_model_1/"), 0);
-	
-	CU_ASSERT_EQUAL(call_external("models/test_model_1/main 11 models/test_model_1/its/0.xml -f 12"), 0);
+	CU_ASSERT_EQUAL(call_external("test1/main 11 test1/0.xml -f 12"), 0);
 	
 	//check_agent_var_num("models/test_model_1/its/1.xml", "agent_a", "id");
 	
-	system("diff -q models/test_model_1/expected.out stdout.out");
+	system("diff -q test1/expected.out stdout.out");
 	
 	/*if((out = fopen("stdout.out", "r"))==NULL)
 	{
