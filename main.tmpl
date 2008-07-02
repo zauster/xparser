@@ -211,8 +211,8 @@ if(argc < 2)
        //agent_list = p_xmachine;
        readinitialstates(inputpath, p_iteration_number, cloud_data, partition_method, 0);
        /* Generate partitions */
-//       generate_partitions(cloud_data,totalnodes,partition_method);
-//       save_partition_data();
+       generate_partitions(cloud_data,totalnodes,partition_method);
+       save_partition_data();
 <?if parallel?>
     }
 <?end if?> 

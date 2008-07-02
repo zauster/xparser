@@ -293,6 +293,7 @@ void add_$name_agent_internal(xmachine_memory_$name * agent, xmachine_memory_$na
 	current->agent = agent;
 	
 	state->count++;
+<?if parallel?>    current_node->agent_total++;<?end if?>
 }
 
 /** \fn void add_$name_agent(<?foreach xagentvar?>$type <?if not_modeldatatype?><?if dynamic_array?>* <?end if?><?end if?><?if modeldatatype?><?if static_array?>*<?end if?>* <?end if?>$name<?if not_modeldatatype?><?if static_array?>[]<?end if?><?end if?><?if notlast?>, <?end if?><?end foreach?>)
