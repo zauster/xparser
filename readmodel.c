@@ -397,8 +397,9 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 		else if(xmlcomment > 3)
 		{
 			if(xmlcomment == 4 && c == '-') xmlcomment = 5;
-			if(xmlcomment == 5 && c == '-') xmlcomment = 6;
-			if(xmlcomment == 6 && c == '>') { xmlcomment = 0; intag = 0; i = 0; }
+			else if(xmlcomment == 5 && c == '-') xmlcomment = 6;
+			else if(xmlcomment == 6 && c == '>') { xmlcomment = 0; intag = 0; i = 0; }
+			else xmlcomment = 4;
 		}
 		/* If the end of a tag */
 		else if(c == '>')
