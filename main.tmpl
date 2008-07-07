@@ -296,7 +296,7 @@ if(argc < 2)
 	{
 		interval = clock();
 		/* Print out iteration number */
-<?if serial?>		<?end if?><?if parallel?>		if(node_number == 0) <?end if?>printf("Iteration - %d\n", iteration_loop);
+<?if serial?>		<?end if?><?if parallel?>		if(node_number == 0) <?end if?>fprintf(stdout, "Iteration - %d\n", iteration_loop);
 		/* START OF ITERATION */
 <?foreach layer?><?foreach function?><?foreach first_input?>
 	rc = MB_SyncComplete(b_$name);
