@@ -1591,6 +1591,8 @@ int checkmodel(model_data * modeldata)
 		
 		/* Compute x,y,z location variables in memory */
 		/* Check for x-axis component as 'posx' or 'px' or 'x' */
+		strcpy(current_xmachine->xvar, "0.0");
+		strcpy(current_xmachine->yvar, "0.0");
 		strcpy(current_xmachine->zvar, "0.0");
 		variable_count = 0;
 		

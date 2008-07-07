@@ -436,8 +436,8 @@ void readinitialstates(char * filename, int * itno, double cloud_data[6],
 				
 <?foreach xagent?>				<?if notfirst?>else <?end if?>if(strcmp(agentname, "$name") == 0)
 				{
-					posx = current_$name_agent->$xvar;
-					posy = current_$name_agent->$yvar;
+					posx = <?if use_xvar?>current_$name_agent->$xvar<?end if?><?if no_xvar?>0.0<?end if?>;
+					posy = <?if use_yvar?>current_$name_agent->$yvar<?end if?><?if no_yvar?>0.0<?end if?>;
 					posz = <?if use_zvar?>current_$name_agent->$zvar<?end if?><?if no_zvar?>0.0<?end if?>;
 					
 					/* If flag is zero just read the data. We'll partition later.

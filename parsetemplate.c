@@ -494,6 +494,50 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (found == 0)
 						write = 0;
 				}
+				else if (strcmp(buffer->array, "<?if use_xvar?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif use_xvar\n", numtag);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if (strcmp(current_xmachine->xvar, "0.0") == 0)
+						write = 0;
+				}
+				else if (strcmp(buffer->array, "<?if no_xvar?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif no_xvar\n", numtag);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if (strcmp(current_xmachine->xvar, "0.0") != 0)
+						write = 0;
+				}
+				else if (strcmp(buffer->array, "<?if use_yvar?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif use_yvar\n", numtag);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if (strcmp(current_xmachine->yvar, "0.0") == 0)
+						write = 0;
+				}
+				else if (strcmp(buffer->array, "<?if no_yvar?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif no_yvar\n", numtag);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if (strcmp(current_xmachine->yvar, "0.0") != 0)
+						write = 0;
+				}
 				else if (strcmp(buffer->array, "<?if use_zvar?>") == 0)
 				{
 					if (log)
