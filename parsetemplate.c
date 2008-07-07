@@ -1389,7 +1389,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 				}
 				else if (strcmp("foreach envvar", lastloop) == 0)
 				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$default_value") != 0 && strcmp(buffer3->array, "$c_type") != 0 && pos <= (pos1 + 14))
+					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$uc_name") != 0 && strcmp(buffer3->array, "$default_value") != 0 && strcmp(buffer3->array, "$c_type") != 0 && pos <= (pos1 + 14))
 					{
 						add_char(buffer3, c);
 						pos++;
@@ -1400,6 +1400,12 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						fputs(current_envvar->name, file);
 					else if (strcmp(buffer3->array, "$type") == 0)
 						fputs(current_envvar->type, file);
+					else if (strcmp(buffer3->array, "$uc_name") == 0)
+					{
+						strcpy(data, current_envvar->name);
+						for(i = 0; i < strlen(data); i++) data[i] = (data[i] >= 'a' && data[i] <= 'z')?('A' + data[i] -'a'):data[i];
+						fputs(data, file);
+					}
 					else if (strcmp(buffer3->array, "$default_value") == 0)
 						fputs(current_envvar->defaultvalue, file);
 					else if (strcmp(buffer3->array, "$c_type") == 0)
