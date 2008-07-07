@@ -630,6 +630,7 @@ void write_double_static_array(FILE *file, double * temp, int size)
 	int i;
 	char data[1000];
 	
+	fputs("{", file);
 	for(i=0; i<size; i++)
 	{
 		sprintf(data, "%f", temp[i]);
