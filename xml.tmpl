@@ -337,6 +337,7 @@ void readinitialstates(char * filename, int * itno, double cloud_data[6],
 		exit(0);
 	}
 	/* Initialise variables */
+    *itno = 0;
 	/* TODO: initialise static arrays with zero for each element? */
 	next_avaliable_id = -1;
 	reading = 1;
