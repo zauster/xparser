@@ -139,6 +139,7 @@ if(argc < 2)
 <?if parallel?>	if(node_number == 0) <?end if?>printf("Initial states: %s\n", inputpath);
 	
 	i = 0;
+	lastd = -1;
 	while(inputpath[i] != '\0')
 	{
 		/* For windows directories */
