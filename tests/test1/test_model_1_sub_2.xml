@@ -74,7 +74,10 @@
 <name>m_sub_2</name>
 <description></description>
 <variables>
-  <variable><type>my_datatype_1</type><name>var_my_datatype_1</name><description></description></variable>
+<variable><type>my_datatype_1</type><name>var_my_datatype_1</name><description></description></variable>
+<variable><type>my_datatype_2</type><name>var_my_datatype_2</name><description></description></variable>
+<variable><type>my_datatype_1</type><name>var_my_datatype_1_list[2]</name><description></description></variable>
+<variable><type>my_datatype_2</type><name>var_my_datatype_2_list[2]</name><description></description></variable>
 </variables>
 </message>
 

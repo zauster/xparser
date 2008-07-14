@@ -49,7 +49,7 @@
 <filter>
   <lhs><value>0</value></lhs>
   <op>EQ</op>
-  <rhs><value>m.id</value></rhs>
+  <rhs><value>m.int_single</value></rhs>
 </filter></input>
 </inputs>
 </function>
@@ -64,7 +64,14 @@
 <name>m_sub_1</name>
 <description></description>
 <variables>
-<variable><type>int</type><name>id</name><description></description></variable>
+<variable><type>int</type><name>int_single</name><description></description></variable>
+<variable><type>float</type><name>float_single</name><description></description></variable>
+<variable><type>double</type><name>double_single</name><description></description></variable>
+<variable><type>char</type><name>char_single</name><description></description></variable>
+<variable><type>int</type><name>int_list[2]</name><description></description></variable>
+<variable><type>float</type><name>float_list[2]</name><description></description></variable>
+<variable><type>double</type><name>double_list[2]</name><description></description></variable>
+<variable><type>char</type><name>char_list[2]</name><description></description></variable>
 </variables>
 </message>
 

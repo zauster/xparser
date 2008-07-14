@@ -4,50 +4,115 @@ Initial states: test1/0.xml
 Ouput dir: test1/
 Using output frequency of: 12
 xml: Geometric partitioning
+xdiv=0 ydiv=1
 Iteration - 1
 iteration_loop5 = 1
 my_constant = 6
-my_int_array = {1, 2}
+int_list = {0, 0}
 my_dyn_int_array = {}
-var_my_datatype_1 = {1, 2}
-var_my_datatype_2 = {{3, 4}}
+my_datatype_1_single = {0, 0}
+my_datatype_2_single = {{0, 0}}
 2 - m_sub_1 from 0
+	0.000000
+	0.000000
+	a
+	[ 1, 2 ]
+	[ 3.400000, 5.600000 ]
+	[ 7.800000, 9.100000 ]
+	[ b, c ]
 2 - m_sub_1 from 0
+	0.000000
+	0.000000
+	a
+	[ 1, 2 ]
+	[ 3.400000, 5.600000 ]
+	[ 7.800000, 9.100000 ]
+	[ b, c ]
 1 - m_sub_2 from 2
+	{ [ 0, 1 ], [ 2, 3] }
+	9 { [ 7, 6 ], [ 5, 4] }
 Iteration - 2
 1 - m_sub_2 from 2
+	{ [ 0, 1 ], [ 2, 3] }
+	9 { [ 7, 6 ], [ 5, 4] }
 Iteration - 3
 1 - m_sub_2 from 2
+	{ [ 0, 1 ], [ 2, 3] }
+	9 { [ 7, 6 ], [ 5, 4] }
 Iteration - 4
 1 - m_sub_2 from 2
+	{ [ 0, 1 ], [ 2, 3] }
+	9 { [ 7, 6 ], [ 5, 4] }
 Iteration - 5
 1 - m_sub_2 from 2
+	{ [ 0, 1 ], [ 2, 3] }
+	9 { [ 7, 6 ], [ 5, 4] }
 Iteration - 6
 iteration_loop5 = 1
 my_constant = 6
-my_int_array = {8, 9}
+int_list = {8, 9}
 my_dyn_int_array = {9}
-var_my_datatype_1 = {8, 9}
-var_my_datatype_2 = {{7, 8}}
+my_datatype_1_single = {8, 9}
+my_datatype_2_single = {{7, 8}}
 2 - m_sub_1 from 0
+	0.000000
+	0.000000
+	a
+	[ 1, 2 ]
+	[ 3.400000, 5.600000 ]
+	[ 7.800000, 9.100000 ]
+	[ b, c ]
 2 - m_sub_1 from 0
+	0.000000
+	0.000000
+	a
+	[ 1, 2 ]
+	[ 3.400000, 5.600000 ]
+	[ 7.800000, 9.100000 ]
+	[ b, c ]
 1 - m_sub_2 from 2
+	{ [ 0, 1 ], [ 2, 3] }
+	9 { [ 7, 6 ], [ 5, 4] }
 Iteration - 7
 1 - m_sub_2 from 2
+	{ [ 0, 1 ], [ 2, 3] }
+	9 { [ 7, 6 ], [ 5, 4] }
 Iteration - 8
 1 - m_sub_2 from 2
+	{ [ 0, 1 ], [ 2, 3] }
+	9 { [ 7, 6 ], [ 5, 4] }
 Iteration - 9
 1 - m_sub_2 from 2
+	{ [ 0, 1 ], [ 2, 3] }
+	9 { [ 7, 6 ], [ 5, 4] }
 Iteration - 10
 1 - m_sub_2 from 2
+	{ [ 0, 1 ], [ 2, 3] }
+	9 { [ 7, 6 ], [ 5, 4] }
 Iteration - 11
 iteration_loop5 = 1
 my_constant = 6
-my_int_array = {8, 9}
+int_list = {8, 9}
 my_dyn_int_array = {9, 9}
-var_my_datatype_1 = {8, 9}
-var_my_datatype_2 = {{7, 8}}
+my_datatype_1_single = {8, 9}
+my_datatype_2_single = {{7, 8}}
 2 - m_sub_1 from 0
+	0.000000
+	0.000000
+	a
+	[ 1, 2 ]
+	[ 3.400000, 5.600000 ]
+	[ 7.800000, 9.100000 ]
+	[ b, c ]
 2 - m_sub_1 from 0
+	0.000000
+	0.000000
+	a
+	[ 1, 2 ]
+	[ 3.400000, 5.600000 ]
+	[ 7.800000, 9.100000 ]
+	[ b, c ]
 1 - m_sub_2 from 2
+	{ [ 0, 1 ], [ 2, 3] }
+	9 { [ 7, 6 ], [ 5, 4] }
 Execution time - 0:00:1 [mins:secs:msecs]

@@ -227,6 +227,8 @@ void test_model_1(void)
 	
 	system("diff -q test1/expected.out stdout.out");
 	
+	//exit(0);
+	
 	/*if((out = fopen("stdout.out", "r"))==NULL)
 	{
 		CU_FAIL("cannot read stdout.out");
