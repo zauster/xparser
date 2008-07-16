@@ -1477,6 +1477,7 @@ int checkmodel(model_data * modeldata)
 	
 	/* Check agent memory variables for being a model data type and update variable attributes */
 	current_xmachine = *modeldata->p_xmachines;
+	current_xmachine2 = NULL;
 	while(current_xmachine)
 	{
 		current_variable = current_xmachine->memory->vars;
@@ -1484,39 +1485,109 @@ int checkmodel(model_data * modeldata)
 		/* Error if no variables */
 		if(current_variable == NULL)
 		{
-			fprintf(stderr, "ERROR: agent '%s' has no memory variables\n", current_xmachine->name);
-			return -1;
+			/*fprintf(stderr, "ERROR: agent '%s' has no memory variables\n", current_xmachine->name);
+			return -1;*/
+			fprintf(stderr, "WARNING: no memory variables found in '%s' agent, agent removed from model\n", current_xmachine->name);
+			/* Remove agent from the agent list */
+			if(current_xmachine2 == NULL) * modeldata->p_xmachines = current_xmachine->next;
+			else current_xmachine2->next = current_xmachine->next;
+							
+			free(current_xmachine->name);
+			freexmemory(&current_xmachine->memory);
+			freexstates(&current_xmachine->states);
+			freexfunctions(&current_xmachine->functions);
+			freestateholder(&current_xmachine->end_states);
+			free(current_xmachine);
+			
+			if(current_xmachine2 == NULL) current_xmachine = * modeldata->p_xmachines;
+			else current_xmachine = current_xmachine2->next;
 		}
-		
-		/* Error if variables type is not a C type or a data type or an array of these */
-		while(current_variable)
+		else
 		{
-			found = 0;
-			if(strcmp(current_variable->type, "int") == 0 ||
-				strcmp(current_variable->type, "short int") == 0 ||
-				strcmp(current_variable->type, "long int") == 0 ||
-				strcmp(current_variable->type, "unsigned int") == 0 ||
-				strcmp(current_variable->type, "unsigned short int") == 0 ||
-				strcmp(current_variable->type, "unsigned long int") == 0 ||
-				strcmp(current_variable->type, "int_array") == 0 ||
-				strcmp(current_variable->type, "double") == 0 ||
-				strcmp(current_variable->type, "float") == 0 ||
-				strcmp(current_variable->type, "double_array") == 0 ||
-				strcmp(current_variable->type, "float_array") == 0 ||
-				strcmp(current_variable->type, "char") == 0 ||
-				strcmp(current_variable->type, "unsigned char") == 0 ||
-				strcmp(current_variable->type, "char_array") == 0)
+			/* Error if variables type is not a C type or a data type or an array of these */
+			while(current_variable)
+			{
+				found = 0;
+				if(strcmp(current_variable->type, "int") == 0 ||
+					strcmp(current_variable->type, "short int") == 0 ||
+					strcmp(current_variable->type, "long int") == 0 ||
+					strcmp(current_variable->type, "unsigned int") == 0 ||
+					strcmp(current_variable->type, "unsigned short int") == 0 ||
+					strcmp(current_variable->type, "unsigned long int") == 0 ||
+					strcmp(current_variable->type, "int_array") == 0 ||
+					strcmp(current_variable->type, "double") == 0 ||
+					strcmp(current_variable->type, "float") == 0 ||
+					strcmp(current_variable->type, "double_array") == 0 ||
+					strcmp(current_variable->type, "float_array") == 0 ||
+					strcmp(current_variable->type, "char") == 0 ||
+					strcmp(current_variable->type, "unsigned char") == 0 ||
+					strcmp(current_variable->type, "char_array") == 0)
+					{
+						found = 1;
+					}
+					
+					/* Handle model defined data types */
+					current_datatype = * modeldata->p_datatypes;
+					while(current_datatype)
+					{
+						if(strcmp(current_variable->type, current_datatype->name) == 0)
+						{
+							found = 1;
+						}
+						
+						strcpy(buffer, current_datatype->name);
+						strcat(buffer, "_array");
+						
+						if(strcmp(current_variable->type, buffer) == 0)
+						{
+							found = 1;
+						}
+						
+						current_datatype = current_datatype->next;
+					}
+					
+					if(found == 0)
+					{
+						fprintf(stderr, "ERROR: type variable '%s' in variable '%s' in agent '%s' doesn't exist\n", current_variable->type, current_variable->name, current_xmachine->name);
+						fprintf(stderr, "       in file: '%s'\n", current_variable->file);
+						return -1;
+					}
+				
+				current_variable = current_variable->next;
+			}
+			
+				/* Error if a variable name is defined twice in same agent */
+			current_variable = current_xmachine->memory->vars;
+			while(current_variable)
+			{
+				current_variable2 = current_xmachine->memory->vars;
+				while(current_variable2)
 				{
-					found = 1;
+					if(strcmp(current_variable->name, current_variable2->name) == 0 && current_variable != current_variable2)
+					{
+						fprintf(stderr, "ERROR: multiple uses of variable '%s' in agent '%s'\n", current_variable->name, current_xmachine->name);
+						fprintf(stderr, "       in file: '%s'\n", current_variable->file);
+						fprintf(stderr, "       in file: '%s'\n", current_variable2->file);
+						return -1;
+					}
+						
+					current_variable2 = current_variable2->next;
 				}
 				
+				current_variable = current_variable->next;
+			}
+			
+			current_variable = current_xmachine->memory->vars;
+			while(current_variable)
+			{
 				/* Handle model defined data types */
 				current_datatype = * modeldata->p_datatypes;
 				while(current_datatype)
 				{
 					if(strcmp(current_variable->type, current_datatype->name) == 0)
 					{
-						found = 1;
+						current_variable->ismodeldatatype = 1;
+						current_variable->datatype = current_datatype;
 					}
 					
 					strcpy(buffer, current_datatype->name);
@@ -1524,142 +1595,88 @@ int checkmodel(model_data * modeldata)
 					
 					if(strcmp(current_variable->type, buffer) == 0)
 					{
-						found = 1;
+						current_variable->ismodeldatatype = 1;
+						current_variable->datatype = current_datatype;
+						current_variable->arraylength = -1;
 					}
 					
 					current_datatype = current_datatype->next;
 				}
+					
+				current_variable = current_variable->next;
+			}
+			
+			/* Compute x,y,z location variables in memory */
+			/* Check for x-axis component as 'posx' or 'px' or 'x' */
+			strcpy(current_xmachine->xvar, "0.0");
+			strcpy(current_xmachine->yvar, "0.0");
+			strcpy(current_xmachine->zvar, "0.0");
+			variable_count = 0;
+			
+			current_variable = current_xmachine->memory->vars;
+			while(current_variable)
+			{
+				if(current_variable->arraylength != 0) modeldata->agents_include_array_variables = 1;
 				
+				/*copycharlist(&current_variable->name, &chardata[0]);*/
+				if(strcmp(current_variable->name, "x") == 0)    strcpy(current_xmachine->xvar, "x");
+				if(strcmp(current_variable->name, "px") == 0)   strcpy(current_xmachine->xvar, "px");
+				if(strcmp(current_variable->name, "posx") == 0) strcpy(current_xmachine->xvar, "posx");
+				if(strcmp(current_variable->name, "y") == 0)    strcpy(current_xmachine->yvar, "y");
+				if(strcmp(current_variable->name, "py") == 0)   strcpy(current_xmachine->yvar, "py");
+				if(strcmp(current_variable->name, "posy") == 0) strcpy(current_xmachine->yvar, "posy");
+				if(strcmp(current_variable->name, "z") == 0)    strcpy(current_xmachine->zvar, "z");
+				if(strcmp(current_variable->name, "pz") == 0)   strcpy(current_xmachine->zvar, "pz");
+				if(strcmp(current_variable->name, "posz") == 0) strcpy(current_xmachine->zvar, "posz");
+				if(strcmp(current_variable->name, "range") == 0) strcpy(current_xmachine->rangevar, "range");
+				if(strcmp(current_variable->name, "radius") == 0) strcpy(current_xmachine->rangevar, "radius");
+				
+				if(strcmp(current_variable->name, "id") == 0) strcpy(current_xmachine->idvar, "id");
+				if(strcmp(current_variable->name, "agent_id") == 0) strcpy(current_xmachine->idvar, "agent_id");
+				
+				found = 0;
+				allvar = * modeldata->p_allvars;
+				while(allvar)
+				{
+					/*copycharlist(&allvar->name, &chardata2[0]);*/
+					if(strcmp(current_variable->name, allvar->name) == 0)
+					{
+						found = 1;
+					
+						/* If same variable name but different type, this breaks get_ and set_ methods */
+						if(strcmp(current_variable->type, allvar->type) != 0)
+						{
+							fprintf(stderr, "ERROR: variable '%s' defined twice but with different types\n", current_variable->name);
+							return -1;
+						}
+					}
+					
+					allvar = allvar->next;
+				}
 				if(found == 0)
 				{
-					fprintf(stderr, "ERROR: type variable '%s' in variable '%s' in agent '%s' doesn't exist\n", current_variable->type, current_variable->name, current_xmachine->name);
-					fprintf(stderr, "       in file: '%s'\n", current_variable->file);
-					return -1;
+					allvar = addvariable(modeldata->p_allvars);
+					allvar->name = copystr(current_variable->name);
+					allvar->type = copystr(current_variable->type);
+					allvar->arraylength = current_variable->arraylength;
+					allvar->ismodeldatatype = current_variable->ismodeldatatype;
+					allvar->datatype = current_variable->datatype;
+					allvar->typenotarray = copystr(current_variable->typenotarray);
+					strcpy(allvar->defaultvalue, current_variable->defaultvalue);
+					strcpy(allvar->c_type, current_variable->c_type);
 				}
-			
-			current_variable = current_variable->next;
-		}
-		
-			/* Error if a variable name is defined twice in same agent */
-		current_variable = current_xmachine->memory->vars;
-		while(current_variable)
-		{
-			current_variable2 = current_xmachine->memory->vars;
-			while(current_variable2)
-			{
-				if(strcmp(current_variable->name, current_variable2->name) == 0 && current_variable != current_variable2)
-				{
-					fprintf(stderr, "ERROR: multiple uses of variable '%s' in agent '%s'\n", current_variable->name, current_xmachine->name);
-					fprintf(stderr, "       in file: '%s'\n", current_variable->file);
-					fprintf(stderr, "       in file: '%s'\n", current_variable2->file);
-					return -1;
-				}
-					
-				current_variable2 = current_variable2->next;
+				
+				variable_count++;
+				
+				current_variable = current_variable->next;
 			}
 			
-			current_variable = current_variable->next;
+			current_xmachine->var_number = variable_count;
+			
+			modeldata->number_xmachines++;
+			
+			current_xmachine = current_xmachine->next;
 		}
-		
-		current_variable = current_xmachine->memory->vars;
-		while(current_variable)
-		{
-			/* Handle model defined data types */
-			current_datatype = * modeldata->p_datatypes;
-			while(current_datatype)
-			{
-				if(strcmp(current_variable->type, current_datatype->name) == 0)
-				{
-					current_variable->ismodeldatatype = 1;
-					current_variable->datatype = current_datatype;
-				}
-				
-				strcpy(buffer, current_datatype->name);
-				strcat(buffer, "_array");
-				
-				if(strcmp(current_variable->type, buffer) == 0)
-				{
-					current_variable->ismodeldatatype = 1;
-					current_variable->datatype = current_datatype;
-					current_variable->arraylength = -1;
-				}
-				
-				current_datatype = current_datatype->next;
-			}
-				
-			current_variable = current_variable->next;
-		}
-		
-		/* Compute x,y,z location variables in memory */
-		/* Check for x-axis component as 'posx' or 'px' or 'x' */
-		strcpy(current_xmachine->xvar, "0.0");
-		strcpy(current_xmachine->yvar, "0.0");
-		strcpy(current_xmachine->zvar, "0.0");
-		variable_count = 0;
-		
-		current_variable = current_xmachine->memory->vars;
-		while(current_variable)
-		{
-			if(current_variable->arraylength != 0) modeldata->agents_include_array_variables = 1;
-			
-			/*copycharlist(&current_variable->name, &chardata[0]);*/
-			if(strcmp(current_variable->name, "x") == 0)    strcpy(current_xmachine->xvar, "x");
-			if(strcmp(current_variable->name, "px") == 0)   strcpy(current_xmachine->xvar, "px");
-			if(strcmp(current_variable->name, "posx") == 0) strcpy(current_xmachine->xvar, "posx");
-			if(strcmp(current_variable->name, "y") == 0)    strcpy(current_xmachine->yvar, "y");
-			if(strcmp(current_variable->name, "py") == 0)   strcpy(current_xmachine->yvar, "py");
-			if(strcmp(current_variable->name, "posy") == 0) strcpy(current_xmachine->yvar, "posy");
-			if(strcmp(current_variable->name, "z") == 0)    strcpy(current_xmachine->zvar, "z");
-			if(strcmp(current_variable->name, "pz") == 0)   strcpy(current_xmachine->zvar, "pz");
-			if(strcmp(current_variable->name, "posz") == 0) strcpy(current_xmachine->zvar, "posz");
-			if(strcmp(current_variable->name, "range") == 0) strcpy(current_xmachine->rangevar, "range");
-			if(strcmp(current_variable->name, "radius") == 0) strcpy(current_xmachine->rangevar, "radius");
-			
-			if(strcmp(current_variable->name, "id") == 0) strcpy(current_xmachine->idvar, "id");
-			if(strcmp(current_variable->name, "agent_id") == 0) strcpy(current_xmachine->idvar, "agent_id");
-			
-			found = 0;
-			allvar = * modeldata->p_allvars;
-			while(allvar)
-			{
-				/*copycharlist(&allvar->name, &chardata2[0]);*/
-				if(strcmp(current_variable->name, allvar->name) == 0)
-				{
-					found = 1;
-				
-					/* If same variable name but different type, this breaks get_ and set_ methods */
-					if(strcmp(current_variable->type, allvar->type) != 0)
-					{
-						fprintf(stderr, "ERROR: variable '%s' defined twice but with different types\n", current_variable->name);
-						return -1;
-					}
-				}
-				
-				allvar = allvar->next;
-			}
-			if(found == 0)
-			{
-				allvar = addvariable(modeldata->p_allvars);
-				allvar->name = copystr(current_variable->name);
-				allvar->type = copystr(current_variable->type);
-				allvar->arraylength = current_variable->arraylength;
-				allvar->ismodeldatatype = current_variable->ismodeldatatype;
-				allvar->datatype = current_variable->datatype;
-				allvar->typenotarray = copystr(current_variable->typenotarray);
-				strcpy(allvar->defaultvalue, current_variable->defaultvalue);
-				strcpy(allvar->c_type, current_variable->c_type);
-			}
-			
-			variable_count++;
-			
-			current_variable = current_variable->next;
-		}
-		
-		current_xmachine->var_number = variable_count;
-		
-		modeldata->number_xmachines++;
-		
-		current_xmachine = current_xmachine->next;
 	}
 	
 	
