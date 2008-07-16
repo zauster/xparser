@@ -1664,20 +1664,58 @@ int checkmodel(model_data * modeldata)
 	
 	
 	int newlayer = 0;
+	int totallayers = 0;
 	int m = 0;
 	int k;
 	/* If functions have old style depends tags create states */
 	if(modeldata->depends_style == 1)
 	{
+		/* Go through all adj functions in depends
+		 * and link the function pointer to the actual function */
 		current_xmachine = *modeldata->p_xmachines;
 		while(current_xmachine)
 		{
-			state_number = 0;
+			current_function = current_xmachine->functions;
+			while(current_function)
+			{
+				current_adj_function = current_function->depends;
+				while(current_adj_function)
+				{
+					current_xmachine2 = *modeldata->p_xmachines;
+					while(current_xmachine2)
+					{
+						current_function2 = current_xmachine2->functions;
+						while(current_function2)
+						{
+							if(strcmp(current_adj_function->name, current_function2->name) == 0)
+							{
+								//printf("** %s -> %s == %s\n", current_function->name, current_adj_function->name, current_function2->name);
+								current_adj_function->function = current_function2;
+							}
+							
+							current_function2 = current_function2->next;
+						}
+						
+						current_xmachine2 = current_xmachine2->next;
+					}
+					
+					current_adj_function = current_adj_function->next;
+				}
+				
+				current_function = current_function->next;
+			}
 			
-			//qwerty
-			newlayer = 0;
-			m = 0;
-			while(m == 0)
+			current_xmachine = current_xmachine->next;
+		}
+		
+		/* Find order of functions in each agent */
+		newlayer = 0;
+		m = 0;
+		while(m == 0)
+		{
+			/* For each agent */
+			current_xmachine = * modeldata->p_xmachines;
+			while(current_xmachine)
 			{
 				/* For each function */
 				current_function = current_xmachine->functions;
@@ -1686,17 +1724,14 @@ int checkmodel(model_data * modeldata)
 					/* If rank_in is unknown */
 					if(current_function->rank_in == -1)
 					{
-						//printf("%s rank = %d\n", current_function->name, current_function->rank_in);
-						
 						k = 0;
 						/* Search dependencies on the current function */
-						current_adj_function = current_function->dependson;
+						current_adj_function = current_function->depends;
 						while(current_adj_function)
 						{
-							//printf("\tdependson %s\n", current_adj_function->function->name);
 							/* Check if the function has a dependency on it (and not from itself) */
 							/* Check to see if the dependency is a function and not be assigned a layer in last layers */
-							if(current_adj_function->function->rank_in == -1)
+							if(current_adj_function->function->rank_in == -1 || current_adj_function->function->rank_in == newlayer)
 							{
 								/* Change flag to say there is a dependency */
 								k = 1;
@@ -1706,51 +1741,86 @@ int checkmodel(model_data * modeldata)
 						}
 						if(k == 0)
 						{
-							newlayer++;
 							current_function->rank_in = newlayer;
-							printf("%s-%s rank = %d\n", current_function->agent_name, current_function->name, current_function->rank_in);
 							
-							if(newlayer == 1) sprintf(buffer, "%s", "start");
-							else sprintf(buffer, "%i", newlayer-1);
-							//free(current_function->current_state);
-							current_function->current_state = copystr(buffer);
-							//free(current_adj_function->function->next_state);
-							sprintf(buffer, "%i", newlayer);
-							current_function->next_state = copystr(buffer);
-							addxstate(current_function->current_state, &current_xmachine->states);
+							printf("%s - %s - %d\n", current_xmachine->name, current_function->name, newlayer);
+							
+							//addfunction_pointer(&current_layer->functions, current_function);
 						}
 					}
 					
 					current_function = current_function->next;
 				}
 				
-				/* If all the functions have layers then stop */
-				/* Set flag to all functions have a layer */
-				k = 0;
+				current_xmachine = current_xmachine->next;
+			}
+			/* Increment layer */
+			newlayer++;
+			/* If all the functions have layers then stop */
+			/* Set flag to all functions have a layer */
+			k = 0;
+			current_xmachine = * modeldata->p_xmachines;
+			while(current_xmachine)
+			{
 				/* For each function */
 				current_function = current_xmachine->functions;
-				current_function2 = current_function;
 				while(current_function)
 				{
-					/* Save last function */
-					if(current_function->rank_in > current_function2->rank_in) current_function2 = current_function;
-					
 					/* If a function does not have a layer yet */
 					if(current_function->rank_in == -1) k = 1;
 					
 					current_function = current_function->next;
 				}
-				/* If flag is still zero then stop */
-				if(k == 0)
-				{
-					free(current_function2->next_state);
-					sprintf(buffer, "%s", "end");
-					current_function2->next_state = copystr(buffer);
-					addxstate(current_function2->next_state, &current_xmachine->states);
-												
-					m = 1;
-				}
+				
+				current_xmachine = current_xmachine->next;
 			}
+			/* If flag is still zero then stop */
+			if(k == 0) m = 1;
+			else
+			{
+				//current_layer = addlayer(modeldata->p_layers);
+			}
+		}
+		
+		totallayers = newlayer;
+		
+		current_xmachine = *modeldata->p_xmachines;
+		while(current_xmachine)
+		{
+			state_number = 0;
+			
+			//qwerty
+			newlayer = 0;
+			m = 0;
+			while(newlayer <= totallayers)
+			{
+				/* For each function */
+				current_function = current_xmachine->functions;
+				while(current_function)
+				{
+					if(current_function->rank_in == newlayer)
+					{
+						if(state_number == 0) sprintf(buffer, "%s", "start");
+						else sprintf(buffer, "%i", state_number);
+						current_function->current_state = copystr(buffer);
+						state_number++;
+						sprintf(buffer, "%i", state_number);
+						current_function->next_state = copystr(buffer);
+						addxstate(current_function->current_state, &current_xmachine->states);
+						/* Save last function */
+						current_function2 = current_function;
+					}
+					
+					current_function = current_function->next;
+				}
+				
+				newlayer++;
+			}
+			
+			free(current_function2->next_state);
+			sprintf(buffer, "%s", "end");
+			current_function2->next_state = copystr(buffer);
+			addxstate(current_function2->next_state, &current_xmachine->states);
 		
 			current_function = current_xmachine->functions;
 			while(current_function)

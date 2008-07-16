@@ -344,6 +344,8 @@ int find_loop(xmachine_function * current, xmachine_function * depends)
 	current_adj_function = current->alldepends;
 	while(current_adj_function)
 	{
+		//printf("\t%s - %s\n", current->name, current_adj_function->function->name);
+		
 		if((xmachine_function*)depends == (xmachine_function*)current)
 		{
 			flag = 1;
