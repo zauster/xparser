@@ -435,6 +435,7 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 	/* Find start state of agents, find error if more than one? */
 	/* For each agent */
 	current_xmachine = * modeldata->p_xmachines;
+	current_xmachine2 = NULL;
 	while(current_xmachine)
 	{
 		current_state = current_xmachine->states;
@@ -477,11 +478,28 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 		/* if no start state then error */
 		if(current_xmachine->start_state == NULL)
 		{
-			fprintf(stderr, "ERROR: no start state found in '%s' agent\n", current_xmachine->name);
-			return -1;
+			/*fprintf(stderr, "ERROR: no start state found in '%s' agent\n", current_xmachine->name);
+			return -1;*/
+			fprintf(stderr, "WARNING: no start state found in '%s' agent, agent removed from model\n", current_xmachine->name);
+			/* Remove agent from the agent list */
+			if(current_xmachine2 == NULL) * modeldata->p_xmachines = current_xmachine->next;
+			else current_xmachine2->next = current_xmachine->next;
+				
+			free(current_xmachine->name);
+			freexmemory(&current_xmachine->memory);
+			freexstates(&current_xmachine->states);
+			freexfunctions(&current_xmachine->functions);
+			freestateholder(&current_xmachine->end_states);
+			free(current_xmachine);
+			
+			if(current_xmachine2 == NULL) current_xmachine = * modeldata->p_xmachines;
+			else current_xmachine = current_xmachine2->next;
 		}
-		
-		current_xmachine = current_xmachine->next;
+		else
+		{
+			current_xmachine2 = current_xmachine;
+			current_xmachine = current_xmachine->next;
+		}
 	}
 	
 	/* For each agent */
