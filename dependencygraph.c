@@ -458,7 +458,16 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 			if(k == 0)
 			{
 				/*printf("%s - %s\n", current_xmachine->name, current_state->name);*/
-				current_xmachine->start_state = current_state;
+				if(current_xmachine->start_state == NULL)
+				{
+					current_xmachine->start_state = current_state;
+				}
+				else
+				{
+					fprintf(stderr, "ERROR: mutiple start states found in '%s' agent\n", current_xmachine->name);
+					fprintf(stderr, "\tincludes %s and %s states\n", current_xmachine->start_state->name, current_state->name);
+					return -1;
+				}
 			}
 			
 			if(m == 0)
