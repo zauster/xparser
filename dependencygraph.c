@@ -691,8 +691,9 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 	
 	modeldata->layer_total = newlayer;
 	
-	if(modeldata->depends_style == 0) output_stategraph("stategraph.dot", filepath, modeldata, 1);
-	if(modeldata->depends_style == 1) output_dgraph("dgraph.dot", filepath, modeldata);
+	/*if(modeldata->depends_style == 0)*/ 
+	output_stategraph("stategraph.dot", filepath, modeldata, 1);
+	/*if(modeldata->depends_style == 1) output_dgraph("dgraph.dot", filepath, modeldata);*/
 	
 	/* Calculate points to start sync and end sync communication */
 	/* and points where states have more than one leading edge */
