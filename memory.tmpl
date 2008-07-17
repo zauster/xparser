@@ -5,35 +5,6 @@
 
 #include "header.h"
 
-/** \fn void initialise_messageboards()
- * \brief Initialises message boards.
- */
-void initialise_messageboards()
-{
-	int rc;
-	
-	<?foreach message?>
-	    rc = MB_Create(&b_$name, sizeof(m_$name));
-	    #ifdef ERRCHECK
-	    if (rc != MB_SUCCESS)
-	    {
-	       fprintf(stderr, "ERROR: Could not create '$name' board\n");
-	       switch(rc) {
-	           case MB_ERR_INVALID:
-	               fprintf(stderr, "\t reason: Invalid message size\n");
-	               break;
-	           case MB_ERR_MEMALLOC:
-	               fprintf(stderr, "\t reason: out of memory\n");
-	               break;
-	           case MB_ERR_INTERNAL:
-	               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
-	               break;
-	       }
-	    }
-	    #endif
-	<?end foreach?>
-}
-
 void free_messages()
 {
 	int rc;
@@ -67,12 +38,32 @@ void free_messages()
  */
 void initialise_pointers()
 {
+	int rc;
     //temp_xmachine = NULL;
 	//p_xmachine = &temp_xmachine;
 <?foreach xagent?><?foreach state?>	//temp_xmachine_$agent_name_$name = NULL;
 	$agent_name_$name_state = init_$agent_name_state();//&temp_xmachine_$agent_name_$name;
 <?end foreach?><?end foreach?>
-	initialise_messageboards();
+<?foreach message?>
+	    rc = MB_Create(&b_$name, sizeof(m_$name));
+	    #ifdef ERRCHECK
+	    if (rc != MB_SUCCESS)
+	    {
+	       fprintf(stderr, "ERROR: Could not create '$name' board\n");
+	       switch(rc) {
+	           case MB_ERR_INVALID:
+	               fprintf(stderr, "\t reason: Invalid message size\n");
+	               break;
+	           case MB_ERR_MEMALLOC:
+	               fprintf(stderr, "\t reason: out of memory\n");
+	               break;
+	           case MB_ERR_INTERNAL:
+	               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+	               break;
+	       }
+	    }
+	    #endif
+	<?end foreach?>
 	temp_node_info = NULL;
 	p_node_info = &temp_node_info;
 }
@@ -82,7 +73,27 @@ void initialise_pointers()
  */
 void initialise_unit_testing()
 {
-	initialise_messageboards();
+	int rc;
+	
+	rc = MB_Env_Init();
+	#ifdef ERRCHECK
+	if (rc != MB_SUCCESS)
+	{
+	   fprintf(stderr, "ERROR: Failed to initialise Message Board environment\n");
+	   switch(rc) {
+	       case MB_ERR_MPI:
+	           fprintf(stderr, "\t reason: MPI library not initialised\n");
+	           break;
+	       case MB_ERR_MEMALLOC:
+	           fprintf(stderr, "\t reason: out of memory\n");
+	           break;
+	           default: break;
+	   }
+	   
+	}
+	#endif
+	
+	initialise_pointers();
 }
 
 /* add_location */
