@@ -5,37 +5,75 @@
 
 #include "header.h"
 
+/** \fn void initialise_messageboards()
+ * \brief Initialises message boards.
+ */
+void initialise_messageboards()
+{
+	int rc;
+	
+	<?foreach message?>
+	    rc = MB_Create(&b_$name, sizeof(m_$name));
+	    #ifdef ERRCHECK
+	    if (rc != MB_SUCCESS)
+	    {
+	       fprintf(stderr, "ERROR: Could not create '$name' board\n");
+	       switch(rc) {
+	           case MB_ERR_INVALID:
+	               fprintf(stderr, "\t reason: Invalid message size\n");
+	               break;
+	           case MB_ERR_MEMALLOC:
+	               fprintf(stderr, "\t reason: out of memory\n");
+	               break;
+	           case MB_ERR_INTERNAL:
+	               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+	               break;
+	       }
+	    }
+	    #endif
+	<?end foreach?>
+}
+
+void free_messages()
+{
+	int rc;
+	
+	<?foreach message?>
+	    rc = MB_Clear(b_$name);
+	    #ifdef ERRCHECK
+	    if (rc != MB_SUCCESS)
+	    {
+	       fprintf(stderr, "ERROR: Could not clear '$name' board\n");
+	       switch(rc) {
+	           case MB_ERR_INVALID:
+	               fprintf(stderr, "\t reason: '$name' board is invalid\n");
+	               break;
+	           case MB_ERR_LOCKED:
+	               fprintf(stderr, "\t reason: '$name' board is locked\n");
+	               break;
+	           case MB_ERR_INTERNAL:
+	               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+	               break;
+	       }
+	    }
+	    #endif
+	<?end foreach?>
+}
+
+
+
 /** \fn void initialise_pointers()
  * \brief Initialises pointers to xmachine, message, and node lists.
  */
 void initialise_pointers()
 {
-    int rc;
-	//temp_xmachine = NULL;
+    //temp_xmachine = NULL;
 	//p_xmachine = &temp_xmachine;
 <?foreach xagent?><?foreach state?>	//temp_xmachine_$agent_name_$name = NULL;
 	$agent_name_$name_state = init_$agent_name_state();//&temp_xmachine_$agent_name_$name;
-<?end foreach?><?end foreach?>	
-<?foreach message?>
-    rc = MB_Create(&b_$name, sizeof(m_$name));
-    #ifdef ERRCHECK
-    if (rc != MB_SUCCESS)
-    {
-       fprintf(stderr, "ERROR: Could not create '$name' board\n");
-       switch(rc) {
-           case MB_ERR_INVALID:
-               fprintf(stderr, "\t reason: Invalid message size\n");
-               break;
-           case MB_ERR_MEMALLOC:
-               fprintf(stderr, "\t reason: out of memory\n");
-               break;
-           case MB_ERR_INTERNAL:
-               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
-               break;
-       }
-    }
-    #endif
-<?end foreach?>	temp_node_info = NULL;
+<?end foreach?><?end foreach?>
+	initialise_messageboards();
+	temp_node_info = NULL;
 	p_node_info = &temp_node_info;
 }
 
@@ -44,14 +82,8 @@ void initialise_pointers()
  */
 void initialise_unit_testing()
 {
-	initialise_pointers();
-	//add_node(0, -SPINF, SPINF, -SPINF, SPINF, -SPINF, SPINF);
-	//current_node = *p_node_info;
-	//p_xmachine = &current_node->agents;
-	//current_xmachine = *p_xmachine;
-	// todo fix pointer to current agent types
-<?foreach message?>	//p_$name_message = &current_node->$name_messages;
-<?end foreach?>}
+	initialise_messageboards();
+}
 
 /* add_location */
 /** \fn void add_location(double point, location ** p_location)
