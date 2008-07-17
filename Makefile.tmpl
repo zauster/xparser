@@ -18,7 +18,7 @@ CFLAGS += -D_DEBUG_MODE -g # uncomment this line for DEBUG runs
 #CFLAGS += -DNDEBUG -O3     # uncomment this line for PRODUCTION runs
 
 LDFLAGS = -L$(LIBMBOARD_LIB)
-LIBS    = -lm <?if serial?>-lmboard_s <?end if?><?if parallel?>-lmboard_p <?end if?>
+LIBS    = <?if serial?>-lmboard_s <?end if?><?if parallel?>-lmboard_p <?end if?> -lm
 
 #FLAME source files
 FLAME   = main.c memory.c xml.c messageboards.c partitioning.c rules.c 
