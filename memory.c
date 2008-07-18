@@ -565,7 +565,10 @@ void add_time_unit(char * name, char * unit_name, int period, time_data ** p_tim
 	/*printf("time: name: %s unit: %s period: %d\n", name, unit_name, period);*/
 	
 	/* Find unit name struct */
-	if(strcmp(unit_name, "ITERATION") == 0 || strcmp(unit_name, "iteration") == 0) current->iterations = 1;
+	if(strcmp(unit_name, "ITERATION") == 0 || strcmp(unit_name, "iteration") == 0)
+	{
+		current->iterations = current->period;
+	}
 	else
 	{
 		temp = * p_time_units;
