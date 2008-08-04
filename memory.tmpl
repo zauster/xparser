@@ -25,7 +25,13 @@ void free_messages()
 	           case MB_ERR_INTERNAL:
 	               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
 	               break;
+	           default:
+                   fprintf(stderr, "\t MB_Clear returned error code: %d (see libmboard docs for details)\n", rc);
+                   break;
 	       }
+	       
+	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       	   exit(rc);
 	    }
 	    #endif
 	<?end foreach?>
@@ -60,7 +66,13 @@ void initialise_pointers()
 	           case MB_ERR_INTERNAL:
 	               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
 	               break;
+	           default:
+                   fprintf(stderr, "\t MB_Create returned error code: %d (see libmboard docs for details)\n", rc);
+                   break;
 	       }
+	       
+	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       	   exit(rc);
 	    }
 	    #endif
 	<?end foreach?>
@@ -87,8 +99,13 @@ void initialise_unit_testing()
 	       case MB_ERR_MEMALLOC:
 	           fprintf(stderr, "\t reason: out of memory\n");
 	           break;
-	           default: break;
-	   }
+	       default:
+               fprintf(stderr, "\t MB_Env_Init returned error code: %d (see libmboard docs for details)\n", rc);
+               break;
+	       }
+	       
+	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       	   exit(rc);
 	   
 	}
 	#endif
@@ -557,8 +574,14 @@ void clean_up(int code)
                break;
            case MB_ERR_INTERNAL:
                fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+               break;   
+	       default:
+               fprintf(stderr, "\t MB_Delete returned error code: %d (see libmboard docs for details)\n", rc);
                break;
-       }
+	       }
+	       
+	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       	   exit(rc);
     }
     #endif
 <?end foreach?>
@@ -572,7 +595,13 @@ void clean_up(int code)
            case MB_ERR_ENV:
                fprintf(stderr, "\t reason: MB environment not yet started?\n");
                break;
-       }
+	       default:
+               fprintf(stderr, "\t MB_Env_Finalise returned error code: %d (see libmboard docs for details)\n", rc);
+               break;
+	       }
+	       
+	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       	   exit(rc);
     }
     #endif
 

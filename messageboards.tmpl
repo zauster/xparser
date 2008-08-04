@@ -41,7 +41,13 @@ void add_$name_message(<?foreach messagevar?>$type $name<?if static_array?>[]<?e
            case MB_ERR_INTERNAL:
                fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
                break;
-       }
+	       default:
+               fprintf(stderr, "\t MB_AddMessage returned error code: %d (see libmboard docs for details)\n", rc);
+               break;
+	   }
+	      
+	   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       exit(rc);
     }
     #endif
 }
@@ -68,7 +74,13 @@ inline static m_$name* getInternalMessage_$name(void)
                 case MB_ERR_INVALID:
                     fprintf(stderr, "\t reason: '$name' Iterator has not been created?\n");
                     break;
-            }
+	            default:
+                    fprintf(stderr, "\t MB_Iterator_Rewind returned error code: %d (see libmboard docs for details)\n", rc);
+                    break;
+	        }
+	       
+	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       	   exit(rc);
         }
         #endif
     }
@@ -86,7 +98,13 @@ inline static m_$name* getInternalMessage_$name(void)
            case MB_ERR_MEMALLOC:
                fprintf(stderr, "\t reason: out of memory\n");
                break;
-       }
+	       default:
+               fprintf(stderr, "\t MB_Iterator_GetMessage returned error code: %d (see libmboard docs for details)\n", rc);
+               break;
+	       }
+	       
+	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       	   exit(rc);
     }
     #endif
     

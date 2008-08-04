@@ -92,8 +92,13 @@ int main(int argc, char * argv[])
 	       case MB_ERR_MEMALLOC:
 	           fprintf(stderr, "\t reason: out of memory\n");
 	           break;
-            default: break;
+           default:
+               fprintf(stderr, "\t MB_Env_Init returned error code: %d (see libmboard docs for details)\n", rc);
+               break;
 	   }
+	   
+	   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       exit(rc);
 	   
 	}
 	#endif
@@ -315,7 +320,13 @@ if(argc < 2)
            case MB_ERR_INTERNAL:
                fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
                break;
+           default:
+               fprintf(stderr, "\t MB_SyncComplete returned error code: %d (see libmboard docs for details)\n", rc);
+               break;
        }
+       
+       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       exit(rc);
     }
     #endif
 	<?end foreach?>
@@ -353,7 +364,18 @@ if(argc < 2)
 	           case MB_ERR_INTERNAL:
 	               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
 	               break;
+	           default:
+	           <?if filter?>
+                   fprintf(stderr, "\t MB_Iterator_CreateFiltered returned error code: %d (see libmboard docs for details)\n", rc);
+               <?end if?>
+               <?if no_filter?>
+                   fprintf(stderr, "\t MB_Iterator_Create returned error code: %d (see libmboard docs for details)\n", rc);
+               <?end if?>
+                   break;
 		   }
+		   
+		   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+           exit(rc);
 		}
 		#endif
 		MB_Iterator_Randomise(i_$name);
@@ -374,7 +396,13 @@ if(argc < 2)
 		           case MB_ERR_INTERNAL:
 		               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
 		               break;
+		           default:
+                       fprintf(stderr, "\t MB_Iterator_Delete returned error code: %d (see libmboard docs for details)\n", rc);
+                       break;
 		       }
+		       
+		       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+               exit(rc);
 		    }
 		    #endif
 		<?end foreach?>
@@ -413,7 +441,14 @@ if(argc < 2)
            case MB_ERR_INTERNAL:
                fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
                break;
+           default:
+               fprintf(stderr, "\t MB_SyncStart returned error code: %d (see libmboard docs for details)\n", rc);
+               break;
+               
        }
+       
+       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       exit(rc);
     }
     #endif
 <?end foreach?>
@@ -435,7 +470,14 @@ if(argc < 2)
            case MB_ERR_INTERNAL:
                fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
                break;
+           default:
+               fprintf(stderr, "\t MB_Clear returned error code: %d (see libmboard docs for details)\n", rc);
+               break;    
+
        }
+       
+       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       exit(rc);
     }
     #endif
 <?end foreach?>
