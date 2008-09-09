@@ -13,7 +13,7 @@
 int main(int argc, char * argv[])
 {
 	/* Timing variables */
-	clock_t start, stop, interval;
+	double start, stop, interval;
 	FILE *file;
 	char data[100];
 	char logfilepath[100];
@@ -30,11 +30,6 @@ int main(int argc, char * argv[])
 	CHECK_POINTER(current_xmachine);
 <?foreach xagent?>	//xmachine_memory_$name * temp_xmachine_$name;
 <?end foreach?>	
-	/* Ratio for calculating time in milliseconds */
-    /* (lsc) changed from long to double
-     * if "long", time_ratio == 0 when CLOCKS_PER_SEC > 1000
-     */
-	double time_ratio = 1000.0/CLOCKS_PER_SEC;
 	/* Particle cloud data */
 	double cloud_data[6];
 
@@ -289,18 +284,35 @@ if(argc < 2)
 	sprintf(data, "%i", totalnodes);
 	fputs(data, file);
 	fputs("</nodes>\n", file);
-	fputs("<!-- warning: time in milliseconds (seems to jump in 15/16ms) -->\n", file);
+	
+	/* print timer into */
+	fputs("<!-- <time> unit: milliseconds -->\n", file);
+	
+	<?if serial?>sprintf(data, "unspecified");<?end if?>
+	<?if parallel?>sprintf(data, "%.2e ms", MPI_Wtick() * 1000.0);<?end if?>
+	fputs("<!-- <time> timer resolution: ", file);
+	fputs(data, file);
+	fputs(")-->\n", file);
+	
+	start = get_time();
+	stop = get_time();
+	sprintf(data, "%.2e ms", (stop - start) * 1000.0);
+	fputs("<!-- <time> timer overhead: ~", file);
+	fputs(data, file);
+	fputs(")-->\n", file);
+	
+	
 	fclose(file);
 <?if parallel?>	}<?end if?>
 	/* Start timing */
-	start = clock();
+	start = get_time();
 
     /* pre-randomise agents for first iteration */
     //randomisexagent();
 	
 	for(iteration_loop=iteration_number+1; iteration_loop < iteration_number+iteration_total+1; iteration_loop++)
 	{
-		interval = clock();
+		interval = get_time();
 		/* Print out iteration number */
 <?if serial?>		<?end if?><?if parallel?>		if(node_number == 0) <?end if?>fprintf(stdout, "Iteration - %d\n", iteration_loop);
 		/* START OF ITERATION */
@@ -513,12 +525,7 @@ if(argc < 2)
 		sprintf(data, "%i", iteration_loop);
 		fputs(data, file);
 		fputs("</no><time>", file);
-        /* (lsc) Changed casting from "long" to "double"
-         * In different systems, clock_t can be either integer or floating point. Casting to 
-         * double ensures that arithmetic and printing operations work properly on all systems
-         * regardless of underlying representation 
-         */
-		sprintf(data, "%ld", (long)(((double)clock()*time_ratio)-((double)interval*time_ratio)));
+		sprintf(data, "%d", (int)((get_time() - interval) * 1000) );
 		fputs(data, file);
 		fputs("</time></iteration>\n", file);
 		fclose(file);
@@ -526,14 +533,10 @@ if(argc < 2)
 	}
 	
 	/* Stop timing and print total time */
-	stop = clock();
-    /* (lsc) Changed casting from "long" to "double"
-     * In different systems, clock_t can be either integer or floating point. Casting to 
-     * double ensures that arithmetic and printing operations work properly on all systems
-     * regardless of underlying representation 
-     */
-	total_time = ((double)stop*time_ratio) - ((double)start*time_ratio);
-<?if serial?>	<?end if?><?if parallel?>	if(node_number == 0) <?end if?>printf("Execution time - %ld:%02ld:%ld [mins:secs:msecs]\n", total_time/60000, ((total_time/1000)%60), total_time%1000);
+	stop = get_time();
+	total_time = stop - start;
+<?if serial?>	<?end if?><?if parallel?>	if(node_number == 0) <?end if?>printf("Execution time - %d:%02d:%03d [mins:secs:msecs]\n", 
+       (int)(total_time/60), ((int)total_time)%60, (((int)(total_time * 1000.0)) % 1000));
 	
 	clean_up(0);
     

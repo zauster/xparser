@@ -14,7 +14,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
-#include <time.h>
 #include "mboard.h"
 
 
@@ -280,8 +279,8 @@ node_information * temp_node_info;
 * \brief Output path for files. */
 char outputpath[100];
 /** \var long total_time
-* \brief Total time for the simulation run */
-long total_time;
+* \brief Total time for the simulation run (in seconds) */
+double total_time;
 /** \var int total_messages
 * \brief Total messages sent between nodes for the simulation run */
 int total_messages;
@@ -480,3 +479,5 @@ void generate_partitions(double cloud_data[6], int partitions, int partition_met
 <?end foreach?>
 /* memory.c */
 xmachine * add_xmachine(void);
+/* timing.c */
+double get_time(void);

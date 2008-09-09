@@ -627,7 +627,7 @@ void clean_up(int code)
 	sprintf(data, "%slog.xml", outputpath);
 	file = fopen(data, "a");
 	fputs("<totaltime>", file);
-	sprintf(data, "%ld", total_time);
+	sprintf(data, "%d", (int)(total_time * 1000.0) % 1000);
 	fputs(data, file);
 	fputs("</totaltime>\n", file);
 	/*fputs("<totalmessages>", file);
