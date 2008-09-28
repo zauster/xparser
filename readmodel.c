@@ -5,15 +5,15 @@ void handleVariableType(char_array * current_string, variable * current_variable
 	model_datatype * current_datatype;
 	char buffer[100];
 	int i;
-	
+
 	current_variable->type = copy_array_to_str(current_string);
-	
+
 	current_variable->arraylength = 0;
 	current_variable->ismodeldatatype = 0;
-	
+
 	strcpy(current_variable->defaultvalue, "");
 	strcpy(current_variable->c_type, "");
-	
+
 	if(strcmp(current_variable->type, "int") == 0 ||
 		strcmp(current_variable->type, "short int") == 0 ||
 		strcmp(current_variable->type, "long int") == 0 ||
@@ -25,7 +25,7 @@ void handleVariableType(char_array * current_string, variable * current_variable
 		strcpy(current_variable->defaultvalue, "0");
 		strcpy(current_variable->c_type, "i");
 	}
-	
+
 	if(strcmp(current_variable->type, "double") == 0 ||
 		strcmp(current_variable->type, "float") == 0 ||
 		strcmp(current_variable->type, "double_array") == 0 ||
@@ -34,7 +34,7 @@ void handleVariableType(char_array * current_string, variable * current_variable
 		strcpy(current_variable->defaultvalue, "0.0");
 		strcpy(current_variable->c_type, "f");
 	}
-	
+
 	if(strcmp(current_variable->type, "char") == 0 ||
 		strcmp(current_variable->type, "unsigned char") == 0 ||
 		strcmp(current_variable->type, "char_array") == 0)
@@ -42,7 +42,7 @@ void handleVariableType(char_array * current_string, variable * current_variable
 		strcpy(current_variable->defaultvalue, "' '");
 		strcpy(current_variable->c_type, "c");
 	}
-	
+
 	/*copycharlist(&current_variable->type, &chardata[0]);*/
 	/* These are C to MPI datatype mappings */
 	if(strcmp(current_variable->type, "int") == 0) strcpy(current_variable->mpi_type, "MPI_INT");
@@ -85,20 +85,20 @@ void handleVariableType(char_array * current_string, variable * current_variable
 			current_variable->ismodeldatatype = 1;
 			current_variable->datatype = current_datatype;
 		}
-		
+
 		strcpy(buffer, current_datatype->name);
 		strcat(buffer, "_array");
-		
+
 		if(strcmp(current_variable->type, buffer) == 0)
 		{
 			current_variable->ismodeldatatype = 1;
 			current_variable->datatype = current_datatype;
 			current_variable->arraylength = -1;
 		}
-		
+
 		current_datatype = current_datatype->next;
 	}
-	
+
 	current_variable->typenotarray = copy_array_to_str(current_string);
 	/* Handle model data type arrays */
 	i = strlen(current_variable->type);
@@ -126,10 +126,10 @@ void handleVariableType(char_array * current_string, variable * current_variable
 void handleVariableName(char_array * current_string, variable * current_variable)
 {
 	current_variable->name = copy_array_to_str(current_string);
-	
+
 	int j, i = 0;
 	char buffer[100];
-	
+
 	/* Handle static arrays */
 	while(current_variable->name[i] != '\0')
 	{
@@ -144,9 +144,9 @@ void handleVariableName(char_array * current_string, variable * current_variable
 				j++;
 				i++;
 			}
-			
+
 			buffer[j] = '\0';
-			
+
 			/* If no number*/
 			if(j == 0) current_variable->arraylength = -1;
 			else
@@ -154,7 +154,7 @@ void handleVariableName(char_array * current_string, variable * current_variable
 				current_variable->arraylength = atoi(buffer);
 			}
 		}
-		
+
 		i++;
 	}
 }
@@ -232,18 +232,18 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	char_array * current_string;
 	char * temp_char = NULL;
 	char * temp_char2 = NULL;
-	
+
 	/* check var name for array */
 	/*char_list * charcheck;*/
 	modeldata->number_messages = 0;
 	modeldata->number_xmachines = 0;
 	modeldata->agents_include_array_variables = 0;
-	
+
 	/* variables in time_data */
 	char * time_name = NULL;
 	char * unit_name = NULL;
 	int period_int;
-	
+
 	/* Open config file to read-only */
 	if((file = fopen(inputfile->fullfilepath, "r"))==NULL)
 	{
@@ -251,13 +251,13 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 		exit(1);
 	}
 	else { printf("reading xmml: %s\n", inputfile->fullfilepath); }
-	
+
 	/* Initialise variables */
 	/*p_charlist = &charlist;*/
 	p_fcode = &fcode;
 	p_variable = &tvariable;
 	current_string = init_char_array();
-	
+
 	i = 0;
 	xmlcode = 0;
 	reading = 1;
@@ -310,9 +310,9 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	enabled = 0;
 	not = 0;
 	time = 0;
-	
+
 	/*printf("%i> ", linenumber);*/
-	
+
 	/* Read characters until the end of the file */
 	/*while(c != EOF)*/
 	/* Read characters until end of xml found */
@@ -320,19 +320,19 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	{
 		/* Get the next char from the file */
 		c = (char)fgetc(file);
-		
+
 		/* Print char */
 		/*printf("%c\n", c);*/
 		if(c == '\n' || c == '\r') linenumber++;
 		/*printf("%i> ", linenumber);*/
-		
+
 		/*printf("xmlcomment: %d\t%c\n", xmlcomment, c);*/
-		
+
 		/* If in cdata then don't parse as xml */
 		if(cdata)
 		{
 			/*printf("in cdata\n");*/
-			
+
 			/* Handle CDATA tags */
 			if(xmlcode != 0)
 			{
@@ -357,10 +357,10 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				{
 					cdata = 0;
 					codefile = 1;
-					
+
 					strcpy(&chartag[numtag][0], "file");
 					numtag++;
-					
+
 					reset_char_array(current_string);
 				}
 				else
@@ -389,7 +389,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				add_char(current_string, c);
 			}
 			if(xmlcode == 9) xmlcode = 0;
-			
+
 			/* Print xmlcode */
 			/*printf("xmlcode: %d", xmlcode);*/
 		}
@@ -405,38 +405,43 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 		else if(c == '>')
 		{
 			/*printf("in c == >\n");*/
-			
+
 			/* Place 0 at end of buffer to make chars a string */
 			/*buffer[i] = 0;*/
-			
+
 			/*printf("buffer = %s\n", buffer);*/
 			/*printf("string = ");*/
 			/*print_char_array(current_string);*/
-			
-			/* Handle XML nested tag errors */
-			/* If start tag or xml start tag */
-			if(current_string->array[0] != '/')
+
+			/* Handle truncated empty content tag */
+			/* If last character of string in tag is not a slash */
+			if(current_string->array[current_string->size-1] != '/')
 			{
-				/* Add to list of tags */
-				strcpy(&chartag[numtag][0], current_string->array);
-				tagline[numtag] = linenumber;
-				/* Advance list to next free place */
-				numtag++;
-			}
-			/* If end tag */
-			else
-			{
-				/* Look at last tag */
-				numtag--;
-				/* If different then exit */
-				if(strcmp(&current_string->array[1], &chartag[numtag][0]) != 0 && strcmp(current_string->array, "/xmodel") != 0)
+				/* Handle XML nested tag errors */
+				/* If start tag or xml start tag */
+				if(current_string->array[0] != '/')
 				{
-					fprintf(stderr, "ERROR: The tag <%s> on line number %i\n", current_string->array, linenumber);
-					fprintf(stderr, "ERROR: doesn't close the tag <%s> on line number %i\n", &chartag[numtag][0], tagline[numtag]);
-					exit(1);
+					/* Add to list of tags */
+					strcpy(&chartag[numtag][0], current_string->array);
+					tagline[numtag] = linenumber;
+					/* Advance list to next free place */
+					numtag++;
+				}
+				/* If end tag */
+				else
+				{
+					/* Look at last tag */
+					numtag--;
+					/* If different then exit */
+					if(strcmp(&current_string->array[1], &chartag[numtag][0]) != 0 && strcmp(current_string->array, "/xmodel") != 0)
+					{
+						fprintf(stderr, "ERROR: The tag <%s> on line number %i\n", current_string->array, linenumber);
+						fprintf(stderr, "ERROR: doesn't close the tag <%s> on line number %i\n", &chartag[numtag][0], tagline[numtag]);
+						exit(1);
+					}
 				}
 			}
-			
+
 			if(strcmp(current_string->array, "xmachine_agent_model") == 0 || strcmp(current_string->array, "xmodel") == 0) { xagentmodel = 1; }
 			if(strcmp(current_string->array, "/xmachine_agent_model") == 0 || strcmp(current_string->array, "/xmodel") == 0) { xagentmodel = 0; reading = 0; printf("End of xagent model.\n"); }
 			if(strcmp(current_string->array, "date") == 0) { date = 1; }
@@ -464,7 +469,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "memory") == 0)
 			{
 				memory = 1;
-				
+
 				tvariable = NULL;
 			}
 			if(strcmp(current_string->array, "/memory") == 0)
@@ -479,7 +484,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				else if(environment == 1) current_variable = addvariable(modeldata->p_envvars);
 				else if(memory == 1) current_variable = addvariable(&current_memory->vars);
 				else current_variable = addvariable(p_variable);
-				
+
 				current_variable->file = copystr(inputfile->fullfilepath);
 			}
 			if(strcmp(current_string->array, "/var") == 0 || strcmp(current_string->array, "/variable") == 0) { var = 0; }
@@ -515,7 +520,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			{
 				datatype = 0;
 				current_datatype->vars = *p_variable;
-				
+
 				current_datatype->has_single_vars = 0;
 				current_datatype->has_dynamic_arrays = 0;
 				/* Check if datatype has single variables and dynamic arrays */
@@ -527,10 +532,10 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 						strcmp(current_variable->type, "double") == 0 ||
 						strcmp(current_variable->type, "char") == 0) &&
 						current_variable->arraylength == 0) current_datatype->has_single_vars = 1;
-					
+
 					if(current_variable->arraylength == -1) current_datatype->has_dynamic_arrays = 1;
 					if(current_variable->ismodeldatatype == 1 && current_variable->datatype->has_dynamic_arrays == 1) current_datatype->has_dynamic_arrays = 1;
-					
+
 					current_variable = current_variable->next;
 				}
 			}
@@ -549,14 +554,14 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "input") == 0)
 			{
 				input = 1;
-				
+
 				current_ioput = addioput(&current_function->inputs);
 			}
 			if(strcmp(current_string->array, "/input") == 0) { input = 0; }
 			if(strcmp(current_string->array, "output") == 0)
 			{
 				output = 1;
-				
+
 				current_ioput = addioput(&current_function->outputs);
 			}
 			if(strcmp(current_string->array, "/output") == 0) { output = 0; }
@@ -567,7 +572,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				function = 1;
 				/* Flag to see if function defined in tags, if not look in functions file */
 				foundfunctioncode = 0;
-				
+
 				if(environment == 1)
 				{
 					current_envfunc = addenvfunc(modeldata->p_envfuncs);
@@ -584,10 +589,10 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/function") == 0)
 			{
 				function = 0;
-				
+
 				if(current_function->current_state != NULL) addxstate(current_function->current_state, &current_xmachine->states);
 				if(current_function->next_state != NULL) addxstate(current_function->next_state, &current_xmachine->states);
-				
+
 				current_function->agent_name = copystr(current_xmachine->name);
 			}
 			if(strcmp(current_string->array, "header") == 0) { header = 1; current_envfunc = addenvfunc(modeldata->p_envfuncs); }
@@ -610,7 +615,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			{
 				message = 0;
 				current_message->vars = *p_variable;
-				
+
 				/* Count number of variables */
 				variable_count = 0;
 				/* Find unallowed dynamic arrays */
@@ -624,22 +629,22 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 						fprintf(stderr, "Error: %s - dyamic array found in message\n", current_variable->name);
 						dynamic_array_found = 1;
 					}
-					
+
 					current_variable = current_variable->next;
 				}
-				
+
 				if(dynamic_array_found == 1)
 				{
 					fprintf(stderr, "Error: Dynamic array found in %s message\n", current_message->name);
 					exit(1);
 				}
-				
+
 				current_message->var_number = variable_count;
 			}
 			if(strcmp(current_string->array, "code") == 0)
 			{
 				/*printf("in code == 0\n");*/
-				
+
 				code = 1;
 				cdata = 1;
 				/*charlist = NULL;*/
@@ -678,7 +683,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				{
 					current_rule_data = add_rule_data(&current_function->condition_rule);
 				}
-				
+
 				current_rule_data->time_rule = 1;
 				if(not == 1) current_rule_data->not = 1;
 			}
@@ -696,7 +701,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "lhs") == 0)
 			{
 				lhs = 1;
-				
+
 				if(current_rule_data == NULL)
 				{
 					if(condition) { current_rule_data = add_rule_data(&current_function->condition_rule); }
@@ -709,9 +714,9 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					if(lhs_last) { current_rule_data = add_rule_data(&current_rule_data->lhs_rule); }
 					else { current_rule_data = add_rule_data(&current_rule_data->rhs_rule); }
 				}
-				
+
 				if(not == 1) current_rule_data->not = 1;
-				
+
 				lhs_last = 1;
 			}
 			if(strcmp(current_string->array, "/lhs") == 0) { lhs = 0; }
@@ -746,7 +751,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/model") == 0)
 			{
 				model = 0;
-				
+
 				printf("Input model file: %s ", current_input_file->fullfilepath);
 				if(current_input_file->enabled == 1) printf("enabled\n");
 				else printf("disabled\n");
@@ -756,24 +761,24 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				depends = 1;
 				/*charlist = NULL;*/
 				current_adj_function = add_depends_adj_function(current_function);
-				
+
 				modeldata->depends_style = 1;
 			}
 			if(strcmp(current_string->array, "/depends") == 0)
 			{
 				depends = 0;
-				
+
 				//add_adj_function(current_function2, current_function, "internal");
-				
+
 				//printf("depends: %s %s %s\n", current_function->name, current_adj_function->name, current_adj_function->type);
-				
-				
+
+
 				/*printf("depends: ");
 				printcharlist(&current_trans->func);
 				printf(" ");
 				printcharlist(&current_trans->dest);
 				printf("\n");*/
-				
+
 			}
 			if(strcmp(current_string->array, "filter") == 0)
 			{
@@ -788,7 +793,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/value") == 0) { value = 0; }
 			if(strcmp(current_string->array, "enabled") == 0) { enabled = 1; }
 			if(strcmp(current_string->array, "/enabled") == 0) { enabled = 0; }
-			
+
 			/* End of tag and reset buffer */
 			intag = 0;
 			/*i = 0;*/
@@ -804,7 +809,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			/* Flag in tag */
 			intag = 1;
 			xmlcomment = 1;
-			
+
 			if(model)
 			{
 				if(enabled)
@@ -827,7 +832,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					temp_char2[0] = 0;
 					free(temp_char2);
 					free(temp_char);
-					
+
 					/* calculate directory of file */
 					/* Calculate directory where xparser and template files are */
 					i = 0;
@@ -846,7 +851,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 						current_input_file->fulldirectory[lastd+1] = '\0';
 					}
 					else current_input_file->fulldirectory[0] = '\0';
-					
+
 					i = 0;
 					lastd = 0;
 					while(current_input_file->localdirectory[i] != '\0')
@@ -887,7 +892,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				else if(datatype)
 				{
 					if(desc) current_datatype->desc = copy_array_to_str(current_string);
-					
+
 					if(var)
 					{
 						if(type) { handleVariableType(current_string, current_variable, modeldata); }
@@ -906,10 +911,10 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					if(type)
 					{
 						current_variable->type = copy_array_to_str(current_string);
-						
+
 						strcpy(current_variable->defaultvalue, "");
 						strcpy(current_variable->c_type, "");
-						
+
 						if(strcmp(current_variable->type, "int") == 0 ||
 							strcmp(current_variable->type, "short int") == 0 ||
 							strcmp(current_variable->type, "long int") == 0 ||
@@ -920,14 +925,14 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 							strcpy(current_variable->defaultvalue, "0");
 							strcpy(current_variable->c_type, "i");
 						}
-						
+
 						if(strcmp(current_variable->type, "double") == 0 ||
 							strcmp(current_variable->type, "float") == 0)
 						{
 							strcpy(current_variable->defaultvalue, "0.0");
 							strcpy(current_variable->c_type, "f");
 						}
-						
+
 						if(strcmp(current_variable->type, "char") == 0 ||
 							strcmp(current_variable->type, "unsigned char") == 0)
 						{
@@ -947,7 +952,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					}
 					strcpy(current_envdefine->type, "");
 				}
-				
+
 				if(codefile)
 				{
 					if(functions)
@@ -955,8 +960,8 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 						current_envfunc = addenvfunc(modeldata->p_envfuncs);
 						current_envfunc->header = 2;
 					}
-					
-					
+
+
 					/* Place directory at start of chardata */
 					j = 0;
 					while(*inputfile->localdirectory != 0)
@@ -970,15 +975,15 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					{
 						(inputfile->localdirectory)--;
 					}
-					
+
 					chardata[j] = '\0';
 					strcat(chardata, current_string->array);
-					
+
 					current_envfunc->filepath = copystr(chardata);
 					//printf("inputfile->directory: %s\n", inputfile->localdirectory);
 					//printf("current_envfunc->filepath: %s\n", current_envfunc->filepath);
-					
-					
+
+
 					/* Place directory at start of chardata */
 					j = 0;
 					while(*inputfile->fulldirectory != 0)
@@ -992,25 +997,25 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					{
 						(inputfile->fulldirectory)--;
 					}
-					
+
 					chardata[j] = '\0';
-					
-					
-					
+
+
+
 					/* Add file name to chardata on end of directory */
 					/*current_charlist = *p_charlist;
 					while(current_charlist)
 					{
 						chardata[j] = current_charlist->character;
 						j++;
-						
+
 						current_charlist = current_charlist->next;
 					}
 					chardata[j] = 0;*/
-					
+
 					strcat(chardata, current_string->array);
 					/*printf("01\t%s\n", chardata);*/
-					
+
 					/* Open code file read-only */
 					if((filecode = fopen(chardata, "r"))==NULL)
 					{
@@ -1019,10 +1024,10 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 						exit(0);
 					}
 					else printf("reading file: %s\n", chardata);
-					
+
 					/*charlist = NULL;*/
 					reset_char_array(current_string);
-					
+
 					if(functions)
 					{
 						printf("%s is a functions file\n", chardata);
@@ -1034,7 +1039,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 						{
 							/* Get the next char from the file */
 							c = (char)fgetc(filecode);
-							
+
 							if(c != (char)EOF)
 							{
 								/*current_charlist = addchar(p_charlist);*/
@@ -1042,16 +1047,16 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 								add_char(current_string, c);
 							}
 						}
-						
+
 						/*if(environment == 1) current_envfunc->code = *p_charlist;*/
 						/*else current_fcode->code = *p_charlist;*/
 					}
-					
+
 					/* Close the file */
 					fclose(filecode);
 				}
-				
-				if(code && function) 
+
+				if(code && function)
 				{
 					current_envfunc->code = copy_array_to_str(current_string);
 					current_envfunc->header = 0;
@@ -1097,15 +1102,15 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					{
 						chardata[j] = current_charlist->character;
 						j++;
-						
+
 						current_charlist = current_charlist->next;
 					}
 					chardata[j] = 0;*/
 					/*printf("01\t%s\n", chardata);*/
-					
+
 					strcpy(chardata, directory);
 					strcat(chardata, copy_array_to_str(current_string));
-					
+
 					/* Open code file read-only */
 					if((filecode = fopen(chardata, "r"))==NULL)
 					{
@@ -1114,16 +1119,16 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 						exit(0);
 					}
 					else printf("reading file: %s\n", chardata);
-					
+
 					/*charlist = NULL;*/
 					reset_char_array(current_string);
-					
+
 					/* Read characters until the end of the file */
 					while(c != (char)EOF)
 					{
 						/* Get the next char from the file */
 						c = (char)fgetc(filecode);
-						
+
 						if(c != (char)EOF)
 						{
 							/*current_charlist = addchar(p_charlist);*/
@@ -1131,14 +1136,14 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 							add_char(current_string, c);
 						}
 					}
-					
+
 					/*if(environment == 1) current_envfunc->code = *p_charlist;*/
 					/*else current_fcode->code = *p_charlist;*/
-					
+
 					/* Close the file */
 					fclose(filecode);
 				}
-				
+
 				if(name && depends == 0) current_function->name = copy_array_to_str(current_string);
 				if(note) current_function->note = copy_array_to_str(current_string);
 				if(code) { current_fcode->code = copy_array_to_str(current_string); foundfunctioncode = 1; }
@@ -1200,7 +1205,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				printf(current_string->array);
 				printf("\n");
 			}
-			
+
 			/* Reset buffer */
 			/*i = 0;*/
 			reset_char_array(current_string);
@@ -1245,12 +1250,12 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			add_char(current_string, c);
 		}
 	}
-	
+
 	/* Free memory */
 	free(time_name);
 	free(unit_name);
 	free_char_array(current_string);
-	
+
 	/* Close the file */
 	fclose(file);
 }
@@ -1261,7 +1266,7 @@ void handleRuleValue(char ** p_value, xmachine_function * current_function, xmac
 	xmachine_message * current_message;
 	char buffer[1000];
 	int found, i, j;
-	
+
 	/* If starts with 'a.' change to 'a->' and check rest is a valid agent memory variable */
 	if(strncmp(*p_value, "a.", 2) == 0)
 	{
@@ -1272,7 +1277,7 @@ void handleRuleValue(char ** p_value, xmachine_function * current_function, xmac
 		while(current_variable)
 		{
 			if(strcmp(buffer, current_variable->name) == 0) found = 1;
-			
+
 			current_variable = current_variable->next;
 		}
 		if(found == 0)
@@ -1282,7 +1287,7 @@ void handleRuleValue(char ** p_value, xmachine_function * current_function, xmac
 			fprintf(stderr, "       in file: '%s'\n", current_function->file);
 			exit(0);
 		}
-		
+
 		/* Update value */
 		strcpy(buffer, "a->");
 		strcat(buffer, *p_value+2);
@@ -1303,11 +1308,11 @@ void handleRuleValue(char ** p_value, xmachine_function * current_function, xmac
 				while(current_variable)
 				{
 					if(strcmp(buffer, current_variable->name) == 0) found = 1;
-					
+
 					current_variable = current_variable->next;
 				}
 			}
-			
+
 			current_message = current_message->next;
 		}
 		if(found == 0)
@@ -1315,7 +1320,7 @@ void handleRuleValue(char ** p_value, xmachine_function * current_function, xmac
 			fprintf(stderr, "ERROR: value '%s' in filter rule not in message variables\n", buffer);
 			exit(0);
 		}
-		
+
 		strcpy(buffer, "m->");
 		strcat(buffer, *p_value+2);
 		free(*p_value);
@@ -1339,7 +1344,7 @@ void handleRuleValue(char ** p_value, xmachine_function * current_function, xmac
 				else buffer[j] = (*p_value)[i];
 			}
 			else buffer[j] = (*p_value)[i];
-			
+
 			j++;
 		}
 		buffer[j++] = 0;
@@ -1347,20 +1352,20 @@ void handleRuleValue(char ** p_value, xmachine_function * current_function, xmac
 		free(*p_value);
 		*p_value = copystr(buffer);
 	}
-	
+
 	/* Check if a number */
-	
+
 	/* Check if a time */
-	
+
 	/* What else can the value (be allowed) be? environment_constant? */
-	
+
 }
 
 void handleRule(rule_data * current_rule_data, xmachine_function * current_function, xmachine * current_xmachine, char * messagetype, model_data * modeldata)
 {
 	time_data * current_time_unit;
 	char buffer[100];
-	
+
 	/* If current_rule_data is NULL */
 	if(current_rule_data != NULL)
 	{
@@ -1375,7 +1380,7 @@ void handleRule(rule_data * current_rule_data, xmachine_function * current_funct
 					sprintf(buffer, "%%%d", current_time_unit->iterations);
 					current_rule_data->op = copystr(buffer);
 				}
-				
+
 				current_time_unit = current_time_unit->next;
 			}
 			if(strcmp(current_rule_data->lhs, "iteration") == 0)
@@ -1387,7 +1392,7 @@ void handleRule(rule_data * current_rule_data, xmachine_function * current_funct
 				fprintf(stderr, "ERROR: condition period '%s' is not a time unit\n", current_rule_data->lhs);
 				exit(0);
 			}
-			
+
 			handleRuleValue(&current_rule_data->rhs, current_function, current_xmachine, messagetype, modeldata);
 		}
 		else
@@ -1395,10 +1400,10 @@ void handleRule(rule_data * current_rule_data, xmachine_function * current_funct
 			/* Handle values */
 			if(current_rule_data->lhs == NULL) handleRule(current_rule_data->lhs_rule, current_function, current_xmachine, messagetype, modeldata);
 			else handleRuleValue(&current_rule_data->lhs, current_function, current_xmachine, messagetype, modeldata);
-			
+
 			if(current_rule_data->rhs == NULL) handleRule(current_rule_data->rhs_rule, current_function, current_xmachine, messagetype, modeldata);
 			else handleRuleValue(&current_rule_data->rhs, current_function, current_xmachine, messagetype, modeldata);
-			
+
 			/* Handle op */
 			if(strcmp(current_rule_data->op, "EQ") == 0) { strcpy(current_rule_data->op, "=="); }
 			else if(strcmp(current_rule_data->op, "NEQ") == 0) { strcpy(current_rule_data->op, "!="); }
@@ -1438,20 +1443,20 @@ int checkmodel(model_data * modeldata)
 	int variable_count;
 	int found;
 	int state_number;
-	
+
 	/* Check model for:
 	 * agent/message variables are only known data types
 	 * agent/message variables only appear once, show warning for duplicates and show from which files
 	 * try and parse functions files for implementations of functions defined in model xml
 	 * */
-	
+
 	/* Check for no agents */
 	if(*modeldata->p_xmachines == NULL)
 	{
 		fprintf(stderr, "ERROR: no agents defined\n");
 		return -1;
 	}
-	
+
 	/* Check duplicate message names */
 	current_message = * modeldata->p_xmessages;
 	while(current_message)
@@ -1468,20 +1473,20 @@ int checkmodel(model_data * modeldata)
 					return -1;
 				}
 			}
-			
+
 			current_message2 = current_message2->next;
 		}
-		
+
 		current_message = current_message->next;
 	}
-	
+
 	/* Check agent memory variables for being a model data type and update variable attributes */
 	current_xmachine = *modeldata->p_xmachines;
 	current_xmachine2 = NULL;
 	while(current_xmachine)
 	{
 		current_variable = current_xmachine->memory->vars;
-		
+
 		/* Error if no variables */
 		if(current_variable == NULL)
 		{
@@ -1491,14 +1496,14 @@ int checkmodel(model_data * modeldata)
 			/* Remove agent from the agent list */
 			if(current_xmachine2 == NULL) * modeldata->p_xmachines = current_xmachine->next;
 			else current_xmachine2->next = current_xmachine->next;
-							
+
 			free(current_xmachine->name);
 			freexmemory(&current_xmachine->memory);
 			freexstates(&current_xmachine->states);
 			freexfunctions(&current_xmachine->functions);
 			freestateholder(&current_xmachine->end_states);
 			free(current_xmachine);
-			
+
 			if(current_xmachine2 == NULL) current_xmachine = * modeldata->p_xmachines;
 			else current_xmachine = current_xmachine2->next;
 		}
@@ -1525,7 +1530,7 @@ int checkmodel(model_data * modeldata)
 					{
 						found = 1;
 					}
-					
+
 					/* Handle model defined data types */
 					current_datatype = * modeldata->p_datatypes;
 					while(current_datatype)
@@ -1534,28 +1539,28 @@ int checkmodel(model_data * modeldata)
 						{
 							found = 1;
 						}
-						
+
 						strcpy(buffer, current_datatype->name);
 						strcat(buffer, "_array");
-						
+
 						if(strcmp(current_variable->type, buffer) == 0)
 						{
 							found = 1;
 						}
-						
+
 						current_datatype = current_datatype->next;
 					}
-					
+
 					if(found == 0)
 					{
 						fprintf(stderr, "ERROR: type variable '%s' in variable '%s' in agent '%s' doesn't exist\n", current_variable->type, current_variable->name, current_xmachine->name);
 						fprintf(stderr, "       in file: '%s'\n", current_variable->file);
 						return -1;
 					}
-				
+
 				current_variable = current_variable->next;
 			}
-			
+
 				/* Error if a variable name is defined twice in same agent */
 			current_variable = current_xmachine->memory->vars;
 			while(current_variable)
@@ -1570,13 +1575,13 @@ int checkmodel(model_data * modeldata)
 						fprintf(stderr, "       in file: '%s'\n", current_variable2->file);
 						return -1;
 					}
-						
+
 					current_variable2 = current_variable2->next;
 				}
-				
+
 				current_variable = current_variable->next;
 			}
-			
+
 			current_variable = current_xmachine->memory->vars;
 			while(current_variable)
 			{
@@ -1589,35 +1594,35 @@ int checkmodel(model_data * modeldata)
 						current_variable->ismodeldatatype = 1;
 						current_variable->datatype = current_datatype;
 					}
-					
+
 					strcpy(buffer, current_datatype->name);
 					strcat(buffer, "_array");
-					
+
 					if(strcmp(current_variable->type, buffer) == 0)
 					{
 						current_variable->ismodeldatatype = 1;
 						current_variable->datatype = current_datatype;
 						current_variable->arraylength = -1;
 					}
-					
+
 					current_datatype = current_datatype->next;
 				}
-					
+
 				current_variable = current_variable->next;
 			}
-			
+
 			/* Compute x,y,z location variables in memory */
 			/* Check for x-axis component as 'posx' or 'px' or 'x' */
 			strcpy(current_xmachine->xvar, "0.0");
 			strcpy(current_xmachine->yvar, "0.0");
 			strcpy(current_xmachine->zvar, "0.0");
 			variable_count = 0;
-			
+
 			current_variable = current_xmachine->memory->vars;
 			while(current_variable)
 			{
 				if(current_variable->arraylength != 0) modeldata->agents_include_array_variables = 1;
-				
+
 				/*copycharlist(&current_variable->name, &chardata[0]);*/
 				if(strcmp(current_variable->name, "x") == 0)    strcpy(current_xmachine->xvar, "x");
 				if(strcmp(current_variable->name, "px") == 0)   strcpy(current_xmachine->xvar, "px");
@@ -1630,10 +1635,10 @@ int checkmodel(model_data * modeldata)
 				if(strcmp(current_variable->name, "posz") == 0) strcpy(current_xmachine->zvar, "posz");
 				if(strcmp(current_variable->name, "range") == 0) strcpy(current_xmachine->rangevar, "range");
 				if(strcmp(current_variable->name, "radius") == 0) strcpy(current_xmachine->rangevar, "radius");
-				
+
 				if(strcmp(current_variable->name, "id") == 0) strcpy(current_xmachine->idvar, "id");
 				if(strcmp(current_variable->name, "agent_id") == 0) strcpy(current_xmachine->idvar, "agent_id");
-				
+
 				found = 0;
 				allvar = * modeldata->p_allvars;
 				while(allvar)
@@ -1642,7 +1647,7 @@ int checkmodel(model_data * modeldata)
 					if(strcmp(current_variable->name, allvar->name) == 0)
 					{
 						found = 1;
-					
+
 						/* If same variable name but different type, this breaks get_ and set_ methods */
 						if(strcmp(current_variable->type, allvar->type) != 0)
 						{
@@ -1650,7 +1655,7 @@ int checkmodel(model_data * modeldata)
 							return -1;
 						}
 					}
-					
+
 					allvar = allvar->next;
 				}
 				if(found == 0)
@@ -1665,21 +1670,21 @@ int checkmodel(model_data * modeldata)
 					strcpy(allvar->defaultvalue, current_variable->defaultvalue);
 					strcpy(allvar->c_type, current_variable->c_type);
 				}
-				
+
 				variable_count++;
-				
+
 				current_variable = current_variable->next;
 			}
-			
+
 			current_xmachine->var_number = variable_count;
-			
+
 			modeldata->number_xmachines++;
-			
+
 			current_xmachine = current_xmachine->next;
 		}
 	}
-	
-	
+
+
 	int newlayer = 0;
 	int totallayers = 0;
 	int m = 0;
@@ -1709,22 +1714,22 @@ int checkmodel(model_data * modeldata)
 								//printf("** %s -> %s == %s\n", current_function->name, current_adj_function->name, current_function2->name);
 								current_adj_function->function = current_function2;
 							}
-							
+
 							current_function2 = current_function2->next;
 						}
-						
+
 						current_xmachine2 = current_xmachine2->next;
 					}
-					
+
 					current_adj_function = current_adj_function->next;
 				}
-				
+
 				current_function = current_function->next;
 			}
-			
+
 			current_xmachine = current_xmachine->next;
 		}
-		
+
 		/* Find order of functions in each agent */
 		newlayer = 0;
 		m = 0;
@@ -1753,22 +1758,22 @@ int checkmodel(model_data * modeldata)
 								/* Change flag to say there is a dependency */
 								k = 1;
 							}
-							
+
 							current_adj_function = current_adj_function->next;
 						}
 						if(k == 0)
 						{
 							current_function->rank_in = newlayer;
-							
+
 							printf("%s - %s - %d\n", current_xmachine->name, current_function->name, newlayer);
-							
+
 							//addfunction_pointer(&current_layer->functions, current_function);
 						}
 					}
-					
+
 					current_function = current_function->next;
 				}
-				
+
 				current_xmachine = current_xmachine->next;
 			}
 			/* Increment layer */
@@ -1785,10 +1790,10 @@ int checkmodel(model_data * modeldata)
 				{
 					/* If a function does not have a layer yet */
 					if(current_function->rank_in == -1) k = 1;
-					
+
 					current_function = current_function->next;
 				}
-				
+
 				current_xmachine = current_xmachine->next;
 			}
 			/* If flag is still zero then stop */
@@ -1798,14 +1803,14 @@ int checkmodel(model_data * modeldata)
 				//current_layer = addlayer(modeldata->p_layers);
 			}
 		}
-		
+
 		totallayers = newlayer;
-		
+
 		current_xmachine = *modeldata->p_xmachines;
 		while(current_xmachine)
 		{
 			state_number = 0;
-			
+
 			//qwerty
 			newlayer = 0;
 			m = 0;
@@ -1827,23 +1832,23 @@ int checkmodel(model_data * modeldata)
 						/* Save last function */
 						current_function2 = current_function;
 					}
-					
+
 					current_function = current_function->next;
 				}
-				
+
 				newlayer++;
 			}
-			
+
 			free(current_function2->next_state);
 			sprintf(buffer, "%s", "end");
 			current_function2->next_state = copystr(buffer);
 			addxstate(current_function2->next_state, &current_xmachine->states);
-		
+
 			current_function = current_xmachine->functions;
 			while(current_function)
 			{
 				current_function->rank_in = -1;
-				
+
 				current_adj_function = current_function->depends;
 				while(current_adj_function)
 				{
@@ -1858,20 +1863,20 @@ int checkmodel(model_data * modeldata)
 							{
 								current_adj_function->function = current_function2;
 							}
-							
+
 							current_function2 = current_function2->next;
 						}
-						
+
 						current_xmachine2 = current_xmachine2->next;
 					}
-					
+
 					if(current_adj_function->function == NULL)
 					{
 						fprintf(stderr, "ERROR: depends function '%s' does not exist\n",
 						current_adj_function->name);
 						return -1;
 					}
-					
+
 					if(strcmp(current_adj_function->type, "internal") != 0)
 					{
 						/* If communication dependency */
@@ -1882,7 +1887,7 @@ int checkmodel(model_data * modeldata)
 						while(current_ioput)
 						{
 							if(strcmp(current_adj_function->type, current_ioput->messagetype) == 0) found = 1;
-							
+
 							current_ioput = current_ioput->next;
 						}
 						if(found == 0)
@@ -1896,7 +1901,7 @@ int checkmodel(model_data * modeldata)
 						while(current_ioput)
 						{
 							if(strcmp(current_adj_function->type, current_ioput->messagetype) == 0) found = 1;
-							
+
 							current_ioput = current_ioput->next;
 						}
 						if(found == 0)
@@ -1905,22 +1910,22 @@ int checkmodel(model_data * modeldata)
 							current_ioput->messagetype = copystr(current_adj_function->type);
 						}
 					}
-					
+
 					current_adj_function = current_adj_function->next;
 				}
-				
+
 				current_function = current_function->next;
 			}
-			
+
 			current_xmachine = current_xmachine->next;
 		}
 	}
-	
+
 	/* Check condition/filter rules */
 	current_xmachine = *modeldata->p_xmachines;
 	while(current_xmachine)
 	{
-		// TODO 
+		// TODO
 		/* Message filters */
 		current_function = current_xmachine->functions;
 		while(current_function)
@@ -1937,10 +1942,10 @@ int checkmodel(model_data * modeldata)
 				strcat(buffer, current_function->next_state);
 				strcat(buffer, "_condition");
 				current_function->condition_function = copystr(buffer);
-				
+
 				handleRule(current_function->condition_rule, current_function, current_xmachine, NULL, modeldata);
 			}
-			
+
 			current_ioput = current_function->inputs;
 			while(current_ioput)
 			{
@@ -1953,7 +1958,7 @@ int checkmodel(model_data * modeldata)
 					{
 						found = 1;
 					}
-					
+
 					current_message = current_message->next;
 				}
 				if(found == 0)
@@ -1962,8 +1967,8 @@ int checkmodel(model_data * modeldata)
 								current_ioput->messagetype, current_function->name, current_xmachine->name, current_function->file);
 					return -1;
 				}
-					
-				
+
+
 				/* If input message has a filter */
 				if(current_ioput->filter_rule != NULL)
 				{
@@ -1975,13 +1980,13 @@ int checkmodel(model_data * modeldata)
 					strcat(buffer, current_ioput->messagetype);
 					strcat(buffer, "_filter");
 					current_ioput->filter_function = copystr(buffer);
-					
+
 					handleRule(current_ioput->filter_rule, current_function, current_xmachine, current_ioput->messagetype, modeldata);
 				}
-				
+
 				current_ioput = current_ioput->next;
 			}
-			
+
 			current_ioput = current_function->outputs;
 			while(current_ioput)
 			{
@@ -1994,7 +1999,7 @@ int checkmodel(model_data * modeldata)
 					{
 						found = 1;
 					}
-					
+
 					current_message = current_message->next;
 				}
 				if(found == 0)
@@ -2003,16 +2008,16 @@ int checkmodel(model_data * modeldata)
 								current_ioput->messagetype, current_function->name, current_xmachine->name, current_function->file);
 					return -1;
 				}
-				
+
 				current_ioput = current_ioput->next;
 			}
-			
-			
+
+
 			current_function = current_function->next;
 		}
-		
+
 		current_xmachine = current_xmachine->next;
 	}
-	
+
 	return 0;
 }
