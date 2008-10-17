@@ -16,8 +16,8 @@ int main(int argc, char * argv[])
 	double start, stop, interval;
 	FILE *file;
 	char data[100];
-	char logfilepath[100];
-	char inputpath[100];
+	char logfilepath[1000];
+	char inputpath[1000];
 	char * c;
 	int lastd = 0;
 	int i;
@@ -29,14 +29,14 @@ int main(int argc, char * argv[])
 	current_xmachine = (xmachine *)malloc(sizeof(xmachine));
 	CHECK_POINTER(current_xmachine);
 <?foreach xagent?>	//xmachine_memory_$name * temp_xmachine_$name;
-<?end foreach?>	
+<?end foreach?>
 	/* Particle cloud data */
 	double cloud_data[6];
 
 /* For partition method. Makes geometric (-g flag) the default but may be overridden with -r for round-robin */
 	int partition_method=1;
 
-<?if parallel?>	
+<?if parallel?>
 	int err; /* MPI errors */
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
 	int processor_name_length;
@@ -47,12 +47,12 @@ int main(int argc, char * argv[])
 	MPI_Aint array_of_displacements[2];
 	MPI_Datatype array_of_types[2] = {MPI_INT, MPI_DOUBLE};
 <?end if?>
-	
+
 	/* Output frequency is 1 as default */
 	output_frequency = 1;
 	/* Set random seed */
 /*	srand(time(NULL)); */
-	
+
 	<?if parallel?>
 	/* MPI initialisation routine */
         err = MPI_Init(&argc, &argv);
@@ -61,7 +61,7 @@ int main(int argc, char * argv[])
             printf("MPI initialization failed!\n");
             exit(1);
         }
-        
+
         /* Get total number of nodes and own node number */
         MPI_Comm_size(MPI_COMM_WORLD, &totalnodes);
         MPI_Comm_rank(MPI_COMM_WORLD, &node_number);
@@ -74,7 +74,7 @@ int main(int argc, char * argv[])
         MPI_Type_struct(2, array_of_block_lengths, array_of_displacements, array_of_types, &spacePartitionType);
         MPI_Type_commit(&spacePartitionType);
     <?end if?>
-    
+
 	rc = MB_Env_Init();
 	#ifdef ERRCHECK
 	if (rc != MB_SUCCESS)
@@ -91,13 +91,13 @@ int main(int argc, char * argv[])
                fprintf(stderr, "\t MB_Env_Init returned error code: %d (see libmboard docs for details)\n", rc);
                break;
 	   }
-	   
+
 	   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
        exit(rc);
-	   
+
 	}
 	#endif
-	
+
 	/* Initialise pointers */
 	initialise_pointers();
 	p_iteration_number = &iteration_number;
@@ -128,7 +128,7 @@ if(argc < 2)
 	}
 	iteration_total = atoi(argv[1]);
 <?if parallel?>	if(node_number == 0) <?end if?>printf("Iterations: %i\n", iteration_total);
-	
+
 	/* Read initial states of x-machines */
 	if(argc < 3)
 	{
@@ -137,7 +137,7 @@ if(argc < 2)
 	}
 	strcpy(inputpath, argv[2]);
 <?if parallel?>	if(node_number == 0) <?end if?>printf("Initial states: %s\n", inputpath);
-	
+
 	i = 0;
 	lastd = -1;
 	while(inputpath[i] != '\0')
@@ -151,7 +151,7 @@ if(argc < 2)
 	strcpy(outputpath, inputpath);
 	outputpath[lastd+1] = '\0';
 <?if parallel?>	if(node_number == 0) <?end if?>printf("Ouput dir: %s\n", outputpath);
-	
+
 <?if serial?>
 	/* Read number of space partitions (1 by default) */
 	totalnodes = 1;
@@ -159,7 +159,7 @@ if(argc < 2)
 	{
 		totalnodes = atoi(argv[3]);
 	}
-	
+
 <?end if?>
 	i = 3;
 	while(argc > i)
@@ -183,13 +183,13 @@ if(argc < 2)
 					output_frequency = atoi(argv[(i+1)]);
 					printf("Using output frequency of: %d with offset %d\n", output_frequency, output_offset);
 				}
-				
+
 				if(output_frequency == 0)
 				{
 					printf("Output frequency cannot be zero\n");
 					exit(0);
 				}
-				
+
 				i++;
 			}
 			else
@@ -203,7 +203,7 @@ if(argc < 2)
 		if(strcmp(argv[i],"-r") == 0) partition_method = 2;
 		i++;
 	}
-	
+
 	/* Read initial data into p_xmachine <?if parallel?>on the master node<?end if?> */
 <?if parallel?>
     if (node_number == 0)
@@ -216,7 +216,7 @@ if(argc < 2)
        save_partition_data();
 <?if parallel?>
     }
-<?end if?> 
+<?end if?>
 
 
 <?if parallel?>
@@ -263,12 +263,12 @@ if(argc < 2)
 		/* Print number of agents on node */
 		printf("%d> ", node_number);
 		printf("No of agents on node: %d\n", current_node->agent_total);
-		
+
 		/* Quickly check account for all agents */
 		MPI_Reduce(&current_node->agent_total, &i, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 		if(node_number == 0) printf("%d> Agent total check: %d\n",node_number, i);
 <?end if?>
-	
+
 	/* Start log file (now so that xvisualiser can read straight away) */
 <?if parallel?>	if(node_number == 0)
 	{<?end if?>
@@ -284,24 +284,24 @@ if(argc < 2)
 	sprintf(data, "%i", totalnodes);
 	fputs(data, file);
 	fputs("</nodes>\n", file);
-	
+
 	/* print timer into */
 	fputs("<!-- <time> unit: milliseconds -->\n", file);
-	
+
 	<?if serial?>sprintf(data, "unspecified");<?end if?>
 	<?if parallel?>sprintf(data, "%.2e ms", MPI_Wtick() * 1000.0);<?end if?>
 	fputs("<!-- <time> timer resolution: ", file);
 	fputs(data, file);
 	fputs(")-->\n", file);
-	
+
 	start = get_time();
 	stop = get_time();
 	sprintf(data, "%.2e ms", (stop - start) * 1000.0);
 	fputs("<!-- <time> timer overhead: ~", file);
 	fputs(data, file);
 	fputs(")-->\n", file);
-	
-	
+
+
 	fclose(file);
 <?if parallel?>	}<?end if?>
 	/* Start timing */
@@ -309,7 +309,7 @@ if(argc < 2)
 
     /* pre-randomise agents for first iteration */
     //randomisexagent();
-	
+
 	for(iteration_loop=iteration_number+1; iteration_loop < iteration_number+iteration_total+1; iteration_loop++)
 	{
 		interval = get_time();
@@ -336,13 +336,13 @@ if(argc < 2)
                fprintf(stderr, "\t MB_SyncComplete returned error code: %d (see libmboard docs for details)\n", rc);
                break;
        }
-       
+
        <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
        exit(rc);
     }
     #endif
 	<?end foreach?>
-	
+
 	current_xmachine_$agent_name_holder = $agent_name_$current_state_state->agents;
 	while(current_xmachine_$agent_name_holder)
 	{
@@ -352,10 +352,10 @@ if(argc < 2)
 		/* For backwards compatability set current_xmachine */
 		<?foreach xagent?>current_xmachine->xmachine_$name = NULL;
 		<?end foreach?>current_xmachine->xmachine_$agent_name = current_xmachine_$agent_name;
-		
+
 		<?if condition?>if($condition(current_xmachine_$agent_name))
 		{<?end if?>
-		
+
 		<?foreach function_input?>
 		<?if filter?>rc = MB_Iterator_CreateFiltered(b_$name, &i_$name, &$filter, current_xmachine_$agent_name);<?end if?>
 		<?if no_filter?>rc = MB_Iterator_Create(b_$name, &i_$name);<?end if?>
@@ -385,16 +385,16 @@ if(argc < 2)
                <?end if?>
                    break;
 		   }
-		   
+
 		   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
            exit(rc);
 		}
 		#endif
 		MB_Iterator_Randomise(i_$name);
 		<?end foreach?>
-		
+
 			i = $name();
-			
+
 		<?foreach function_input?>
 		    rc = MB_Iterator_Delete(&i_$name);
 		    #ifdef ERRCHECK
@@ -412,13 +412,13 @@ if(argc < 2)
                        fprintf(stderr, "\t MB_Iterator_Delete returned error code: %d (see libmboard docs for details)\n", rc);
                        break;
 		       }
-		       
+
 		       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
                exit(rc);
 		    }
 		    #endif
 		<?end foreach?>
-		
+
 			if(i == 1)
 			{
 				free_$agent_name_agent(current_xmachine_$agent_name_holder, $agent_name_$current_state_state);
@@ -428,9 +428,9 @@ if(argc < 2)
 				transition_$agent_name_agent(current_xmachine_$agent_name_holder, $agent_name_$current_state_state, $agent_name_$next_state_state);
 			}
 		<?if condition?>}<?end if?>
-		
+
 		current_xmachine_$agent_name = NULL;
-		
+
 		current_xmachine_$agent_name_holder = temp_xmachine_$agent_name_holder;
 	}
 
@@ -456,9 +456,9 @@ if(argc < 2)
            default:
                fprintf(stderr, "\t MB_SyncStart returned error code: %d (see libmboard docs for details)\n", rc);
                break;
-               
+
        }
-       
+
        <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
        exit(rc);
     }
@@ -484,10 +484,10 @@ if(argc < 2)
                break;
            default:
                fprintf(stderr, "\t MB_Clear returned error code: %d (see libmboard docs for details)\n", rc);
-               break;    
+               break;
 
        }
-       
+
        <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
        exit(rc);
     }
@@ -508,7 +508,7 @@ if(argc < 2)
 	{
 		temp_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
 		transition_$agent_name_agent(current_xmachine_$agent_name_holder, $agent_name_$name_state, $agent_name_$agent_start_state);
-	
+
 		current_xmachine_$agent_name_holder = temp_xmachine_$agent_name_holder;
 	}
 <?end foreach?><?end foreach?>
@@ -531,15 +531,15 @@ if(argc < 2)
 		fclose(file);
 <?if parallel?>		}<?end if?>
 	}
-	
+
 	/* Stop timing and print total time */
 	stop = get_time();
 	total_time = stop - start;
-<?if serial?>	<?end if?><?if parallel?>	if(node_number == 0) <?end if?>printf("Execution time - %d:%02d:%03d [mins:secs:msecs]\n", 
+<?if serial?>	<?end if?><?if parallel?>	if(node_number == 0) <?end if?>printf("Execution time - %d:%02d:%03d [mins:secs:msecs]\n",
        (int)(total_time/60), ((int)total_time)%60, (((int)(total_time * 1000.0)) % 1000));
-	
+
 	clean_up(0);
-    
+
 	/* Exit successfully by returning zero to Operating System */
 	return 0;
 }
