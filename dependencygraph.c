@@ -613,7 +613,7 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 
 		current_xmachine = current_xmachine->next;
 	}
-	printf("Finshed dependency loop check\n");
+	printf("Finished dependency loop check\n");
 
 	/* For a set amount of times for each layer (cannot be more layers than functions?) */
 	/* WARNING: there is no check for depencency loops that can cause an infinite loop */
