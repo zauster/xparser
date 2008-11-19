@@ -4,8 +4,7 @@
 
 <name>test_model_simple_everthing</name>
 <version>01</version>
-<description></description>
-
+<description/>
 <models>
   <model><file>test_model_1_sub_1.xml</file><enabled>true</enabled></model>
   <model><file>test_model_1_sub_2.xml</file><enabled>true</enabled></model>
@@ -33,7 +32,7 @@
 </timeUnit>
 <timeUnit>
  <name>weekly</name>
- <unit>daily</unit>
+ <unit>iteration</unit>
  <period>5</period>
 </timeUnit>
 <timeUnit>
