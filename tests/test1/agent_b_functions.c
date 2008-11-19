@@ -46,6 +46,7 @@ int agent_b_2()
 	var_my_datatype_2_list[1].var_my_datatype_1.type = 4;
 	/*  Send message with variable */
 	add_m_sub_2_message(var_my_datatype_1, var_my_datatype_2, var_my_datatype_1_list, var_my_datatype_2_list);
-	
+	//remove_for_test add_m_sub_2_message(var_my_datatype_1, var_my_datatype_2, var_my_datatype_1_list, var_my_datatype_2_list);
+
 	return 0;
 }
