@@ -13,7 +13,7 @@
 #define VERSIONMINOR 15
 /** \def VERSIONMICRO
  * \brief Bug fixes. */
-#define VERSIONMICRO 10
+#define VERSIONMICRO 12
 /** \def DEBUG
  * \brief Debug output. */
 #define DEBUG 0
