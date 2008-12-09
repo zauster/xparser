@@ -1203,7 +1203,7 @@ void FLAME_write_xml(char * location, int iteration_number, int output_type)
 		exit(0);
 	}
 	
-	printf("xml file written: '%s' it=%d type=%d\n", data, iteration_number, output_type);
+	/*printf("xml file written: '%s' it=%d type=%d\n", data, iteration_number, output_type);*/
 	
 	<?if parallel?>	if(node_number == 0){<?end if?>
 	fputs("<states>\n", file);
