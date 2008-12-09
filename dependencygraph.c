@@ -427,91 +427,11 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 	xmachine_ioput * current_output;
 	adj_function * current_adj_function;
 	layer * current_layer;
-	xmachine_state * current_state;
 	function_pointer * current_function_pointer;
 	xmachine_message * current_message;
 	xmachine_ioput * current_ioput;
 
 	int k, m, rc;
-
-	/* Find start state of agents, find error if more than one? */
-	/* For each agent */
-	current_xmachine = * modeldata->p_xmachines;
-	current_xmachine2 = NULL;
-	while(current_xmachine)
-	{
-		current_state = current_xmachine->states;
-		while(current_state)
-		{
-			k = 0;
-			m = 0;
-			current_function = current_xmachine->functions;
-			while(current_function)
-			{
-				if(strcmp(current_function->next_state, current_state->name) == 0)
-					k = 1;
-
-				if(strcmp(current_function->current_state, current_state->name) == 0)
-					m++;
-
-				current_function = current_function->next;
-			}
-
-			if(k == 0)
-			{
-				/*printf("%s - %s\n", current_xmachine->name, current_state->name);*/
-				if(current_xmachine->start_state == NULL)
-				{
-					current_xmachine->start_state = current_state;
-				}
-				else
-				{
-					fprintf(stderr, "ERROR: multiple start states found in '%s' agent\n", current_xmachine->name);
-					fprintf(stderr, "\tincludes %s and %s states\n", current_xmachine->start_state->name, current_state->name);
-					return -1;
-				}
-			}
-
-			if(m == 0)
-			{
-				/*printf("END STATE: %s - %s\n", current_xmachine->name, current_state->name);*/
-				addstateholder(current_state, &current_xmachine->end_states);
-			}
-
-			if(m > 1)
-			{
-				/*printf("More than one outgoing edge: %s - %s\n", current_xmachine->name, current_state->name);*/
-			}
-
-			current_state = current_state->next;
-		}
-
-		/* if no start state then error */
-		if(current_xmachine->start_state == NULL)
-		{
-			/*fprintf(stderr, "ERROR: no start state found in '%s' agent\n", current_xmachine->name);
-			return -1;*/
-			fprintf(stderr, "WARNING: no start state found in '%s' agent, agent removed from model\n", current_xmachine->name);
-			/* Remove agent from the agent list */
-			if(current_xmachine2 == NULL) * modeldata->p_xmachines = current_xmachine->next;
-			else current_xmachine2->next = current_xmachine->next;
-
-			free(current_xmachine->name);
-			freexmemory(&current_xmachine->memory);
-			freexstates(&current_xmachine->states);
-			freexfunctions(&current_xmachine->functions);
-			freestateholder(&current_xmachine->end_states);
-			free(current_xmachine);
-
-			if(current_xmachine2 == NULL) current_xmachine = * modeldata->p_xmachines;
-			else current_xmachine = current_xmachine2->next;
-		}
-		else
-		{
-			current_xmachine2 = current_xmachine;
-			current_xmachine = current_xmachine->next;
-		}
-	}
 
 	/* For each agent */
 	current_xmachine = * modeldata->p_xmachines;

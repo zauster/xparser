@@ -1076,6 +1076,9 @@ model_datatype * adddatatype(model_datatype ** p_datatypes)
 	current->next = NULL;
 	current->desc = NULL;
 	current->name = NULL;
+	current->has_single_vars = 0;
+	current->has_dynamic_arrays = 0;
+	current->has_arrays = 0;
 	/* Find end of list */
 	if(* p_datatypes == NULL)
 	{

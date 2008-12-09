@@ -2,7 +2,7 @@
  * \file  header.h
  * \brief Header for xmachine data structures and transition functions.
  */
- 
+
 #ifdef _DEBUG_MODE
     #define ERRCHECK
 #else
@@ -23,7 +23,7 @@
 #ifdef CHECK_MEMORY
 #define CHECK_POINTER(PT) if(PT==NULL){printf("**** ERROR in Memory check 1\n");exit(1);}
 #else
-#define CHECK_POINTER(PT) 
+#define CHECK_POINTER(PT)
 #endif
 
 <?foreach envvar?>
@@ -40,6 +40,19 @@
  * \brief Finish of loop to process $name messages. */
 #define FINISH_$capsname_MESSAGE_LOOP $name_message = get_next_$name_message($name_message); }
 <?end foreach?>
+
+struct FLAME_output
+{
+	int type; /* 0=snapshot <?foreach xagent?>$xagentcountplusone=$name <?end foreach?>*/
+	int format; /* 0=XML */
+	char * location;
+	int period;
+	int phase;
+
+	struct FLAME_output * next;
+};
+typedef struct FLAME_output FLAME_output;
+
 /** \struct int_array
  * \brief Dynamic array to hold integers.
  *
@@ -49,7 +62,7 @@ struct int_array
 {
 	int size;
 	int total_size;
-	
+
 	int * array;
 };
 
@@ -62,7 +75,7 @@ struct float_array
 {
 	int size;
 	int total_size;
-	
+
 	float * array;
 };
 
@@ -75,7 +88,7 @@ struct double_array
 {
 	int size;
 	int total_size;
-	
+
 	double * array;
 };
 
@@ -88,7 +101,7 @@ struct char_array
 {
 	int size;
 	int total_size;
-	
+
 	char * array;
 };
 
@@ -126,7 +139,7 @@ struct $name_array
 {
 	int size;
 	int total_size;
-	
+
 	struct $name * array;
 };
 
@@ -174,7 +187,7 @@ struct xmachine_memory_$name_state
 struct xmachine
 {<?foreach xagent?>
 	struct xmachine_memory_$name * xmachine_$name;	/**< Pointer to X-machine memory of type $name.  */<?end foreach?>
-	
+
 	//struct xmachine * prev;	/**< Pointer to previous X-machine in the list.  */
 	//struct xmachine * next;	/**< Pointer to next X-machine in the list.  */
 };
@@ -219,7 +232,7 @@ int $filter(const void *msg, const void *params);<?end if?><?end foreach?><?end 
 struct location
 {
 	double point;		/**< Point on an axis. */
-	
+
 	struct location * next;	/**< Pointer to next location on the list. */
 };
 
@@ -237,7 +250,7 @@ struct node_information
 <?end foreach?><?if parallel?><?foreach message?>	int $name_message_no;	/**< Number of $name messages in list to send. */
 <?end foreach?><?foreach xagent?>	struct xmachine * $name_agents;	/**< Pointer to $name agent list. */
 	int $name_agent_no;	/**< Number of $name agents in list to send. */
-<?end foreach?><?end if?>	
+<?end foreach?><?end if?>
 	struct node_information * next;	/**< Pointer to next node on the list. */
 };
 
@@ -310,7 +323,10 @@ MBt_Iterator i_$name;
 /** \var m_$name * $name_message
 * \brief Pointer to message struct for looping through $name message list */
 m_$name * $name_message;<?end foreach?>
-/** \var node_information ** p_node_info
+/** \var FLAME_output ** FLAME_outputs
+* \brief Pointer to list of outputs */
+FLAME_output * FLAME_outputs;
+/** \var node_information * p_node_info
 * \brief Pointer to first pointer of node list */
 node_information ** p_node_info;
 /** \var node_information * current_node
@@ -333,7 +349,7 @@ MPI_Datatype spacePartitionType;
 * \brief MPI ", $name message */
 /* MPI_Datatype message$nameType; */
 <?end foreach?>
-/** \var int node_number\n 
+/** \var int node_number\n
  * \brief Node number (identifier for node) */
 int node_number;
 <?end if?>
@@ -362,6 +378,8 @@ int next_avaliable_id;
 
 void initialise_pointers(void);
 void initialise_unit_testing(void);
+FLAME_output * add_FLAME_output(FLAME_output ** outputs);
+void free_FLAME_outputs(FLAME_output ** outputs);
 void add_location(double point, location ** p_location);
 void freelocations(location ** p_location);
 void add_node(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz);
@@ -382,7 +400,7 @@ void copy_$name_array($name_array * from, $name_array * to);
 void add_$name($name_array * array<?foreach datatypevar?>, $type <?if modeldatatype?><?if not_array?>* <?end if?><?end if?><?if array?>* <?end if?>$name<?end foreach?>);
 void remove_$name($name_array * array, int index);
 <?end foreach?>
-
+void init_int_static_array(int * array, int size);
 void init_int_array(int_array * array);
 void reset_int_array(int_array * array);
 void free_int_array(int_array * array);
@@ -392,6 +410,7 @@ void copy_int_array(int_array * from, int_array * to);
 void add_int(int_array * array, int new_int);
 void remove_int(int_array * array, int index);
 void print_int_array(int_array * array);
+void init_float_static_array(float * array, int size);
 void init_float_array(float_array * array);
 void reset_float_array(float_array * array);
 void free_float_array(float_array * array);
@@ -401,6 +420,7 @@ void copy_float_array(float_array * from, float_array * to);
 void add_float(float_array * array, float new_float);
 void remove_float(float_array * array, int index);
 void print_float_array(float_array * array);
+void init_double_static_array(double* array, int size);
 void init_double_array(double_array * array);
 void reset_double_array(double_array * array);
 void free_double_array(double_array * array);
@@ -410,6 +430,7 @@ void copy_double_array(double_array * from, double_array * to);
 void add_double(double_array * array, double new_double);
 void remove_double(double_array * array, int index);
 void print_double_array(double_array * array);
+void init_char_static_array(char * array, int size);
 void init_char_array(char_array * array);
 void reset_char_array(char_array * array);
 void free_char_array(char_array * array);
@@ -420,25 +441,25 @@ char * copy_array_to_str(char_array * array);
 void print_char_array(char_array * array);
 int idle();
 /* xml.c */
-void read_int_static_array(char * buffer, int * j, int * int_static_array, int size);
-void read_float_static_array(char * buffer, int * j, float * float_static_array, int size);
-void read_double_static_array(char * buffer, int * j, double * double_static_array, int size);
-void read_char_static_array(char * buffer, int * j, char * char_static_array, int size);
-void read_int_dynamic_array(char * buffer, int * j, int_array * int_dynamic_array);
-void read_float_dynamic_array(char * buffer, int * j, float_array * float_dynamic_array);
-void read_double_dynamic_array(char * buffer, int * j, double_array * double_dynamic_array);
-void read_char_dynamic_array(char * buffer, int * j, char_array * char_dynamic_array);
+int read_int_static_array(char * buffer, int buffer_size, int * j, int * int_static_array, int size);
+int read_float_static_array(char * buffer, int buffer_size, int * j, float * float_static_array, int size);
+int read_double_static_array(char * buffer, int buffer_size, int * j, double * double_static_array, int size);
+int read_char_static_array(char * buffer, int buffer_size, int * j, char * char_static_array, int size);
+int read_int_dynamic_array(char * buffer, int buffer_size, int * j, int_array * int_dynamic_array);
+int read_float_dynamic_array(char * buffer, int buffer_size, int * j, float_array * float_dynamic_array);
+int read_double_dynamic_array(char * buffer, int buffer_size, int * j, double_array * double_dynamic_array);
+int read_char_dynamic_array(char * buffer, int buffer_size, int * j, char_array * char_dynamic_array);
 <?foreach datatype?>
 void init_$name($name * temp);
 void init_$name_static_array($name * array, int size);
-void read_$name(char * buffer, int * j, $name * temp_datatype);
-void read_$name_dynamic_array(char * buffer, int * j, $name_array * temp_datatype_array);
-void read_$name_static_array(char * buffer, int * j, $name * temp_datatype_array, int size);
+int read_$name(char * buffer, int buffer_size, int * j, $name * temp_datatype);
+int read_$name_dynamic_array(char * buffer, int buffer_size, int * j, $name_array * temp_datatype_array);
+int read_$name_static_array(char * buffer, int buffer_size, int * j, $name * temp_datatype_array, int size);
 void write_$name(FILE *file, $name * temp_datatype);
 void write_$name_static_array(FILE *file, $name * temp_datatype, int size);
 void write_$name_dynamic_array(FILE *file, $name_array * temp_datatype);<?end foreach?>
-void readinitialstates(char * filename, int * itno, double cloud_data[6], 
-                       int partition_method, int flag);
+void readinitialstates(char * filename, char * filelocation, int * itno, double cloud_data[6],
+					   int partition_method, int flag);
 void saveiterationdata(int iteration_number);
 <?foreach datatype?>
 void free_$name($name * temp);

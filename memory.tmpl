@@ -8,7 +8,7 @@
 void free_messages()
 {
 	int rc;
-	
+
 	<?foreach message?>
 	    rc = MB_Clear(b_$name);
 	    #ifdef ERRCHECK
@@ -29,7 +29,7 @@ void free_messages()
                    fprintf(stderr, "\t MB_Clear returned error code: %d (see libmboard docs for details)\n", rc);
                    break;
 	       }
-	       
+
 	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
        	   exit(rc);
 	    }
@@ -70,7 +70,7 @@ void initialise_pointers()
                    fprintf(stderr, "\t MB_Create returned error code: %d (see libmboard docs for details)\n", rc);
                    break;
 	       }
-	       
+
 	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
        	   exit(rc);
 	    }
@@ -86,7 +86,7 @@ void initialise_pointers()
 void initialise_unit_testing()
 {
 	int rc;
-	
+
 	rc = MB_Env_Init();
 	#ifdef ERRCHECK
 	if (rc != MB_SUCCESS)
@@ -103,14 +103,47 @@ void initialise_unit_testing()
                fprintf(stderr, "\t MB_Env_Init returned error code: %d (see libmboard docs for details)\n", rc);
                break;
 	       }
-	       
+
 	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
        	   exit(rc);
-	   
+
 	}
 	#endif
-	
+
 	initialise_pointers();
+}
+
+FLAME_output * add_FLAME_output(FLAME_output ** outputs)
+{
+	FLAME_output * current;
+
+	current = (FLAME_output *)malloc(sizeof(FLAME_output));
+	CHECK_POINTER(current);
+	current->next = *outputs;
+	*outputs = current;
+
+	current->type = -1;
+	current->format = -1;
+	current->location = NULL;
+	current->period = -1;
+	current->phase = -1;
+
+	return current;
+}
+
+void free_FLAME_outputs(FLAME_output ** outputs)
+{
+	FLAME_output * current, * next;
+
+	current = *outputs;
+	while(current)
+	{
+		next = current->next;
+		free(current->location);
+		free(current);
+		current = next;
+	}
+	*outputs = NULL;
 }
 
 /* add_location */
@@ -125,7 +158,7 @@ void add_location(double point, location ** p_location)
 	location * tmp = NULL;
 	location * newlocation = NULL;
 	int found = 0;
-	
+
 	while(found == 0)
 	{
 		if(current == NULL) found = 1;
@@ -136,9 +169,9 @@ void add_location(double point, location ** p_location)
 			current = current->next;
 		}
 	}
-	
+
 	newlocation = (location *)malloc(sizeof(location));
-	CHECK_POINTER(newlocation);	
+	CHECK_POINTER(newlocation);
 	if(tmp)
 	{
 		tmp->next = newlocation;
@@ -147,7 +180,7 @@ void add_location(double point, location ** p_location)
 	{
 		*p_location = newlocation;
 	}
-	
+
 	newlocation->next = current;
 	newlocation->point = point;
 }
@@ -161,42 +194,42 @@ void freelocations(location ** p_location)
 {
 	location * head = *p_location;
 	location * tmp = NULL;
-	
+
 	while(head)
 	{
 		tmp = head->next;
 		free(head);
 		head = tmp;
 	}
-	
+
 	*p_location = NULL;
 }
 
 void init_int_static_array(int * array, int size)
 {
 	int i;
-	
+
 	for(i = 0; i < size; i++) array[i] = 0;
 }
 
 void init_float_static_array(float * array, int size)
 {
 	int i;
-	
+
 	for(i = 0; i < size; i++) array[i] = 0.0;
 }
 
 void init_double_static_array(double* array, int size)
 {
 	int i;
-	
+
 	for(i = 0; i < size; i++) array[i] = 0.0;
 }
 
 void init_char_static_array(char * array, int size)
 {
 	int i;
-	
+
 	for(i = 0; i < size; i++) array[i] = '\0';
 }
 
@@ -214,7 +247,7 @@ void init_$name($name * temp)
 void init_$name_static_array($name * array, int size)
 {
 	int i;
-	
+
 	for(i = 0; i < size; i++) init_$name(&array[i]);
 }
 
@@ -229,7 +262,7 @@ void free_$name($name * temp)
 void free_$name_static_array($name * array, int size)
 {
 	int i;
-	
+
 	for(i = 0; i < size; i++) free_$name(&array[i]);
 }
 
@@ -246,7 +279,7 @@ void copy_$name($name * from, $name * to)
 void copy_$name_static_array($name * from, $name * to, int size)
 {
 	int i;
-	
+
 	for(i = 0; i < size; i++)
 	{
 		copy_$name(&from[i], &to[i]);
@@ -259,10 +292,10 @@ xmachine_memory_$name_state * init_$name_state()
 {
 	xmachine_memory_$name_state * current = (xmachine_memory_$name_state *)malloc(sizeof(xmachine_memory_$name_state));
 	CHECK_POINTER(current);
-	
+
 	current->agents = NULL;
 	current->count = 0;
-	
+
 	return current;
 }
 
@@ -270,12 +303,12 @@ xmachine_memory_$name * init_$name_agent()
 {
 	xmachine_memory_$name * current = (xmachine_memory_$name *)malloc(sizeof(xmachine_memory_$name));
 	CHECK_POINTER(current);
-	
+
 <?foreach xagentvar?><?if modeldatatype?><?if not_array?>	init_$type(&current->$name);
 <?end if?><?end if?><?if static_array?>	init_$type_static_array(current->$name, $arraylength);
 <?end if?><?if dynamic_array?>	init_$type(&current->$name);
 <?end if?><?if not_modeldatatype?><?if not_array?>	current->$name = $default_value;
-<?end if?><?end if?><?end foreach?>	
+<?end if?><?end if?><?end foreach?>
 	return current;
 }
 
@@ -284,12 +317,12 @@ void free_$name_agent(xmachine_memory_$name_holder * tmp, xmachine_memory_$name_
 	if(tmp->prev == NULL) state->agents = tmp->next;
 	else tmp->prev->next = tmp->next;
 	if(tmp->next != NULL) tmp->next->prev = tmp->prev;
-	
+
 	<?foreach xagentvar?><?if modeldatatype?><?if not_array?>free_$type(&tmp->agent->$name);
 	<?end if?><?if static_array?>free_$type_static_array(tmp->agent->$name, $arraylength);
 	<?end if?><?end if?><?if dynamic_array?>free_$type(&tmp->agent->$name);
 	<?end if?><?end foreach?>
-	
+
 	free(tmp->agent);
 	free(tmp);
 }
@@ -298,12 +331,12 @@ void unittest_init_$name_agent()
 {
 	current_xmachine_$name = (xmachine_memory_$name *)malloc(sizeof(xmachine_memory_$name));
 	CHECK_POINTER(current);
-	
+
 	<?foreach xagentvar?><?if modeldatatype?><?if not_array?>	init_$type(&current_xmachine_$agent_name->$name);
 	<?end if?><?end if?><?if static_array?>	init_$type_static_array(current_xmachine_$agent_name->$name, $arraylength);
 	<?end if?><?if dynamic_array?>	init_$type(&current_xmachine_$agent_name->$name);
 	<?end if?><?if not_modeldatatype?><?if not_array?>	current_xmachine_$agent_name->$name = $default_value;
-	<?end if?><?end if?><?end foreach?>	
+	<?end if?><?end if?><?end foreach?>
 }
 
 void unittest_free_$name_agent()
@@ -335,8 +368,8 @@ void transition_$name_agent(xmachine_memory_$name_holder * tmp, xmachine_memory_
 {
 	if(tmp->prev == NULL) from_state->agents = tmp->next;
 	else tmp->prev->next = tmp->next;
-	if(tmp->next != NULL) tmp->next->prev = tmp->prev;	
-	
+	if(tmp->next != NULL) tmp->next->prev = tmp->prev;
+
 	add_$name_agent_internal(tmp->agent, to_state);
 	free(tmp);
 }
@@ -345,13 +378,13 @@ void add_$name_agent_internal(xmachine_memory_$name * agent, xmachine_memory_$na
 {
 	xmachine_memory_$name_holder * current = (xmachine_memory_$name_holder *)malloc(sizeof(xmachine_memory_$name_holder));
 	CHECK_POINTER(current);
-	
+
 	current->next = state->agents;
 	current->prev = NULL;
 	state->agents = current;
 	if(current->next != NULL) current->next->prev = current;
 	current->agent = agent;
-	
+
 	state->count++;
 <?if parallel?>    current_node->agent_total++;<?end if?>
 }
@@ -363,10 +396,10 @@ void add_$name_agent_internal(xmachine_memory_$name * agent, xmachine_memory_$na
 void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>$name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>)
 {
 	xmachine_memory_$name * current;
-	
+
 	current = init_$name_agent();
 	add_$name_agent_internal(current, current_xmachine_$name_next_state);
-	
+
 <?foreach xagentvar?>	<?if modeldatatype?><?if not_array?>copy_$type(&$name, &current->$name);
 <?end if?><?if dynamic_array?>copy_$type($name, &current->$name);
 <?end if?><?if static_array?>copy_$type_static_array($name, current->$name, $arraylength);
@@ -387,7 +420,7 @@ void freexmachines()
 }
 
 <?foreach allvar?><?if not_modeldatatype?><?if not_array?>
-/** \fn void set_$name($type $name) 
+/** \fn void set_$name($type $name)
  * \brief Set $name memory variable for current X-machine.
  * \param $name New value for variable.
  */
@@ -452,7 +485,7 @@ double agent_get_x()
 double agent_get_y()
 {
     double value = 0.0;
-<?foreach xagent?>    /*if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$yvar;*/ 
+<?foreach xagent?>    /*if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$yvar;*/
 <?end foreach?>
     return value;
 }
@@ -463,7 +496,7 @@ double agent_get_y()
 double agent_get_z()
 {
     double value = 0.0;
-<?foreach xagent?><?if use_zvar?>    /*if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$zvar;*/ 
+<?foreach xagent?><?if use_zvar?>    /*if (current_xmachine->xmachine_$name) value = current_xmachine->xmachine_$name->$zvar;*/
 <?end if?><?end foreach?>
     return value;
 }
@@ -482,13 +515,13 @@ void add_node(int node_id, double minx, double maxx, double miny, double maxy, d
 {
 	node_information * current = *p_node_info;
 	node_information * tmp = NULL;
-	
+
 	while(current)
 	{
 		tmp = current;
 		current = current->next;
 	}
-	
+
 	current = (node_information *)malloc(sizeof(node_information));
 		CHECK_POINTER(current);
 <?if parallel?>	if(node_id == node_number) current_node = current;<?end if?>
@@ -500,7 +533,7 @@ void add_node(int node_id, double minx, double maxx, double miny, double maxy, d
 	{
 		*p_node_info = current;
 	}
-	
+
 	current->next = NULL;
 	current->node_id = node_id;
 	current->agents_in_halo = 0;
@@ -528,14 +561,14 @@ void free_node_info()
 {
 	node_information * tmp, * head;
 	head = *p_node_info;
-	
+
 	while(head)
 	{
 		tmp = head->next;
 		free(head);
 		head = tmp;
 	}
-	
+
 	*p_node_info = NULL;
 }
 
@@ -548,16 +581,18 @@ void clean_up(int code)
     int rc;
 	FILE *file;
 	char data[100];
-	
+
 	free(current_xmachine);
 	/* Free x-machine memory */
 	freexmachines();
 	/* Free space partitions linked list */
 	free_node_info();
+	/* Free output list */
+	free_FLAME_outputs(&FLAME_outputs);
 	/* Free agent states */
 <?foreach xagent?>	free_$name_states();
-<?end foreach?>	
-	
+<?end foreach?>
+
 	/* Free message boards */
 <?foreach message?>
 	rc = MB_Delete(&b_$name);
@@ -574,12 +609,12 @@ void clean_up(int code)
                break;
            case MB_ERR_INTERNAL:
                fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
-               break;   
+               break;
 	       default:
                fprintf(stderr, "\t MB_Delete returned error code: %d (see libmboard docs for details)\n", rc);
                break;
 	       }
-	       
+
 	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
        	   exit(rc);
     }
@@ -599,13 +634,13 @@ void clean_up(int code)
                fprintf(stderr, "\t MB_Env_Finalise returned error code: %d (see libmboard docs for details)\n", rc);
                break;
 	       }
-	       
+
 	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
        	   exit(rc);
     }
     #endif
 
-	
+
 <?if parallel?>
         /* Clear MPI_Datatypes */
         MPI_Type_free(&spacePartitionType);
@@ -615,11 +650,11 @@ void clean_up(int code)
         <?foreach message?>
         /* MPI_Type_free(&message$nameType); */
         <?end foreach?>
-        
+
 
 		/* MPI finalise routine */
 		MPI_Finalize();
-		
+
 		if(node_number == 0)
 		{
 <?end if?>
@@ -637,13 +672,13 @@ void clean_up(int code)
 	fputs("</model_run>", file);
 	fclose(file);
 <?if parallel?>	}<?end if?>
-	
+
 	if(code != 0)
 	{
 		printf("*** Error: ");
 		if(code == 100) printf("cannot handle specified number of space partitions");
 		if(code == 101) printf("could not find number of space partitions config in file");
-		
+
 		printf(" ***");
 		exit(0);
 	}
@@ -669,7 +704,7 @@ void propagate_agents()
 			y_xmachine = current_xmachine->xmachine_$name->$yvar;
 <?if use_zvar?>			z_xmachine = current_xmachine->xmachine_$name->$zvar;<?end if?><?if no_zvar?>			z_xmachine = 0.0;<?end if?>
 		}
-<?end foreach?>		
+<?end foreach?>
 		if(x_xmachine < current_node->partition_data[0] ||
 		   x_xmachine > current_node->partition_data[1] ||
 		   y_xmachine < current_node->partition_data[2] ||
@@ -701,7 +736,7 @@ void propagate_agents()
 				}
 			}
 			else before_xmachine = current_xmachine;
-			
+
 			if(before_xmachine) current_xmachine = before_xmachine->next;
 			else current_xmachine = NULL;
 		}*/
@@ -742,7 +777,7 @@ void copy_int_array(int_array * from, int_array * to)
 {
 	int i;
 	//to = init_int_array();
-	
+
 	for (i = 0; i < (*from).size; i++)
 	{
 		add_int(to, (*from).array[i]);
@@ -756,14 +791,14 @@ void copy_int_array(int_array * from, int_array * to)
 /*void sort_int_array(int_array * array)
 {
 	int i, j, temp;
-	
+
 	for(i=0; i<((*array).size-1); i++)
 	{
-		for(j=0; j<((*array).size-1)-i; j++) 
+		for(j=0; j<((*array).size-1)-i; j++)
 		{
 			if(*((*array).array+j+1) < *((*array).array+j))
 			{
-                temp = *((*array).(*array)+j); 
+                temp = *((*array).(*array)+j);
                 *((*array).array+j) = *((*array).array+j+1);
                 *((*array).array+j+1) = temp;
 			}
@@ -800,7 +835,7 @@ void copy_int_array(int_array * from, int_array * to)
 			end[i+1]=end[i];
 			end[i++]=left;
 		}
-	    else 
+	    else
 	    {
 	      i--;
 	    }
@@ -832,7 +867,7 @@ void add_int(int_array * array, int new_int)
 void remove_int(int_array * array, int index)
 {
 	int i;
-	
+
 	if(index <= (*array).size)
 	{
 		/* memcopy?? */
@@ -851,7 +886,7 @@ void remove_int(int_array * array, int index)
 void print_int_array(int_array * array)
 {
 	int i;
-	
+
 	for(i=0; i<(*array).size; i++)
 	{
 		printf("%d> %d", i, (*array).array[i]);
@@ -892,7 +927,7 @@ void copy_float_array(float_array * from, float_array * to)
 {
 	int i;
 	//to = init_float_array();
-	
+
 	for (i = 0; i < (*from).size; i++)
 	{
 		add_float(to, (*from).array[i]);
@@ -910,13 +945,13 @@ void copy_float_array(float_array * from, float_array * to)
 	// Using bubble sorts nested loops //
 	for(i=0; i<(array.size-1); i++)
 	{
-		for(j=0; j<(array.size-1)-i; j++) 
+		for(j=0; j<(array.size-1)-i; j++)
 		{
 			// Comparing the values between neighbours //
 			if(*(array.array+j+1) < *(array.array+j))
 			{
                 // Swap neighbours //
-                temp = *(array.array+j); 
+                temp = *(array.array+j);
                 *(array.array+j) = *(array.array+j+1);
                 *(array.array+j+1) = temp;
 			}
@@ -954,7 +989,7 @@ void copy_float_array(float_array * from, float_array * to)
 			end[i+1]=end[i];
 			end[i++]=left;
 		}
-	    else 
+	    else
 	    {
 	      i--;
 	    }
@@ -986,7 +1021,7 @@ void add_float(float_array * array, float new_float)
 void remove_float(float_array * array, int index)
 {
 	int i;
-	
+
 	if(index <= (*array).size)
 	{
 		/* memcopy?? */
@@ -1046,7 +1081,7 @@ void copy_double_array(double_array * from, double_array * to)
 {
 	int i;
 	//to = init_double_array();
-	
+
 	for (i = 0; i < (*from).size; i++)
 	{
 		add_double(to, (*from).array[i]);
@@ -1061,17 +1096,17 @@ void copy_double_array(double_array * from, double_array * to)
 {
 	int i, j;
 	double temp;
-	
+
 	// Using bubble sorts nested loops //
 	for(i=0; i<(array.size-1); i++)
 	{
-		for(j=0; j<(array.size-1)-i; j++) 
+		for(j=0; j<(array.size-1)-i; j++)
 		{
 			// Comparing the values between neighbours //
 			if(*(array.array+j+1) < *(array.array+j))
 			{
                 // Swap neighbours //
-                temp = *(array.array+j); 
+                temp = *(array.array+j);
                 *(array.array+j) = *(array.array+j+1);
                 *(array.array+j+1) = temp;
 			}
@@ -1089,7 +1124,7 @@ void copy_double_array(double_array * from, double_array * to)
 {
 	#define  LEVEL  1000
 	double pivot, begin[LEVEL], end[LEVEL];
-	int  i=0, left, right ; 
+	int  i=0, left, right ;
 	begin[0]=0; end[0]=elements;
 	while (i>=0)
 	{
@@ -1109,7 +1144,7 @@ void copy_double_array(double_array * from, double_array * to)
 			end[i+1]=end[i];
 			end[i++]=left;
 		}
-	    else 
+	    else
 	    {
 	      i--;
 	    }
@@ -1159,7 +1194,7 @@ void remove_double(double_array * array, int index)
 void print_double_array(double_array * array)
 {
 	int i;
-	
+
 	for(i=0; i<(*array).size; i++)
 	{
 		printf("%d> %f", i, (*array).array[i]);
@@ -1200,7 +1235,7 @@ void free_char_array(char_array * array)
 void copy_char_array(char_array * from, char_array * to)
 {
 	int i;
-	
+
 	for (i = 0; i < (*from).size; i++)
 	{
 		add_char(to, (*from).array[i]);
@@ -1298,9 +1333,9 @@ void free_$name_array($name_array * array)
 void copy_$name_array($name_array * from, $name_array * to)
 {
 	int i;
-	
+
 	//to = init_$name_array();
-	
+
 	for(i = 0; i < (*from).size; i++)
 	{
 		add_$name(to<?foreach datatypevar?>, <?if modeldatatype?><?if not_array?>&<?end if?><?end if?><?if dynamic_array?>&<?end if?>(*from).array[i].$name<?end foreach?>);
@@ -1333,10 +1368,10 @@ void add_$name($name_array * array<?foreach datatypevar?>, $type <?if modeldatat
 void remove_$name($name_array * array, int index)
 {
 	int i;
-	
+
 	/* Free element at index index */
 	free_$name(&(*array).array[index]);
-	
+
 	/* Copy all elements up by one */
 	if(index <= (*array).size)
 	{

@@ -42,7 +42,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	int inxagentvar = 0;
 	int indatatypevar = 0;
 	int inmessagevar = 0;
-	
+
 	/* pointers to model datatypes */
 	xmachine * current_xmachine;
 	xmachine_message * current_message = NULL;
@@ -60,10 +60,10 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	time_data * current_time_unit = NULL;
 	model_datatype * current_datatype = NULL;
 	xmachine_state_holder * current_end_state = NULL;
-	
+
 	/* Initialise variables */
 	lastloop[0] = '\0';
-	
+
 	/* Open the output file */
 	printf("writing file: %s\t", filename);
 	file = fopen(filename, "w");
@@ -330,7 +330,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						if (strcmp(current_variable->type, "char_array") != 0)
 							write = 0;
 					if (indatatypevar)
-						if (strcmp(current_datatypevariable->type, "char_array") != 0)
+						if (strcmp(current_datatypevariable->type, "char_array") != 0 &&
+								strcmp(current_datatypevariable->type, "char") != 0)
 							write = 0;
 				}
 				else if (strcmp(buffer->array, "<?if notchar_array?>") == 0)
@@ -348,7 +349,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						if (strcmp(current_variable->type, "char_array") == 0)
 							write = 0;
 					if (indatatypevar)
-						if (strcmp(current_datatypevariable->type, "char_array") == 0)
+						if (strcmp(current_datatypevariable->type, "char_array") == 0 ||
+								strcmp(current_datatypevariable->type, "char") == 0)
 							write = 0;
 				}
 				else if (strcmp(buffer->array, "<?if int_array?>") == 0)
@@ -582,6 +584,17 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						if (current_datatype->has_dynamic_arrays == 0) write = 0;
 					}
 				}
+				else if (strcmp(buffer->array, "<?if has_arrays?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if(current_datatype != NULL)
+					{
+						if (current_datatype->has_arrays == 0) write = 0;
+					}
+				}
 				else if (strcmp(buffer->array, "<?if no_dynamic_arrays?>") == 0)
 				{
 					strcpy(&chartag[numtag][0], "if");
@@ -655,7 +668,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					exitforeach = 0;
 					/* Look at last tag */
 					numtag--;
-					
+
 					/* Check for next element in current loop */
 					if (strcmp("foreach functionfiles", &chartag[numtag][0]) == 0)
 					{
@@ -701,10 +714,11 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					}
 					else if (strcmp("foreach xagent", &chartag[numtag][0]) == 0)
 					{
-						previous_name = current_xmachine->name;
-						
 						if (current_xmachine != NULL)
+						{
+							previous_name = current_xmachine->name;
 							current_xmachine = current_xmachine->next;
+						}
 						if (current_xmachine == NULL)
 							exitforeach = 1;
 						else
@@ -865,7 +879,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							 	current_function = current_function_pointer->function;
 								pos = looppos[numtag];
 								numtag++;
-								var_count++;								
+								var_count++;
 							}
 						}
 						else
@@ -965,14 +979,14 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							printf("tag to close: %s\n", &chartag[numtag][0]);
 							exit(0);
 						}
-						
+
 						if(loopwritepos > 0)
 						{
 							loopwritepos--;
 							write = loopwrite[loopwritepos];
 						}
 						else write = lastwrite;
-						
+
 						/* find last loop in chartag */
 						if (log)
 							printf("**** exit loop = %s\n", lastloop);
@@ -1244,7 +1258,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					/*lastwrite = write;*/
 					loopwrite[loopwritepos] = write;
 					loopwritepos++;
-					
+
 					current_datatype = * modeldata->p_datatypes;
 					if (current_datatype == NULL) write = 0;
 				}
@@ -1260,7 +1274,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					/*lastwrite = write;*/
 					loopwrite[loopwritepos] = write;
 					loopwritepos++;
-					
+
 					indatatypevar = 1;
 					current_datatypevariable = NULL;
 					if(current_datatype != NULL) current_datatypevariable = current_datatype->vars;
@@ -1282,7 +1296,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					/*lastwrite = write;*/
 					loopwrite[loopwritepos] = write;
 					loopwritepos++;
-					
+
 					current_time_unit = * modeldata->p_time_units;
 					if (current_time_unit == NULL) write = 0;
 				}
@@ -1298,7 +1312,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					/*lastwrite = write;*/
 					loopwrite[loopwritepos] = write;
 					loopwritepos++;
-					
+
 					current_end_state = current_xmachine->end_states;
 					if (current_end_state == NULL) write = 0;
 				}
@@ -1670,7 +1684,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 				}
 				else if (strcmp("foreach function", lastloop) == 0)
 				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$note") != 0 && strcmp(buffer3->array, "$agent_name") != 0 && 
+					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$note") != 0 && strcmp(buffer3->array, "$agent_name") != 0 &&
 					strcmp(buffer3->array, "$current_state") != 0 && strcmp(buffer3->array, "$next_state") != 0 && strcmp(buffer3->array, "$condition") != 0 && pos <= (pos1 + 15))
 					{
 						add_char(buffer3, c);
@@ -1816,7 +1830,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 			else if (write)
 				fputc(c, file);
 		}
-		
+
 		pos++;
 	}
 
@@ -1846,7 +1860,7 @@ void parseAgentHeaderTemplate(char * directory, model_data * modeldata)
 	int i;
 	xmachine * current_xmachine = * modeldata->p_xmachines;
 	variable * current_variable;
-	
+
 	while(current_xmachine)
 	{
 		/* Open the output file */
@@ -1855,14 +1869,14 @@ void parseAgentHeaderTemplate(char * directory, model_data * modeldata)
 		strcat(filename, "_agent_header.h");
 		printf("writing file: %s\n", filename);
 		file = fopen(filename, "w");
-		
+
 		fputs("/**\n", file);
 		fputs(" * \\file  ", file);
 		fputs(current_xmachine->name, file);
 		fputs("_agent_header.h\n", file);
 		fputs(" * \\brief Header for agent type memory access.\n", file);
 		fputs(" */\n\n", file);
-		
+
 		current_variable = current_xmachine->memory->vars;
 		while(current_variable)
 		{
@@ -1883,13 +1897,13 @@ void parseAgentHeaderTemplate(char * directory, model_data * modeldata)
 			fputs("->", file);
 			fputs(current_variable->name, file);
 			fputs(")\n", file);
-			
+
 			current_variable = current_variable->next;
 		}
-		
+
 		/* Close the files */
 		fclose(file);
-		
+
 		current_xmachine = current_xmachine->next;
 	}
 }
@@ -1928,7 +1942,7 @@ void writeRule(rule_data * current_rule_data, FILE *file)
 int checkRuleAgentVar(rule_data * current_rule_data)
 {
 	int flag = 0;
-	
+
 	if(current_rule_data->time_rule == 1)
 	{
 		if(strncmp(current_rule_data->rhs, "a->", 3) == 0) flag = 1;
@@ -1943,7 +1957,7 @@ int checkRuleAgentVar(rule_data * current_rule_data)
 		{
 			if(strncmp(current_rule_data->lhs, "a->", 3) == 0) flag = 1;
 		}
-		
+
 		if(current_rule_data->rhs == NULL)
 		{
 			if(checkRuleAgentVar(current_rule_data->rhs_rule) == 1) flag = 1;
@@ -1953,7 +1967,7 @@ int checkRuleAgentVar(rule_data * current_rule_data)
 			if(strncmp(current_rule_data->rhs, "a->", 3) == 0) flag = 1;
 		}
 	}
-	
+
 	return flag;
 }
 
@@ -1969,54 +1983,54 @@ void parseRuleFunctionsTemplate(char * directory, model_data * modeldata)
 	xmachine * current_xmachine = * modeldata->p_xmachines;
 	xmachine_function * current_function;
 	xmachine_ioput * current_ioput;
-	
+
 	/* Open the output file */
 	strcpy(filename, directory);
 	strcat(filename, "rules.c");
 	printf("writing file: %s\n", filename);
 	file = fopen(filename, "w");
-	
+
 	fputs("/**\n", file);
 	fputs(" * \\file rules.c\n", file);
 	fputs(" * \\brief Functions created from tagged condition and filter rules.\n", file);
 	fputs(" */\n\n", file);
 	fputs("#include \"header.h\"\n", file);
-	
+
 	/*current_time_unit = * modeldata->p_time_units;
 	while(current_time_unit)
 	{
-		
+
 		current_time_unit = current_time_unit->next;
 	}*/
 	/*<?foreach timeunit?>#define $name $period
 	#define $unit_name_OF_$name $unit_name%$name
 	<?end foreach?>*/
-	
+
 	while(current_xmachine)
 	{
-		// TODO 
+		// TODO
 		/* Message filters */
 		current_function = current_xmachine->functions;
 		while(current_function)
 		{
 			/* If function has a condition... */
 			if(current_function->condition_function != NULL)
-			{	
+			{
 				fputs("\nint ", file);
 				fputs(current_function->condition_function, file);
 				fputs("(xmachine_memory_", file);
 				fputs(current_xmachine->name, file);
 				fputs(" *a)\n", file);
 				fputs("{\n", file);
-				
+
 				fputs("\tif(", file);
 				writeRule(current_function->condition_rule, file);
 				fputs(") return 1;\n", file);
 				fputs("\telse return 0;\n", file);
-				
+
 				fputs("}\n", file);
 			}
-			
+
 			current_ioput = current_function->inputs;
 			while(current_ioput)
 			{
@@ -2025,7 +2039,7 @@ void parseRuleFunctionsTemplate(char * directory, model_data * modeldata)
 				{
 					/* Check if an agent variable used in the filter */
 					current_ioput->filter_rule->has_agent_var = checkRuleAgentVar(current_ioput->filter_rule);
-					
+
 					fputs("\nint ", file);
 					fputs(current_ioput->filter_function, file);
 					fputs("(const void *msg, const void *params)\n", file);
@@ -2045,24 +2059,24 @@ void parseRuleFunctionsTemplate(char * directory, model_data * modeldata)
 						fputs(current_xmachine->name, file);
 						fputs(" *)params;\n", file);
 					}
-					
+
 					fputs("\n\tif(", file);
 					writeRule(current_ioput->filter_rule, file);
 					fputs(") return 1;\n", file);
 					fputs("\telse return 0;\n", file);
-					
+
 					fputs("}\n", file);
 				}
-				
+
 				current_ioput = current_ioput->next;
 			}
-			
+
 			current_function = current_function->next;
 		}
-		
+
 		current_xmachine = current_xmachine->next;
 	}
-	
+
 	/* Close the files */
 	fclose(file);
 }
@@ -2074,13 +2088,13 @@ void parseUnittest(char * directory, model_data * modeldata)
 	/*xmachine * current_xmachine = * modeldata->p_xmachines;
 	xmachine_function * current_function;
 	xmachine_ioput * current_ioput;*/
-	
+
 	/* Open the output file */
 	strcpy(filename, directory);
 	strcat(filename, "unittest.c");
 	printf("writing file: %s\n", filename);
 	file = fopen(filename, "w");
-	
+
 	fputs("/**\n", file);
 	fputs(" * \\file unittest.c\n", file);
 	fputs(" * \\brief Unit test program.\n", file);
@@ -2093,7 +2107,7 @@ void parseUnittest(char * directory, model_data * modeldata)
 	fputs("\t/* Exit successfully by returning zero to Operating System */\n", file);
 	fputs("\treturn 0;\n", file);
 	fputs("}\n", file);
-	
+
 	/* Close the files */
 	fclose(file);
 }

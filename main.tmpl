@@ -136,7 +136,7 @@ if(argc < 2)
 		exit(0);
 	}
 	strcpy(inputpath, argv[2]);
-<?if parallel?>	if(node_number == 0) <?end if?>printf("Initial states: %s\n", inputpath);
+/*<?if parallel?>	if(node_number == 0) <?end if?>printf("Initial states: %s\n", inputpath);*/
 
 	i = 0;
 	lastd = -1;
@@ -150,7 +150,7 @@ if(argc < 2)
 	}
 	strcpy(outputpath, inputpath);
 	outputpath[lastd+1] = '\0';
-<?if parallel?>	if(node_number == 0) <?end if?>printf("Ouput dir: %s\n", outputpath);
+/*<?if parallel?>	if(node_number == 0) <?end if?>printf("Ouput dir: %s\n", outputpath);*/
 
 <?if serial?>
 	/* Read number of space partitions (1 by default) */
@@ -169,7 +169,7 @@ if(argc < 2)
 			if(argc > (i+1))
 			{
 				output_offset = 0;
-				/* Find offset, seperated by the char '+' */
+				/* Find offset, separated by the char '+' */
 				c = strchr(argv[(i+1)], '+');
 				if(c == NULL)
 				{
@@ -210,7 +210,7 @@ if(argc < 2)
     {
 <?end if?>
        //agent_list = p_xmachine;
-       readinitialstates(inputpath, p_iteration_number, cloud_data, partition_method, 0);
+       readinitialstates(inputpath, outputpath, p_iteration_number, cloud_data, partition_method, 0);
        /* Generate partitions */
        generate_partitions(cloud_data,totalnodes,partition_method);
        save_partition_data();
@@ -238,7 +238,7 @@ if(argc < 2)
     /* Partition the data by reading it in. Partitions are known so get the read function
      * to do the partitioning for us.
      */
-    readinitialstates(inputpath, p_iteration_number, cloud_data, partition_method, 1);
+    readinitialstates(inputpath, outputpath, p_iteration_number, cloud_data, partition_method, 1);
 <?end if?>
 
 <?if serial?>
@@ -313,8 +313,12 @@ if(argc < 2)
 	for(iteration_loop=iteration_number+1; iteration_loop < iteration_number+iteration_total+1; iteration_loop++)
 	{
 		interval = get_time();
+		<?if parallel?>if(node_number == 0) {<?end if?>
 		/* Print out iteration number */
-<?if serial?>		<?end if?><?if parallel?>		if(node_number == 0) <?end if?>fprintf(stdout, "Iteration - %d\n", iteration_loop);
+		fprintf(stdout, "Iteration - %d\n", iteration_loop);
+		/* Flush stdout to keep user updated on progress */
+		fflush(stdout);
+		<?if parallel?>}<?end if?>
 		/* START OF ITERATION */
 <?foreach layer?><?foreach function?><?foreach first_input?>
 	rc = MB_SyncComplete(b_$name);

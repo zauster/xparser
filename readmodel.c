@@ -523,6 +523,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 
 				current_datatype->has_single_vars = 0;
 				current_datatype->has_dynamic_arrays = 0;
+				current_datatype->has_arrays = 0;
 				/* Check if datatype has single variables and dynamic arrays */
 				current_variable = current_datatype->vars;
 				while(current_variable)
@@ -533,6 +534,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 						strcmp(current_variable->type, "char") == 0) &&
 						current_variable->arraylength == 0) current_datatype->has_single_vars = 1;
 
+					if(current_variable->arraylength != 0) current_datatype->has_arrays = 1;
 					if(current_variable->arraylength == -1) current_datatype->has_dynamic_arrays = 1;
 					if(current_variable->ismodeldatatype == 1 && current_variable->datatype->has_dynamic_arrays == 1) current_datatype->has_dynamic_arrays = 1;
 
@@ -626,7 +628,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					variable_count++;
 					if(current_variable->arraylength == -1 || (current_variable->ismodeldatatype == 1 && current_variable->datatype->has_dynamic_arrays == 1))
 					{
-						fprintf(stderr, "Error: %s - dyamic array found in message\n", current_variable->name);
+						fprintf(stderr, "Error: %s - dynamic array found in message\n", current_variable->name);
 						dynamic_array_found = 1;
 					}
 
@@ -1438,17 +1440,99 @@ int checkmodel(model_data * modeldata)
 	rule_data * current_rule_data;
 	xmachine_message * current_message;
 	xmachine_message * current_message2;
+	xmachine_state * current_state;
 	variable * allvar;
 	char buffer[1000];
 	int variable_count;
 	int found;
 	int state_number;
+	int k, m;
 
 	/* Check model for:
 	 * agent/message variables are only known data types
 	 * agent/message variables only appear once, show warning for duplicates and show from which files
 	 * try and parse functions files for implementations of functions defined in model xml
 	 * */
+
+	/* Find start state of agents, find error if more than one? */
+	/* For each agent */
+	current_xmachine = * modeldata->p_xmachines;
+	current_xmachine2 = NULL;
+	while(current_xmachine)
+	{
+		current_state = current_xmachine->states;
+		while(current_state)
+		{
+			k = 0;
+			m = 0;
+			current_function = current_xmachine->functions;
+			while(current_function)
+			{
+				if(strcmp(current_function->next_state, current_state->name) == 0)
+					k = 1;
+
+				if(strcmp(current_function->current_state, current_state->name) == 0)
+					m++;
+
+				current_function = current_function->next;
+			}
+
+			if(k == 0)
+			{
+				/*printf("%s - %s\n", current_xmachine->name, current_state->name);*/
+				if(current_xmachine->start_state == NULL)
+				{
+					current_xmachine->start_state = current_state;
+				}
+				else
+				{
+					fprintf(stderr, "ERROR: multiple start states found in '%s' agent\n", current_xmachine->name);
+					fprintf(stderr, "\tincludes %s and %s states\n", current_xmachine->start_state->name, current_state->name);
+					return -1;
+				}
+			}
+
+			if(m == 0)
+			{
+				/*printf("END STATE: %s - %s\n", current_xmachine->name, current_state->name);*/
+				addstateholder(current_state, &current_xmachine->end_states);
+			}
+
+			if(m > 1)
+			{
+				/*printf("More than one outgoing edge: %s - %s\n", current_xmachine->name, current_state->name);*/
+			}
+
+			current_state = current_state->next;
+		}
+
+		/* if no start state then error */
+		if(current_xmachine->start_state == NULL)
+		{
+			/*fprintf(stderr, "ERROR: no start state found in '%s' agent\n", current_xmachine->name);
+			return -1;*/
+			fprintf(stderr, "WARNING: no start state found in '%s' agent, agent removed from model\n", current_xmachine->name);
+			/* Remove agent from the agent list */
+			if(current_xmachine2 == NULL) * modeldata->p_xmachines = current_xmachine->next;
+			else current_xmachine2->next = current_xmachine->next;
+
+			free(current_xmachine->name);
+			freexmemory(&current_xmachine->memory);
+			freexstates(&current_xmachine->states);
+			freexfunctions(&current_xmachine->functions);
+			freestateholder(&current_xmachine->end_states);
+			free(current_xmachine);
+
+			if(current_xmachine2 == NULL) current_xmachine = * modeldata->p_xmachines;
+			else current_xmachine = current_xmachine2->next;
+		}
+		else
+		{
+			current_xmachine2 = current_xmachine;
+			current_xmachine = current_xmachine->next;
+		}
+	}
+
 
 	/* Check for no agents */
 	if(*modeldata->p_xmachines == NULL)
@@ -1687,8 +1771,7 @@ int checkmodel(model_data * modeldata)
 
 	int newlayer = 0;
 	int totallayers = 0;
-	int m = 0;
-	int k;
+	m = 0;
 	/* If functions have old style depends tags create states */
 	if(modeldata->depends_style == 1)
 	{

@@ -19,8 +19,11 @@ $(OBJECTS): $(DEPS)
 .c.o:
 	$(CC) $(CFLAGS) $< -o $@
 
-test:
+test: all
 	make --directory=tests/
+
+testclean:
+	$(RM) tests/*.o tests/run_test.exe tests/run_test
 
 docs: docs/user_manual/user_manual.ps docs/developer_manual/developer_manual.ps
 
@@ -30,10 +33,9 @@ docs/user_manual/user_manual.ps:
 docs/developer_manual/developer_manual.ps:
 	make --directory=docs/developer_manual/
 
-clean:
-	$(RM) *.o xparser.exe xparser
-
 docsclean:
 	make --directory=docs/user_manual/ clean
 	make --directory=docs/developer_manual/ clean
 
+clean: testclean docsclean
+	$(RM) *.o xparser.exe xparser

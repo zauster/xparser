@@ -55,6 +55,8 @@
 <name>my_datatype_2</name>
 <description></description>
 <variables>
+  <variable><type>int</type><name>int_list[2]</name><description></description></variable>
+  <variable><type>my_datatype_1</type><name>var_my_datatype_1_list[2]</name><description></description></variable>
   <variable><type>my_datatype_1</type><name>var_my_datatype_1</name><description></description></variable>
 </variables>
 </dataType>
@@ -68,7 +70,7 @@
 <name>agent_a</name>
 <description></description>
 <memory>
-  <variable><type>int</type><name>id</name><description></description></variable>
+  <variable><type>int</type><name>int_single</name><description></description></variable>
   <variable><type>float</type><name>float_single</name><description></description></variable>
   <variable><type>double</type><name>double_single</name><description></description></variable>
   <variable><type>char</type><name>char_single</name><description></description></variable>
