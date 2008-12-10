@@ -1433,6 +1433,7 @@ int checkmodel(model_data * modeldata)
 	variable * current_variable;
 	variable * current_variable2;
 	model_datatype * current_datatype;
+	model_datatype * current_datatype2;
 	xmachine_function * current_function;
 	xmachine_function * current_function2;
 	adj_function * current_adj_function;
@@ -1769,7 +1770,7 @@ int checkmodel(model_data * modeldata)
 	}
 
 	/* Check environment variables do not have same names as agent variables */
-	/*for(current_variable = *modeldata->p_envvars; current_variable != NULL; current_variable = current_variable->next)
+	for(current_variable = *modeldata->p_envvars; current_variable != NULL; current_variable = current_variable->next)
 	{
 		for(current_xmachine = *modeldata->p_xmachines; current_xmachine != NULL; current_xmachine = current_xmachine->next)
 		{
@@ -1782,7 +1783,21 @@ int checkmodel(model_data * modeldata)
 				}
 			}
 		}
-	}*/
+	}
+	
+	/* Check data types do not have the same name */
+	for(current_datatype = *modeldata->p_datatypes; current_datatype != NULL; current_datatype = current_datatype->next)
+	{
+		for(current_datatype2 = *modeldata->p_datatypes; current_datatype2 != NULL; current_datatype2 = current_datatype2->next)
+		{
+			if(current_datatype != current_datatype2)
+				if(strcmp(current_datatype->name, current_datatype2->name) == 0)
+				{
+					printf("Error: the datatype '%s' is defined more than once\n", current_datatype->name);
+					return -1;
+				}
+		}
+	}
 
 	int newlayer = 0;
 	int totallayers = 0;
