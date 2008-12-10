@@ -1768,6 +1768,22 @@ int checkmodel(model_data * modeldata)
 		}
 	}
 
+	/* Check environment variables do not have same names as agent variables */
+	for(current_variable = *modeldata->p_envvars; current_variable != NULL; current_variable = current_variable->next)
+	{
+		for(current_xmachine = *modeldata->p_xmachines; current_xmachine != NULL; current_xmachine = current_xmachine->next)
+		{
+			for(current_variable2 = current_xmachine->memory->vars; current_variable2 != NULL; current_variable2 = current_variable2->next)
+			{
+				if(strcmp(current_variable->name, current_variable2->name) == 0)
+				{
+					printf("Error: environment variable '%s' has same name as agent variable in agent '%s'\n", current_variable->name, current_xmachine->name);
+					return -1;
+				}
+			}
+		}
+		
+	}
 
 	int newlayer = 0;
 	int totallayers = 0;
