@@ -13,10 +13,10 @@
 <environment>
 
 <constants>
-  <variable>
-  <type>int</type><name>my_constant</name>
-  <description>value read in from 0.xml</description>
-  </variable>
+  <variable><type>int</type><name>env_int</name><description>int value read in from 0.xml</description></variable>
+  <variable><type>float</type><name>env_float</name><description>float value read in from 0.xml</description></variable>
+  <variable><type>double</type><name>env_double</name><description>double value read in from 0.xml</description></variable>
+  <variable><type>char</type><name>env_char</name><description>char value read in from 0.xml</description></variable>
 </constants>
 
 <functionFiles>

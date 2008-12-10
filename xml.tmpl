@@ -411,7 +411,7 @@ int readEnvironmentXML(char * location)
 			buffer[index] = '\0';
 			if(in_environment)
 			{
-				<?foreach envvar?>if(in_$name) { $name = ato$c_type(buffer); }
+				<?foreach envvar?>if(in_$name) { FLAME_environment_variable_$name = <?if not_char?>ato$c_type<?end if?>(buffer<?if char?>[0]<?end if?>); }
 				<?end foreach?>
 			}
 			index = 0;
@@ -692,7 +692,7 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 	int FLAME_in_name = 0;
 
 	/* Initialise environment vars */
-	<?foreach envvar?>$name = $default_value;
+	<?foreach envvar?>FLAME_environment_variable_$name = $default_value;
 	<?end foreach?>
 
 	/* Open config file to read-only */
@@ -1215,7 +1215,7 @@ void FLAME_write_xml(char * location, int iteration_number, int output_type)
 		fputs("</itno>\n", file);
 		fputs("<environment>\n" , file);
 		<?foreach envvar?>	fputs("<$name>", file);
-		sprintf(data, "%$c_type", $name);
+		sprintf(data, "%$c_type", FLAME_environment_variable_$name);
 		fputs(data, file);
 		fputs("</$name>\n", file);
 		<?end foreach?>	fputs("</environment>\n" , file);

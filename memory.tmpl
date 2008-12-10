@@ -1390,3 +1390,9 @@ int idle()
 {
 	return 0;
 }
+
+<?foreach envvar?>$type FLAME_get_environment_variable_$name()
+{
+	return FLAME_environment_variable_$name;
+}
+<?end foreach?>

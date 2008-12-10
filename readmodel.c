@@ -1769,7 +1769,7 @@ int checkmodel(model_data * modeldata)
 	}
 
 	/* Check environment variables do not have same names as agent variables */
-	for(current_variable = *modeldata->p_envvars; current_variable != NULL; current_variable = current_variable->next)
+	/*for(current_variable = *modeldata->p_envvars; current_variable != NULL; current_variable = current_variable->next)
 	{
 		for(current_xmachine = *modeldata->p_xmachines; current_xmachine != NULL; current_xmachine = current_xmachine->next)
 		{
@@ -1782,8 +1782,7 @@ int checkmodel(model_data * modeldata)
 				}
 			}
 		}
-		
-	}
+	}*/
 
 	int newlayer = 0;
 	int totallayers = 0;

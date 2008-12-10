@@ -29,7 +29,7 @@
 <?foreach envvar?>
 /** \def $uc_name
  * \brief Provide access to environment variables in uppercase. */
-#define $uc_name $name<?end foreach?>
+#define $uc_name (FLAME_get_environment_variable_$name())<?end foreach?>
 /** \def ARRAY_BLOCK_SIZE
  * \brief The block size to allocate to dynamic arrays. */
 #define ARRAY_BLOCK_SIZE 5
@@ -277,7 +277,7 @@ typedef struct node_information node_information;
 <?foreach envvar?>
 /** \var $type $name
 * \brief A constant variable from the environment. */
-$type $name;<?end foreach?>
+$type FLAME_environment_variable_$name;<?end foreach?>
 /** \var xmachine * temp_xmachine
 * \brief Pointer to xmachine to initialise linked list. */
 xmachine * temp_xmachine;
@@ -440,6 +440,8 @@ void remove_char(char_array * array, int index);
 char * copy_array_to_str(char_array * array);
 void print_char_array(char_array * array);
 int idle();
+<?foreach envvar?>$type FLAME_get_environment_variable_$name();
+<?end foreach?>
 /* xml.c */
 int read_int_static_array(char * buffer, int buffer_size, int * j, int * int_static_array, int size);
 int read_float_static_array(char * buffer, int buffer_size, int * j, float * float_static_array, int size);

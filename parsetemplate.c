@@ -38,6 +38,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	char_array * buffer3 = init_char_array();
 	char_array * filebuffer = init_char_array();
 	char * previous_name;
+	int inenvvar = 0;
 	int inallvar = 0;
 	int inxagentvar = 0;
 	int indatatypevar = 0;
@@ -283,6 +284,9 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					}
 					else
 					{
+						if (inenvvar)
+							if (strcmp(current_envvar->type, "char") != 0 && strcmp(current_envvar->type, "char_array") != 0)
+								write = 0;
 						if (inallvar)
 							if (strcmp(allvar->type, "char") != 0 && strcmp(allvar->type, "char_array") != 0)
 								write = 0;
@@ -307,6 +311,9 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					}
 					else
 					{
+						if (inenvvar)
+							if (strcmp(current_envvar->type, "char") == 0 || strcmp(current_envvar->type, "char_array") == 0)
+								write = 0;
 						if (inallvar)
 							if (strcmp(allvar->type, "char") == 0 || strcmp(allvar->type, "char_array") == 0)
 								write = 0;
@@ -705,7 +712,10 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						if (current_envvar != NULL)
 							current_envvar = current_envvar->next;
 						if (current_envvar == NULL)
+						{
 							exitforeach = 1;
+							inenvvar = 0;
+						}
 						else
 						{
 							pos = looppos[numtag];
@@ -1040,7 +1050,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					looppos[numtag] = pos;
 					numtag++;
 					lastwrite = write;
-
+					inenvvar = 1;
 					current_envvar = * modeldata->p_envvars;
 					if (current_envvar == NULL)
 						write = 0;

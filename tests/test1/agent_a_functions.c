@@ -27,7 +27,10 @@ int agent_a_1()
 	add_m_sub_1_message(5, 0.0, 0.0, 'a', int_list, float_list, double_list, char_list);
 	add_m_sub_1_message(6, 0.0, 0.0, 'a', int_list, float_list, double_list, char_list);
 
-	printf("my_constant = %d\n", my_constant);
+	printf("ENV_INT = %d\n", ENV_INT);
+	printf("ENV_FLOAT = %f\n", ENV_FLOAT);
+	printf("ENV_DOUBLE = %f\n", ENV_DOUBLE);
+	printf("ENV_CHAR = %c\n", ENV_CHAR);
 
 	printf("INT_SINGLE = %d\n", INT_SINGLE);
 	printf("FLOAT_SINGLE = %f\n", FLOAT_SINGLE);
