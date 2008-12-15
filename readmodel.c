@@ -1785,17 +1785,35 @@ int checkmodel(model_data * modeldata)
 		}
 	}
 	
+	/* Check for duplicate names in environment variables */
+	for(current_variable = *modeldata->p_envvars; current_variable != NULL; current_variable = current_variable->next)
+	{
+		for(current_variable2 = *modeldata->p_envvars; current_variable2 != NULL; current_variable2 = current_variable2->next)
+		{
+			if(current_variable != current_variable2)
+			{
+				if(strcmp(current_variable->name, current_variable2->name) == 0)
+				{
+					printf("Error: environment variable name '%s' has been defined more than once\n", current_variable->name);
+					return -1;
+				}
+			}
+		}
+	}
+	
 	/* Check data types do not have the same name */
 	for(current_datatype = *modeldata->p_datatypes; current_datatype != NULL; current_datatype = current_datatype->next)
 	{
 		for(current_datatype2 = *modeldata->p_datatypes; current_datatype2 != NULL; current_datatype2 = current_datatype2->next)
 		{
 			if(current_datatype != current_datatype2)
+			{
 				if(strcmp(current_datatype->name, current_datatype2->name) == 0)
 				{
-					printf("Error: the datatype '%s' is defined more than once\n", current_datatype->name);
+					printf("Error: the datatype name '%s' has been defined more than once\n", current_datatype->name);
 					return -1;
 				}
+			}
 		}
 	}
 
