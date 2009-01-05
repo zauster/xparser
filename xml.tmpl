@@ -960,12 +960,8 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 	{
 		printf("output: type='");
 		if(current_FLAME_output->type == 0) printf("snapshot");
-		else if(current_FLAME_output->type == 1)
-		{
-			<?foreach xagent?>if(current_FLAME_output->type == $xagentcountplusone) printf("agent' name='$name");
-			<?end foreach?>
-		}
-		else printf("undefined");
+		<?foreach xagent?>else if(current_FLAME_output->type == $xagentcountplusone) printf("agent' name='$name");
+		<?end foreach?>else printf("undefined");
 		printf("' format='");
 		if(current_FLAME_output->format == 0) printf("xml");
 		else printf("undefined");
