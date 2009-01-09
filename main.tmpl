@@ -320,15 +320,15 @@ if(argc < 2)
 		fflush(stdout);
 		<?if parallel?>}<?end if?>
 		/* START OF ITERATION */
-<?foreach layer?><?foreach function?><?foreach first_input?>
-	rc = MB_SyncComplete(b_$name);
+<?foreach layer?><?foreach function?><?foreach complete_sync?>
+	rc = MB_SyncComplete(b_$message_name);
 	#ifdef ERRCHECK
     if (rc != MB_SUCCESS)
     {
-       fprintf(stderr, "ERROR: Could not complete sync of '$name' board\n");
+       fprintf(stderr, "ERROR: Could not complete sync of '$message_name' board\n");
        switch(rc) {
             case MB_ERR_INVALID:
-               fprintf(stderr, "\t reason: '$name' board is invalid\n");
+               fprintf(stderr, "\t reason: '$message_name' board is invalid\n");
                break;
            case MB_ERR_MEMALLOC:
                fprintf(stderr, "\t reason: out of memory\n");
@@ -345,6 +345,19 @@ if(argc < 2)
        exit(rc);
     }
     #endif
+    <?if filter?>rc = MB_Function_Assign(b_$message_name, MB_NULL_FUNCTION, NULL, 0);
+	if ( rc != MB_SUCCESS )
+	{
+		fprintf(stderr, "Error while assigning NULL function to board\n");
+
+		/* check value of rc to determine reason of failure. Handle error */
+		/* don't continue if error can't be handled */
+		exit(1);
+	}
+	/* Free memory used for filter composite params */
+	free(FLAME_m_$message_name_composite_params);
+	FLAME_m_$message_name_composite_params = NULL;
+	<?end if?>
 	<?end foreach?>
 
 	current_xmachine_$agent_name_holder = $agent_name_$current_state_state->agents;
@@ -438,18 +451,21 @@ if(argc < 2)
 		current_xmachine_$agent_name_holder = temp_xmachine_$agent_name_holder;
 	}
 
-<?foreach last_output?>
-    rc = MB_SyncStart(b_$name);
+<?foreach start_sync?>
+// new
+<?if filter?>FLAME_build_filter_param_$filter_name();<?end if?>
+//new
+    rc = MB_SyncStart(b_$message_name);
     #ifdef ERRCHECK
     if (rc != MB_SUCCESS)
     {
-       fprintf(stderr, "ERROR: Could not start sync of '$name' board\n");
+       fprintf(stderr, "ERROR: Could not start sync of '$message_name' board\n");
        switch(rc) {
            case MB_ERR_INVALID:
-               fprintf(stderr, "\t reason: '$name' board is invalid\n");
+               fprintf(stderr, "\t reason: '$message_name' board is invalid\n");
                break;
            case MB_ERR_LOCKED:
-               fprintf(stderr, "\t reason: '$name' board is locked\n");
+               fprintf(stderr, "\t reason: '$message_name' board is locked\n");
                break;
            case MB_ERR_MEMALLOC:
                fprintf(stderr, "\t reason: out of memory\n");

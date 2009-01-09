@@ -1,5 +1,32 @@
 #include "header.h"
 
+void writeRule(rule_data * current_rule_data, FILE *file)
+{
+	if(current_rule_data->time_rule == 1)
+	{
+		if(current_rule_data->not == 1) fputs("!", file);
+		fputs("(", file);
+		fputs("iteration_loop", file);
+		fputs(current_rule_data->op, file);
+		fputs(" == ", file);
+		fputs(current_rule_data->rhs, file);
+		fputs(")", file);
+	}
+	else
+	{
+		if(current_rule_data->not == 1) fputs("!", file);
+		fputs("(", file);
+		if(current_rule_data->lhs == NULL) writeRule(current_rule_data->lhs_rule, file);
+		else fputs(current_rule_data->lhs, file);
+		fputs(" ", file);
+		fputs(current_rule_data->op, file);
+		fputs(" ", file);
+		if(current_rule_data->rhs == NULL) writeRule(current_rule_data->rhs_rule, file);
+		else fputs(current_rule_data->rhs, file);
+		fputs(")", file);
+	}
+}
+
 /** \fn parseTemplate(char * filename, char * templatename, model_data * modeldata)
  * \brief Combines the model data with a template to produce a simulation source code file.
  * \param filename The output file name.
@@ -53,6 +80,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	variable * current_variable;
 	f_code * current_code;
 	function_pointer * current_function_pointer;
+	function_pointer * current_function_pointer2;
 	layer * current_layer = NULL;
 	env_func * current_envfunc;
 	variable * allvar;
@@ -61,6 +89,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	time_data * current_time_unit = NULL;
 	model_datatype * current_datatype = NULL;
 	xmachine_state_holder * current_end_state = NULL;
+	sync * current_sync = NULL;
+	sync_pointer * current_sync_pointer;
 
 	/* Initialise variables */
 	lastloop[0] = '\0';
@@ -126,6 +156,17 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					numtag++;
 					if (modeldata->code_type != 1)
 						write = 0;
+				}
+				else if (strcmp(buffer->array, "<?if has_arrays?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if(current_datatype != NULL)
+					{
+						if (current_datatype->has_arrays == 0) write = 0;
+					}
 				}
 				else if (strcmp(buffer->array, "<?if dynamic_array?>") == 0)
 				{
@@ -492,7 +533,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						lastiftag = numtag;
 					numtag++;
 					found = 0;
-					current_variable = current_xmachine->memory->vars;
+					current_variable = current_xmachine->variables;
 					while (current_variable)
 					{
 						if (strcmp(current_variable->name, allvar->name) == 0)
@@ -591,17 +632,6 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						if (current_datatype->has_dynamic_arrays == 0) write = 0;
 					}
 				}
-				else if (strcmp(buffer->array, "<?if has_arrays?>") == 0)
-				{
-					strcpy(&chartag[numtag][0], "if");
-					if (write == 1)
-						lastiftag = numtag;
-					numtag++;
-					if(current_datatype != NULL)
-					{
-						if (current_datatype->has_arrays == 0) write = 0;
-					}
-				}
 				else if (strcmp(buffer->array, "<?if no_dynamic_arrays?>") == 0)
 				{
 					strcpy(&chartag[numtag][0], "if");
@@ -630,9 +660,48 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (write == 1)
 						lastiftag = numtag;
 					numtag++;
-					if(current_ioput != NULL)
+
+					if(strcmp(lastloop, "foreach sync") == 0 || strcmp(lastloop, "foreach start_sync") == 0)
 					{
-						if (current_ioput->filter_function == NULL) write = 0;
+						/* Make write = -1 as a flag value */
+						write = -1;
+
+						/* Loop though all inputting functions.
+						 * If filter exists then true.
+						 * But if filter and no filter then false. */
+						if(current_sync != NULL)
+						{
+							current_function_pointer2 = current_sync->inputting_functions;
+							while(current_function_pointer2)
+							{
+								current_ioput = current_function_pointer2->function->inputs;
+								while(current_ioput)
+								{
+									if(strcmp(current_ioput->messagetype, current_sync->message->name) == 0)
+									{
+										if(current_ioput->filter_function == NULL) write = 0;
+										else if(write == -1) write = 1;
+									}
+
+									current_ioput = current_ioput->next;
+								}
+
+								current_function_pointer2 = current_function_pointer2->next;
+							}
+						}
+						else write = 0;
+
+						/* If no inputting functions then make sure write = 0 */
+						if(write == -1) write = 0;
+
+						//if(current_ioput != NULL)
+						//if(current_ioput->filter_function == NULL) write = 0;
+					}
+					else if(current_ioput != NULL)
+					{
+						/* TODO handle <?foreach last_output?>
+						 * <?if filter?> */
+						if (current_ioput->filter_rule == NULL) write = 0;
 					}
 				}
 				else if (strcmp(buffer->array, "<?if no_filter?>") == 0)
@@ -641,9 +710,53 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (write == 1)
 						lastiftag = numtag;
 					numtag++;
+
 					if(current_ioput != NULL)
 					{
 						if (current_ioput->filter_function != NULL) write = 0;
+					}
+				}
+				else if (strcmp(buffer->array, "<?if function_input?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if(current_function != NULL)
+					{
+						if(current_function->inputs == NULL)
+						{
+							write = 0;
+						}
+					}
+					else write = 0;
+				}
+				else if (strcmp(buffer->array, "<?if has_agent_var?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if(current_ioput != NULL)
+					{
+						if(current_ioput->filter_rule != NULL)
+						{
+							if (current_ioput->filter_rule->has_agent_var == 0) write = 0;
+						}
+					}
+				}
+				else if (strcmp(buffer->array, "<?if has_message_var?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if(current_ioput != NULL)
+					{
+						if(current_ioput->filter_rule != NULL)
+						{
+							if (current_ioput->filter_rule->has_message_var == 0) write = 0;
+						}
 					}
 				}
 				else if (strcmp(buffer->array, "<?end if?>") == 0)
@@ -809,6 +922,65 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							var_count++;
 						}
 					}
+					else if (strcmp("foreach sync", &chartag[numtag][0]) == 0)
+					{
+						if (current_sync != NULL)
+						{
+							current_sync = current_sync->next;
+						}
+						if (current_sync == NULL)
+						{
+							exitforeach = 1;
+							inmessagevar = 0;
+						}
+						else
+						{
+							pos = looppos[numtag];
+							numtag++;
+							var_count++;
+						}
+					}
+					else if (strcmp("foreach syncvar", &chartag[numtag][0]) == 0)
+					{
+						if (current_variable != NULL)
+						{
+							current_variable = current_variable->next;
+						}
+						if (current_variable == NULL)
+						{
+							exitforeach = 1;
+						}
+						else
+						{
+							pos = looppos[numtag];
+							numtag++;
+							var_count++;
+						}
+					}
+					else if (strcmp("foreach paramvar", &chartag[numtag][0]) == 0)
+					{
+						if (current_variable != NULL)
+						{
+							current_variable = current_variable->next;
+						}
+						if (current_variable == NULL)
+						{
+							if(current_xmachine != NULL)
+								current_xmachine = current_xmachine->next;
+							if(current_xmachine != NULL)
+								current_variable = current_xmachine->variables;
+						}
+						if (current_variable == NULL)
+						{
+							exitforeach = 1;
+						}
+						else
+						{
+							pos = looppos[numtag];
+							numtag++;
+							var_count++;
+						}
+					}
 					else if (strcmp("foreach layer", &chartag[numtag][0]) == 0)
 					{
 						if (current_layer != NULL)
@@ -827,7 +999,18 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					else if (strcmp("foreach function_input", &chartag[numtag][0]) == 0)
 					{
 						if (current_ioput != NULL)
+						{
 							current_ioput = current_ioput->next;
+
+							if(current_sync != NULL)
+							{
+								while(current_ioput != NULL &&
+										strcmp(current_ioput->messagetype, current_sync->message->name) != 0)
+								{
+									current_ioput = current_ioput->next;
+								}
+							}
+						}
 						if (current_ioput == NULL)
 							exitforeach = 1;
 						else
@@ -850,27 +1033,35 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							var_count++;
 						}
 					}
-					else if (strcmp("foreach first_input", &chartag[numtag][0]) == 0)
+					else if (strcmp("foreach complete_sync", &chartag[numtag][0]) == 0)
 					{
-						if (current_ioput != NULL)
-							current_ioput = current_ioput->next;
-						if (current_ioput == NULL)
+						if (current_sync_pointer != NULL)
+							current_sync_pointer = current_sync_pointer->next;
+						if (current_sync_pointer == NULL)
+						{
+							current_sync = NULL;
 							exitforeach = 1;
+						}
 						else
 						{
+							current_sync = current_sync_pointer->current_sync;
 							pos = looppos[numtag];
 							numtag++;
 							var_count++;
 						}
 					}
-					else if (strcmp("foreach last_output", &chartag[numtag][0]) == 0)
+					else if (strcmp("foreach start_sync", &chartag[numtag][0]) == 0)
 					{
-						if (current_ioput != NULL)
-							current_ioput = current_ioput->next;
-						if (current_ioput == NULL)
+						if (current_sync_pointer != NULL)
+							current_sync_pointer = current_sync_pointer->next;
+						if (current_sync_pointer == NULL)
+						{
+							current_sync = NULL;
 							exitforeach = 1;
+						}
 						else
 						{
+							current_sync = current_sync_pointer->current_sync;
 							pos = looppos[numtag];
 							numtag++;
 							var_count++;
@@ -878,12 +1069,25 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					}
 					else if (strcmp("foreach function", &chartag[numtag][0]) == 0)
 					{
-						if (current_layer != NULL)
+						if (current_layer != NULL)// || current_sync != NULL)
 						{
+							//if(current_layer != NULL) printf("current_layer: %d\n", current_layer->number);
+
 							if (current_function_pointer != NULL)
+							{
+								//printf("foreach function: %s next: ", current_function_pointer->function->name);
+
 								current_function_pointer = current_function_pointer->next;
+
+								//if (current_function_pointer == NULL) printf("NULL\n");
+								//else printf("%s\n", current_function_pointer->function->name);
+							}
 							if (current_function_pointer == NULL)
+							{
+								//printf("foreach function: NULL\n");
+								current_function = NULL;
 								exitforeach = 1;
+							}
 							else
 							{
 							 	current_function = current_function_pointer->function;
@@ -1053,7 +1257,10 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					inenvvar = 1;
 					current_envvar = * modeldata->p_envvars;
 					if (current_envvar == NULL)
+					{
 						write = 0;
+						inenvvar = 0;
+					}
 				}
 				else if (strcmp(buffer->array, "<?foreach xagent?>") == 0)
 				{
@@ -1067,9 +1274,16 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					lastwrite = write;
 					previous_name = NULL;
 
-					current_xmachine = * modeldata->p_xmachines;
+					if(current_sync != NULL)
+					{
+						current_xmachine = current_sync->agents;
+					}
+					else current_xmachine = * modeldata->p_xmachines;
+
 					if (current_xmachine == NULL)
 						write = 0;
+
+					strcpy(lastloop, "foreach xagent");
 				}
 				else if (strcmp(buffer->array, "<?foreach xagentvar?>") == 0)
 				{
@@ -1082,7 +1296,11 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					var_count = 0;
 					lastwrite = write;
 					inxagentvar = 1;
-					current_variable = current_xmachine->memory->vars;
+
+					if(current_xmachine != NULL)
+						current_variable = current_xmachine->variables;
+					else current_variable = NULL;
+
 					if(current_variable != NULL)
 					{
 						current_datatype = current_variable->datatype;
@@ -1100,21 +1318,38 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					numtag++;
 					var_count = 0;
 					lastwrite = write;
-					current_state = current_xmachine->states;
-					if (current_state == NULL)
-						write = 0;
+
+					if(current_xmachine == NULL) current_state = NULL;
+					else current_state = current_xmachine->states;
+
+					if (current_state == NULL) write = 0;
 				}
 				else if (strcmp(buffer->array, "<?foreach function_input?>") == 0)
 				{
 					if (log)
 						printf("start :%d\tforeach function_input\tpos: %d\n", numtag, pos);
 					strcpy(&chartag[numtag][0], "foreach function_input");
-					strcpy(lastloop, "foreach function_input");
+
 					looppos[numtag] = pos;
 					numtag++;
 					var_count = 0;
 					lastwrite = write;
-					current_ioput = current_function->inputs;
+
+					if(current_function != NULL) current_ioput = current_function->inputs;
+					else current_ioput = NULL;
+
+					if(current_sync != NULL)
+					{
+						while(current_ioput != NULL && strcmp(current_ioput->messagetype, current_sync->message->name) != 0)
+						{
+							current_ioput = current_ioput->next;
+						}
+
+						//printf("filter messagetype = %s\tsync messagetype = %s\n", current_ioput->messagetype, current_sync->message->name);
+					}
+
+					strcpy(lastloop, "foreach function_input");
+
 					if (current_ioput == NULL)
 						write = 0;
 				}
@@ -1132,33 +1367,35 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (current_ioput == NULL)
 						write = 0;
 				}
-				else if (strcmp(buffer->array, "<?foreach first_input?>") == 0)
+				else if (strcmp(buffer->array, "<?foreach complete_sync?>") == 0)
 				{
 					if (log)
-						printf("start :%d\tforeach first_input\tpos: %d\n", numtag, pos);
-					strcpy(&chartag[numtag][0], "foreach first_input");
-					strcpy(lastloop, "foreach first_input");
+						printf("start :%d\tforeach complete_sync\tpos: %d\n", numtag, pos);
+					strcpy(&chartag[numtag][0], "foreach complete_sync");
+					strcpy(lastloop, "foreach complete_sync");
 					looppos[numtag] = pos;
 					numtag++;
 					var_count = 0;
 					lastwrite = write;
-					current_ioput = current_function->first_inputs;
-					if (current_ioput == NULL)
-						write = 0;
+					current_sync_pointer = current_function->complete_syncs;
+					if (current_sync_pointer == NULL) write = 0;
+					else current_sync = current_sync_pointer->current_sync;
 				}
-				else if (strcmp(buffer->array, "<?foreach last_output?>") == 0)
+				else if (strcmp(buffer->array, "<?foreach start_sync?>") == 0)
 				{
 					if (log)
-						printf("start :%d\tforeach last_output\tpos: %d\n", numtag, pos);
-					strcpy(&chartag[numtag][0], "foreach last_output");
-					strcpy(lastloop, "foreach last_output");
+						printf("start :%d\tforeach start_sync\tpos: %d\n", numtag, pos);
+					strcpy(&chartag[numtag][0], "foreach start_sync");
+					strcpy(lastloop, "foreach start_sync");
 					looppos[numtag] = pos;
 					numtag++;
 					var_count = 0;
 					lastwrite = write;
-					current_ioput = current_function->last_outputs;
-					if (current_ioput == NULL)
+					if(current_function != NULL) current_sync_pointer = current_function->start_syncs;
+					else current_sync_pointer = NULL;
+					if (current_sync_pointer == NULL)
 						write = 0;
+					else current_sync = current_sync_pointer->current_sync;
 				}
 				else if (strcmp(buffer->array, "<?foreach message?>") == 0)
 				{
@@ -1196,6 +1433,57 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (current_variable == NULL)
 						write = 0;
 				}
+				else if (strcmp(buffer->array, "<?foreach sync?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tforeach sync\tpos: %d\n", numtag, pos);
+					strcpy(&chartag[numtag][0], "foreach sync");
+					strcpy(lastloop, "foreach sync");
+					looppos[numtag] = pos;
+					numtag++;
+					var_count = 0;
+					lastwrite = write;
+
+					if(current_message != NULL) current_sync = current_message->syncs;
+					else current_sync = NULL;
+					if(current_sync == NULL) write = 0;
+				}
+				else if (strcmp(buffer->array, "<?foreach syncvar?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tforeach syncvar\tpos: %d\n", numtag, pos);
+					strcpy(&chartag[numtag][0], "foreach syncvar");
+					strcpy(lastloop, "foreach syncvar");
+					looppos[numtag] = pos;
+					numtag++;
+					var_count = 0;
+					lastwrite = write;
+
+					if(current_sync != NULL) current_variable = current_sync->vars;
+					else current_variable = NULL;
+					if(current_variable == NULL) write = 0;
+				}
+				else if (strcmp(buffer->array, "<?foreach paramvar?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tforeach paramvar\tpos: %d\n", numtag, pos);
+					strcpy(&chartag[numtag][0], "foreach paramvar");
+					strcpy(lastloop, "foreach paramvar");
+					looppos[numtag] = pos;
+					numtag++;
+					var_count = 0;
+					lastwrite = write;
+					/*if(current_message != NULL)
+					{
+						if(current_message->agents != NULL)
+						{
+							current_xmachine = current_message->agents;
+							current_variable = current_xmachine->variables;
+						}
+					}
+					else*/ current_variable = NULL;
+					if (current_variable == NULL) write = 0;
+				}
 				else if (strcmp(buffer->array, "<?foreach layer?>") == 0)
 				{
 					if (log)
@@ -1226,17 +1514,34 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					var_count = 0;
 					lastwrite = write;
 
-					if (strcmp(lastloop, "foreach layer") == 0)
+					if (strcmp(lastloop, "foreach sync") == 0)
 					{
-						current_function_pointer = current_layer->functions;
-						if (current_function_pointer == NULL)
+						if(current_sync != NULL)
+						{
+							current_function_pointer = current_sync->inputting_functions;
+							if (current_function_pointer == NULL) write = 0;
+							else current_function = current_function_pointer->function;
+						}
+						else
+						{
+							current_function_pointer = NULL;
+							current_function = NULL;
 							write = 0;
+						}
 					}
-					if (strcmp(lastloop, "foreach xagent") == 0)
+					else if (strcmp(lastloop, "foreach layer") == 0)
 					{
-						current_function = current_xmachine->functions;
-						if (current_function == NULL)
-							write = 0;
+						//printf("layer: %d -> %p\n", current_layer->number, (void *)current_layer->functions);
+
+						current_function_pointer = current_layer->functions;
+						if (current_function_pointer == NULL) write = 0;
+						else current_function = current_function_pointer->function;
+					}
+					else if (strcmp(lastloop, "foreach xagent") == 0)
+					{
+						if(current_xmachine != NULL) current_function = current_xmachine->functions;
+						else current_function = NULL;
+						if (current_function == NULL) write = 0;
 					}
 
 					strcpy(lastloop, "foreach function");
@@ -1356,15 +1661,16 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 				while (strcmp(buffer3->array, "$number_messagesplusone") != 0 &&
 					strcmp(buffer3->array, "$number_xagentsplusone") != 0 &&
 					strcmp(buffer3->array, "$model_name") != 0 &&
+					strcmp(buffer3->array, "$xagent_total") != 0 &&
 					pos <= (pos1 + 24) && pos <= filebuffer->size)
 				{
 					add_char(buffer3, c);
 					pos++;
 					c = filebuffer->array[pos];
 				}
+				pos--;
 				if (strcmp(buffer3->array, "$model_name") == 0) fputs(modeldata->name, file);
-				else
-				if (strcmp(buffer3->array, "$number_messagesplusone") == 0)
+				else if (strcmp(buffer3->array, "$number_messagesplusone") == 0)
 				{
 					sprintf(data, "%i", modeldata->number_messages + 1);
 					fputs(data, file);
@@ -1374,461 +1680,596 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					sprintf(data, "%i", modeldata->number_xmachines + 1);
 					fputs(data, file);
 				}
+				else if (strcmp(buffer3->array, "$xagent_total") == 0)
+				{
+					sprintf(data, "%i", modeldata->number_xmachines);
+					fputs(data, file);
+				}
 				else
 				{
 					reset_char_array(buffer3);
 					pos = pos1;
 					c = '$';
-				}
 
-				if (strcmp("foreach allvar", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$default_value") != 0 && strcmp(buffer3->array, "$c_type") != 0 && strcmp(buffer3->array, "$notarraytype") != 0 && strcmp(buffer3->array, "$arraylength") != 0 && pos <= (pos1 + 14))
+					if (strcmp("foreach allvar", lastloop) == 0)
 					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$name") == 0)
-						fputs(allvar->name, file);
-					else if (strcmp(buffer3->array, "$type") == 0)
-						fputs(allvar->type, file);
-					else if (strcmp(buffer3->array, "$arraylength") == 0)
-					{
-						sprintf(data, "%i", allvar->arraylength);
-						fputs(data, file);
-					}
-					else if (strcmp(buffer3->array, "$default_value") == 0)
-						fputs(allvar->defaultvalue, file);
-					else if (strcmp(buffer3->array, "$c_type") == 0)
-						fputs(allvar->c_type, file);
-					else if (strcmp(buffer3->array, "$notarraytype") == 0)
-						fputs(allvar->typenotarray, file);
-					else
-					{
-						fputs("$", file);
-						pos = pos1;
-					}
-				}
-				else if (strcmp("foreach envvar", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$uc_name") != 0 && strcmp(buffer3->array, "$default_value") != 0 && strcmp(buffer3->array, "$c_type") != 0 && pos <= (pos1 + 14))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$name") == 0)
-						fputs(current_envvar->name, file);
-					else if (strcmp(buffer3->array, "$type") == 0)
-						fputs(current_envvar->type, file);
-					else if (strcmp(buffer3->array, "$uc_name") == 0)
-					{
-						strcpy(data, current_envvar->name);
-						for(i = 0; i < strlen(data); i++) data[i] = (data[i] >= 'a' && data[i] <= 'z')?('A' + data[i] -'a'):data[i];
-						fputs(data, file);
-					}
-					else if (strcmp(buffer3->array, "$default_value") == 0)
-						fputs(current_envvar->defaultvalue, file);
-					else if (strcmp(buffer3->array, "$c_type") == 0)
-						fputs(current_envvar->c_type, file);
-					else
-					{
-						fputs("$", file);
-						pos = pos1;
-					}
-				}
-				else if (strcmp("foreach functionfiles", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$filepath") != 0 && pos <= (pos1 + 9))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$filepath") == 0)
-						fputs(current_envfunc->filepath, file);
-					else
-					{
-						fputs("$", file);
-						pos = pos1;
-					}
-				}
-				else if (strcmp("foreach xagent", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$rangevar") != 0 && strcmp(buffer3->array, "$idvar") != 0 && strcmp(buffer3->array, "$xvar") != 0 && strcmp(buffer3->array, "$yvar") != 0 && strcmp(buffer3->array, "$zvar") != 0 && strcmp(buffer3->array, "$var_number") != 0 && strcmp(buffer3->array, "$allvar_name") != 0 && strcmp(buffer3->array, "$xagentcountplusone") != 0 && strcmp(buffer3->array, "$xagent_count") != 0 && strcmp(buffer3->array, "$previous_name") != 0 && strcmp(buffer3->array, "$start_state") != 0 && pos <= (pos1 + 22))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$name") == 0)
-						fputs(current_xmachine->name, file);
-					else if (strcmp(buffer3->array, "$rangevar") == 0)
-						fputs(current_xmachine->rangevar, file);
-					else if (strcmp(buffer3->array, "$idvar") == 0)
-						fputs(current_xmachine->idvar, file);
-					else if (strcmp(buffer3->array, "$xvar") == 0)
-						fputs(current_xmachine->xvar, file);
-					else if (strcmp(buffer3->array, "$yvar") == 0)
-						fputs(current_xmachine->yvar, file);
-					else if (strcmp(buffer3->array, "$zvar") == 0)
-						fputs(current_xmachine->zvar, file);
-					else if (strcmp(buffer3->array, "$allvar_name") == 0)
-						fputs(allvar->name, file);
-					else if (strcmp(buffer3->array, "$start_state") == 0)
-						fputs(current_xmachine->start_state->name, file);
-					else if (strcmp(buffer3->array, "$var_number") == 0)
-					{
-						sprintf(data, "%i", current_xmachine->var_number);
-						fputs(data, file);
-					}
-					else if (strcmp(buffer3->array, "$xagentcountplusone") == 0)
-					{
-						sprintf(data, "%i", xagent_count + 1);
-						fputs(data, file);
-					}
-					else if (strcmp(buffer3->array, "$xagent_count") == 0)
-					{
-						sprintf(data, "%i", xagent_count);
-						fputs(data, file);
-					}
-					else if (strcmp(buffer3->array, "$previous_name") == 0)
-					{
-						if(previous_name != NULL)
+						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$default_value") != 0 && strcmp(buffer3->array, "$c_type") != 0 && strcmp(buffer3->array, "$notarraytype") != 0 && strcmp(buffer3->array, "$arraylength") != 0 && pos <= (pos1 + 14))
 						{
-							sprintf(data, "%s", previous_name);
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(allvar->name, file);
+						else if (strcmp(buffer3->array, "$type") == 0)
+							fputs(allvar->type, file);
+						else if (strcmp(buffer3->array, "$arraylength") == 0)
+						{
+							sprintf(data, "%i", allvar->arraylength);
 							fputs(data, file);
 						}
-					}
-					else
-					{
-						fputs("$", file);
-						pos = pos1;
-					}
-				}
-				else if (strcmp("foreach xagentvar", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$agent_name") != 0 && strcmp(buffer3->array, "$c_type") != 0 && strcmp(buffer3->array, "$mpi_type") != 0 && strcmp(buffer3->array, "$arraylength") != 0 && strcmp(buffer3->array, "$var_count") != 0 && strcmp(buffer3->array, "$notarraytype") != 0 && strcmp(buffer3->array, "$default_value") != 0 && pos <= (pos1 + 15))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$name") == 0)
-						fputs(current_variable->name, file);
-					else if (strcmp(buffer3->array, "$type") == 0)
-						fputs(current_variable->type, file);
-					else if (strcmp(buffer3->array, "$agent_name") == 0)
-						fputs(current_xmachine->name, file);
-					else if (strcmp(buffer3->array, "$c_type") == 0)
-						fputs(current_variable->c_type, file);
-					else if (strcmp(buffer3->array, "$mpi_type") == 0)
-						fputs(current_variable->mpi_type, file);
-					else if (strcmp(buffer3->array, "$arraylength") == 0)
-					{
-						sprintf(data, "%i", current_variable->arraylength);
-						fputs(data, file);
-					}
-					else if (strcmp(buffer3->array, "$var_count") == 0)
-					{
-						sprintf(data, "%i", var_count);
-						fputs(data, file);
-					}
-					else if (strcmp(buffer3->array, "$notarraytype") == 0)
-						fputs(current_variable->typenotarray, file);
-					else if (strcmp(buffer3->array, "$default_value") == 0)
-						fputs(current_variable->defaultvalue, file);
-					else
-					{
-						fputs("$", file);
-						pos = pos1;
-					}
-				}
-				else if (strcmp("foreach state", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$agent_name") != 0 && strcmp(buffer3->array, "$agent_start") != 0 && pos <= (pos1 + 15))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$name") == 0)
-						fputs(current_state->name, file);
-					else if (strcmp(buffer3->array, "$agent_name") == 0)
-						fputs(current_xmachine->name, file);
-					else if (strcmp(buffer3->array, "$agent_start") == 0)
-						fputs(current_xmachine->start_state->name, file);
-					else
-					{
-						fputs("$", file);
-						pos = pos1;
-					}
-				}
-				else if (strcmp("foreach endstate", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$agent_name") != 0 && strcmp(buffer3->array, "$agent_start") != 0 && pos <= (pos1 + 15))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$name") == 0)
-						fputs(current_end_state->state->name, file);
-					else if (strcmp(buffer3->array, "$agent_name") == 0)
-						fputs(current_xmachine->name, file);
-					else if (strcmp(buffer3->array, "$agent_start") == 0)
-						fputs(current_xmachine->start_state->name, file);
-					else
-					{
-						fputs("$", file);
-						pos = pos1;
-					}
-				}
-				else if (strcmp("foreach function_input", lastloop) == 0 ||
-						strcmp("foreach function_output", lastloop) == 0 ||
-						strcmp("foreach first_input", lastloop) == 0 ||
-						strcmp("foreach last_output", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$agent_name") != 0 && strcmp(buffer3->array, "$filter") != 0 && pos <= (pos1 + 15))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$name") == 0)
-						fputs(current_ioput->messagetype, file);
-					else if (strcmp(buffer3->array, "$agent_name") == 0)
-						fputs(current_function->agent_name, file);
-					else if (strcmp(buffer3->array, "$filter") == 0)
-						fputs(current_ioput->filter_function, file);
-					else
-					{
-						fputs("$", file);
-						pos = pos1;
-					}
-				}
-				else if (strcmp("foreach message", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$var_number") != 0 && strcmp(buffer3->array, "$message_countplusone") != 0 && strcmp(buffer3->array, "$previous_name") != 0 && strcmp(buffer3->array, "$capsname") != 0 && pos <= (pos1 + 22))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$name") == 0)
-						fputs(current_message->name, file);
-					else if (strcmp(buffer3->array, "$capsname") == 0)
-					{
-						strcpy(data, current_message->name);
-						for(i = 0; i < strlen(data); i++) data[i] = (data[i] >= 'a' && data[i] <= 'z')?('A' + data[i] -'a'):data[i];
-						fputs(data, file);
-					}
-					else if (strcmp(buffer3->array, "$var_number") == 0)
-					{
-						sprintf(data, "%i", current_message->var_number);
-						fputs(data, file);
-					}
-					else if (strcmp(buffer3->array, "$message_countplusone") == 0)
-					{
-						sprintf(data, "%i", message_count + 1);
-						fputs(data, file);
-					}
-					else if (strcmp(buffer3->array, "$previous_name") == 0)
-					{
-						if(previous_name != NULL)
+						else if (strcmp(buffer3->array, "$default_value") == 0)
+							fputs(allvar->defaultvalue, file);
+						else if (strcmp(buffer3->array, "$c_type") == 0)
+							fputs(allvar->c_type, file);
+						else if (strcmp(buffer3->array, "$notarraytype") == 0)
+							fputs(allvar->typenotarray, file);
+						else
 						{
-							sprintf(data, "%s", previous_name);
-							fputs(data, file);
+							fputs("$", file);
+							pos = pos1;
 						}
 					}
-					else
+					else if (strcmp("foreach envvar", lastloop) == 0)
 					{
-						fputs("$", file);
-						pos = pos1;
-					}
-				}
-				else if (strcmp("foreach messagevar", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$messagename") != 0 && strcmp(buffer3->array, "$c_type") != 0 && strcmp(buffer3->array, "$mpi_type") != 0 && strcmp(buffer3->array, "$arraylength") != 0 && strcmp(buffer3->array, "$var_count") != 0 && pos <= (pos1 + 14))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$name") == 0)
-						fputs(current_variable->name, file);
-					else if (strcmp(buffer3->array, "$type") == 0)
-						fputs(current_variable->type, file);
-					else if (strcmp(buffer3->array, "$messagename") == 0)
-						fputs(current_message->name, file);
-					else if (strcmp(buffer3->array, "$c_type") == 0)
-						fputs(current_variable->c_type, file);
-					else if (strcmp(buffer3->array, "$mpi_type") == 0)
-						fputs(current_variable->mpi_type, file);
-					else if (strcmp(buffer3->array, "$arraylength") == 0)
-					{
-						sprintf(data, "%i", current_variable->arraylength);
-						fputs(data, file);
-					}
-					else if (strcmp(buffer3->array, "$var_count") == 0)
-					{
-						sprintf(data, "%i", var_count);
-						fputs(data, file);
-					}
-					else
-					{
-						fputs("$", file);
-						pos = pos1;
-					}
-				}
-				else if (strcmp("foreach function", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$note") != 0 && strcmp(buffer3->array, "$agent_name") != 0 &&
-					strcmp(buffer3->array, "$current_state") != 0 && strcmp(buffer3->array, "$next_state") != 0 && strcmp(buffer3->array, "$condition") != 0 && pos <= (pos1 + 15))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$name") == 0)
-						fputs(current_function->name, file);
-					else if (strcmp(buffer3->array, "$note") == 0)
-						fputs(current_function->note, file);
-					else if (strcmp(buffer3->array, "$agent_name") == 0)
-						fputs(current_function->agent_name, file);
-					else if (strcmp(buffer3->array, "$current_state") == 0)
-						fputs(current_function->current_state, file);
-					else if (strcmp(buffer3->array, "$next_state") == 0)
-						fputs(current_function->next_state, file);
-					else if (strcmp(buffer3->array, "$condition") == 0)
-					{
-						if(current_function->condition_function == NULL) fputs("1", file);
-						else fputs(current_function->condition_function, file);
-					}
-					else
-					{
-						fputs("$", file);
-						pos = pos1;
-					}
-				}
-				else if (strcmp("foreach enditfunc", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$code") != 0 && pos <= (pos1 + 5))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$code") == 0)
-						fputs(current_code->code, file);
-					else
-					{
-						fputs("$", file);
-						pos = pos1;
-					}
-				}
-				else if (strcmp("foreach timeunit", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$unit_name") != 0 && strcmp(buffer3->array, "$period") != 0 && pos <= (pos1 + 11))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$name") == 0)
-						fputs(current_time_unit->name, file);
-					else if (strcmp(buffer3->array, "$unit_name") == 0)
-					{
-						if(current_time_unit->unit == NULL) fputs("ITERATION", file);
-						else fputs(current_time_unit->unit->name, file);
-					}
-					else if (strcmp(buffer3->array, "$period") == 0)
-					{
-						if(current_time_unit->unit != NULL)
+						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$uc_name") != 0 && strcmp(buffer3->array, "$default_value") != 0 && strcmp(buffer3->array, "$c_type") != 0 && pos <= (pos1 + 14))
 						{
-							sprintf(data, "%i", current_time_unit->period * current_time_unit->unit->period);
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_envvar->name, file);
+						else if (strcmp(buffer3->array, "$type") == 0)
+							fputs(current_envvar->type, file);
+						else if (strcmp(buffer3->array, "$uc_name") == 0)
+						{
+							strcpy(data, current_envvar->name);
+							for(i = 0; i < strlen(data); i++) data[i] = (data[i] >= 'a' && data[i] <= 'z')?('A' + data[i] -'a'):data[i];
 							fputs(data, file);
 						}
-						else fputs("ITERATION", file);
+						else if (strcmp(buffer3->array, "$default_value") == 0)
+							fputs(current_envvar->defaultvalue, file);
+						else if (strcmp(buffer3->array, "$c_type") == 0)
+							fputs(current_envvar->c_type, file);
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
 					}
+					else if (strcmp("foreach functionfiles", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$filepath") != 0 && pos <= (pos1 + 9))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$filepath") == 0)
+							fputs(current_envfunc->filepath, file);
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach xagent", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 &&
+								strcmp(buffer3->array, "$rangevar") != 0 &&
+								strcmp(buffer3->array, "$idvar") != 0 &&
+								strcmp(buffer3->array, "$xvar") != 0 &&
+								strcmp(buffer3->array, "$yvar") != 0 &&
+								strcmp(buffer3->array, "$zvar") != 0 &&
+								strcmp(buffer3->array, "$var_number") != 0 &&
+								strcmp(buffer3->array, "$allvar_name") != 0 &&
+								strcmp(buffer3->array, "$xagentcountplusone") != 0 &&
+								strcmp(buffer3->array, "$xagent_count") != 0 &&
+								strcmp(buffer3->array, "$previous_name") != 0 &&
+								strcmp(buffer3->array, "$start_state") != 0 &&
+								strcmp(buffer3->array, "$message_name") != 0 &&
+								strcmp(buffer3->array, "$layer") != 0 &&
+								pos <= (pos1 + 22))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_xmachine->name, file);
+						else if (strcmp(buffer3->array, "$rangevar") == 0)
+							fputs(current_xmachine->rangevar, file);
+						else if (strcmp(buffer3->array, "$idvar") == 0)
+							fputs(current_xmachine->idvar, file);
+						else if (strcmp(buffer3->array, "$xvar") == 0)
+							fputs(current_xmachine->xvar, file);
+						else if (strcmp(buffer3->array, "$yvar") == 0)
+							fputs(current_xmachine->yvar, file);
+						else if (strcmp(buffer3->array, "$zvar") == 0)
+							fputs(current_xmachine->zvar, file);
+						else if (strcmp(buffer3->array, "$allvar_name") == 0)
+							fputs(allvar->name, file);
+						else if (strcmp(buffer3->array, "$start_state") == 0)
+							fputs(current_xmachine->start_state->name, file);
+						else if (strcmp(buffer3->array, "$var_number") == 0)
+						{
+							sprintf(data, "%i", current_xmachine->var_number);
+							fputs(data, file);
+						}
+						else if (strcmp(buffer3->array, "$xagentcountplusone") == 0)
+						{
+							sprintf(data, "%i", xagent_count + 1);
+							fputs(data, file);
+						}
+						else if (strcmp(buffer3->array, "$xagent_count") == 0)
+						{
+							sprintf(data, "%i", xagent_count);
+							fputs(data, file);
+						}
+						else if (strcmp(buffer3->array, "$previous_name") == 0)
+						{
+							if(previous_name != NULL)
+							{
+								sprintf(data, "%s", previous_name);
+								fputs(data, file);
+							}
+						}
+						else if (strcmp(buffer3->array, "$message_name") == 0)
+							fputs(current_message->name, file);
+						else if (strcmp(buffer3->array, "$layer") == 0)
+						{
+							if(current_sync->inputting_functions == NULL) fputs("unknown", file);
+							else
+							{
+								sprintf(data, "%i", current_sync->inputting_functions->function->rank_in);
+								fputs(data, file);
+							}
+						}
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach xagentvar", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$agent_name") != 0 && strcmp(buffer3->array, "$c_type") != 0 && strcmp(buffer3->array, "$mpi_type") != 0 && strcmp(buffer3->array, "$arraylength") != 0 && strcmp(buffer3->array, "$var_count") != 0 && strcmp(buffer3->array, "$notarraytype") != 0 && strcmp(buffer3->array, "$default_value") != 0 && pos <= (pos1 + 15))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_variable->name, file);
+						else if (strcmp(buffer3->array, "$type") == 0)
+							fputs(current_variable->type, file);
+						else if (strcmp(buffer3->array, "$agent_name") == 0)
+							fputs(current_xmachine->name, file);
+						else if (strcmp(buffer3->array, "$c_type") == 0)
+							fputs(current_variable->c_type, file);
+						else if (strcmp(buffer3->array, "$mpi_type") == 0)
+							fputs(current_variable->mpi_type, file);
+						else if (strcmp(buffer3->array, "$arraylength") == 0)
+						{
+							sprintf(data, "%i", current_variable->arraylength);
+							fputs(data, file);
+						}
+						else if (strcmp(buffer3->array, "$var_count") == 0)
+						{
+							sprintf(data, "%i", var_count);
+							fputs(data, file);
+						}
+						else if (strcmp(buffer3->array, "$notarraytype") == 0)
+							fputs(current_variable->typenotarray, file);
+						else if (strcmp(buffer3->array, "$default_value") == 0)
+							fputs(current_variable->defaultvalue, file);
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach state", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$agent_name") != 0 && strcmp(buffer3->array, "$agent_start") != 0 && pos <= (pos1 + 15))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_state->name, file);
+						else if (strcmp(buffer3->array, "$agent_name") == 0)
+							fputs(current_state->agent_name, file);
+						else if (strcmp(buffer3->array, "$agent_start") == 0)
+							fputs(current_xmachine->start_state->name, file);
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach endstate", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$agent_name") != 0 && strcmp(buffer3->array, "$agent_start") != 0 && pos <= (pos1 + 15))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_end_state->state->name, file);
+						else if (strcmp(buffer3->array, "$agent_name") == 0)
+							fputs(current_xmachine->name, file);
+						else if (strcmp(buffer3->array, "$agent_start") == 0)
+							fputs(current_xmachine->start_state->name, file);
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach function_input", lastloop) == 0 ||
+							strcmp("foreach function_output", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$agent_name") != 0 &&
+								strcmp(buffer3->array, "$filter") != 0 && strcmp(buffer3->array, "$rule") != 0 && pos <= (pos1 + 15))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_ioput->messagetype, file);
+						else if (strcmp(buffer3->array, "$agent_name") == 0)
+							fputs(current_function->agent_name, file);
+						else if (strcmp(buffer3->array, "$filter") == 0)
+							fputs(current_ioput->filter_function, file);
+						else if (strcmp(buffer3->array, "$rule") == 0)
+							writeRule(current_ioput->filter_rule, file);
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach start_sync", lastloop) == 0 ||
+							strcmp("foreach complete_sync", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$message_name") != 0 &&
+								strcmp(buffer3->array, "$filter_name") != 0 &&
+								pos <= (pos1 + 15))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$message_name") == 0)
+							fputs(current_sync->message->name, file);
+						else if (strcmp(buffer3->array, "$filter_name") == 0)
+							fputs(current_sync->name, file);
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach message", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$var_number") != 0 && strcmp(buffer3->array, "$message_countplusone") != 0 && strcmp(buffer3->array, "$previous_name") != 0 && strcmp(buffer3->array, "$capsname") != 0 && pos <= (pos1 + 22))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_message->name, file);
+						else if (strcmp(buffer3->array, "$capsname") == 0)
+						{
+							strcpy(data, current_message->name);
+							for(i = 0; i < strlen(data); i++) data[i] = (data[i] >= 'a' && data[i] <= 'z')?('A' + data[i] -'a'):data[i];
+							fputs(data, file);
+						}
+						else if (strcmp(buffer3->array, "$var_number") == 0)
+						{
+							sprintf(data, "%i", current_message->var_number);
+							fputs(data, file);
+						}
+						else if (strcmp(buffer3->array, "$message_countplusone") == 0)
+						{
+							sprintf(data, "%i", message_count + 1);
+							fputs(data, file);
+						}
+						else if (strcmp(buffer3->array, "$previous_name") == 0)
+						{
+							if(previous_name != NULL)
+							{
+								sprintf(data, "%s", previous_name);
+								fputs(data, file);
+							}
+						}
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach messagevar", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$messagename") != 0 && strcmp(buffer3->array, "$c_type") != 0 && strcmp(buffer3->array, "$mpi_type") != 0 && strcmp(buffer3->array, "$arraylength") != 0 && strcmp(buffer3->array, "$var_count") != 0 && pos <= (pos1 + 14))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_variable->name, file);
+						else if (strcmp(buffer3->array, "$type") == 0)
+							fputs(current_variable->type, file);
+						else if (strcmp(buffer3->array, "$messagename") == 0)
+							fputs(current_message->name, file);
+						else if (strcmp(buffer3->array, "$c_type") == 0)
+							fputs(current_variable->c_type, file);
+						else if (strcmp(buffer3->array, "$mpi_type") == 0)
+							fputs(current_variable->mpi_type, file);
+						else if (strcmp(buffer3->array, "$arraylength") == 0)
+						{
+							sprintf(data, "%i", current_variable->arraylength);
+							fputs(data, file);
+						}
+						else if (strcmp(buffer3->array, "$var_count") == 0)
+						{
+							sprintf(data, "%i", var_count);
+							fputs(data, file);
+						}
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach sync", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 &&
+								strcmp(buffer3->array, "$messagename") != 0 &&
+								strcmp(buffer3->array, "$layer") != 0 &&
+								strcmp(buffer3->array, "$filteragentcount") != 0 &&
+								pos <= (pos1 + 20))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_sync->name, file);
+						else if (strcmp(buffer3->array, "$messagename") == 0)
+							fputs(current_sync->message->name, file);
+						else if (strcmp(buffer3->array, "$layer") == 0)
+						{
+							if(current_sync->inputting_functions == NULL) fputs("unknown", file);
+							else
+							{
+								sprintf(data, "%i", current_sync->inputting_functions->function->rank_in);
+								fputs(data, file);
+							}
+						}
+						else if (strcmp(buffer3->array, "$filteragentcount") == 0)
+						{
+							sprintf(data, "%i", current_sync->filter_agent_count);
+							fputs(data, file);
+						}
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach syncvar", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$type") != 0 &&
+								pos <= (pos1 + 14))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$type") == 0)
+							fputs(current_variable->type, file);
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach paramvar", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0
+								&& strcmp(buffer3->array, "$agent_name") != 0 && strcmp(buffer3->array, "$c_type") != 0 && pos <= (pos1 + 14))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_variable->name, file);
+						else if (strcmp(buffer3->array, "$type") == 0)
+							fputs(current_variable->type, file);
+						else if (strcmp(buffer3->array, "$agent_name") == 0)
+							fputs(current_variable->agent->name, file);
+						else if (strcmp(buffer3->array, "$c_type") == 0)
+							fputs(current_variable->c_type, file);
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach function", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$note") != 0 && strcmp(buffer3->array, "$agent_name") != 0 &&
+						strcmp(buffer3->array, "$current_state") != 0 && strcmp(buffer3->array, "$next_state") != 0 && strcmp(buffer3->array, "$condition") != 0 &&
+						strcmp(buffer3->array, "$rule") != 0 && pos <= (pos1 + 15))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_function->name, file);
+						else if (strcmp(buffer3->array, "$note") == 0)
+							fputs(current_function->note, file);
+						else if (strcmp(buffer3->array, "$agent_name") == 0)
+							fputs(current_function->agent_name, file);
+						else if (strcmp(buffer3->array, "$current_state") == 0)
+							fputs(current_function->current_state, file);
+						else if (strcmp(buffer3->array, "$next_state") == 0)
+							fputs(current_function->next_state, file);
+						else if (strcmp(buffer3->array, "$condition") == 0)
+						{
+							if(current_function->condition_function == NULL) fputs("1", file);
+							else fputs(current_function->condition_function, file);
+						}
+						else if (strcmp(buffer3->array, "$rule") == 0)
+						{
+							writeRule(current_function->condition_rule, file);
+						}
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach enditfunc", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$code") != 0 && pos <= (pos1 + 5))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$code") == 0)
+							fputs(current_code->code, file);
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach timeunit", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$unit_name") != 0 && strcmp(buffer3->array, "$period") != 0 && pos <= (pos1 + 11))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_time_unit->name, file);
+						else if (strcmp(buffer3->array, "$unit_name") == 0)
+						{
+							if(current_time_unit->unit == NULL) fputs("ITERATION", file);
+							else fputs(current_time_unit->unit->name, file);
+						}
+						else if (strcmp(buffer3->array, "$period") == 0)
+						{
+							if(current_time_unit->unit != NULL)
+							{
+								sprintf(data, "%i", current_time_unit->period * current_time_unit->unit->period);
+								fputs(data, file);
+							}
+							else fputs("ITERATION", file);
+						}
+					}
+					else if (strcmp("foreach datatype", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$desc") != 0 && pos <= (pos1 + 5))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_datatype->name, file);
+						else if (strcmp(buffer3->array, "$desc") == 0)
+							if(current_datatype->desc != NULL) fputs(current_datatype->desc, file);
+					}
+					else if (strcmp("foreach datatypevar", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$messagename") != 0 && strcmp(buffer3->array, "$c_type") != 0 && strcmp(buffer3->array, "$mpi_type") != 0 && strcmp(buffer3->array, "$arraylength") != 0 && strcmp(buffer3->array, "$var_count") != 0 && strcmp(buffer3->array, "$datatypevarname") != 0 && strcmp(buffer3->array, "$default_value") != 0 && strcmp(buffer3->array, "$agent_name") != 0 && strcmp(buffer3->array, "$notarraytype") != 0 && pos <= (pos1 + 16))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_datatypevariable->name, file);
+						else if (strcmp(buffer3->array, "$datatypevarname") == 0)
+						{
+							if(inallvar) fputs(allvar->name, file);
+							if(inxagentvar) fputs(current_variable->name, file);
+						}
+						else if (strcmp(buffer3->array, "$agent_name") == 0)
+							fputs(current_xmachine->name, file);
+						else if (strcmp(buffer3->array, "$default_value") == 0)
+							fputs(current_datatypevariable->defaultvalue, file);
+						else if (strcmp(buffer3->array, "$type") == 0)
+							fputs(current_datatypevariable->type, file);
+						else if (strcmp(buffer3->array, "$messagename") == 0)
+							fputs(current_datatypevariable->name, file);
+						else if (strcmp(buffer3->array, "$c_type") == 0)
+							fputs(current_datatypevariable->c_type, file);
+						else if (strcmp(buffer3->array, "$mpi_type") == 0)
+							fputs(current_datatypevariable->mpi_type, file);
+						else if (strcmp(buffer3->array, "$arraylength") == 0)
+						{
+							sprintf(data, "%i", current_datatypevariable->arraylength);
+							fputs(data, file);
+						}
+						else if (strcmp(buffer3->array, "$var_count") == 0)
+						{
+							sprintf(data, "%i", var_count);
+							fputs(data, file);
+						}
+						else if (strcmp(buffer3->array, "$notarraytype") == 0)
+							fputs(current_datatypevariable->typenotarray, file);
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if(write) fputc(c, file);
 				}
-				else if (strcmp("foreach datatype", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$desc") != 0 && pos <= (pos1 + 5))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$name") == 0)
-						fputs(current_datatype->name, file);
-					else if (strcmp(buffer3->array, "$desc") == 0)
-						if(current_datatype->desc != NULL) fputs(current_datatype->desc, file);
-				}
-				else if (strcmp("foreach datatypevar", lastloop) == 0)
-				{
-					while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$messagename") != 0 && strcmp(buffer3->array, "$c_type") != 0 && strcmp(buffer3->array, "$mpi_type") != 0 && strcmp(buffer3->array, "$arraylength") != 0 && strcmp(buffer3->array, "$var_count") != 0 && strcmp(buffer3->array, "$datatypevarname") != 0 && strcmp(buffer3->array, "$default_value") != 0 && strcmp(buffer3->array, "$agent_name") != 0 && strcmp(buffer3->array, "$notarraytype") != 0 && pos <= (pos1 + 16))
-					{
-						add_char(buffer3, c);
-						pos++;
-						c = filebuffer->array[pos];
-					}
-					pos--;
-					if (strcmp(buffer3->array, "$name") == 0)
-						fputs(current_datatypevariable->name, file);
-					else if (strcmp(buffer3->array, "$datatypevarname") == 0)
-					{
-						if(inallvar) fputs(allvar->name, file);
-						if(inxagentvar) fputs(current_variable->name, file);
-					}
-					else if (strcmp(buffer3->array, "$agent_name") == 0)
-						fputs(current_xmachine->name, file);
-					else if (strcmp(buffer3->array, "$default_value") == 0)
-						fputs(current_datatypevariable->defaultvalue, file);
-					else if (strcmp(buffer3->array, "$type") == 0)
-						fputs(current_datatypevariable->type, file);
-					else if (strcmp(buffer3->array, "$messagename") == 0)
-						fputs(current_datatypevariable->name, file);
-					else if (strcmp(buffer3->array, "$c_type") == 0)
-						fputs(current_datatypevariable->c_type, file);
-					else if (strcmp(buffer3->array, "$mpi_type") == 0)
-						fputs(current_datatypevariable->mpi_type, file);
-					else if (strcmp(buffer3->array, "$arraylength") == 0)
-					{
-						sprintf(data, "%i", current_datatypevariable->arraylength);
-						fputs(data, file);
-					}
-					else if (strcmp(buffer3->array, "$var_count") == 0)
-					{
-						sprintf(data, "%i", var_count);
-						fputs(data, file);
-					}
-					else if (strcmp(buffer3->array, "$notarraytype") == 0)
-						fputs(current_datatypevariable->typenotarray, file);
-					else
-					{
-						fputs("$", file);
-						pos = pos1;
-					}
-				}
-				else if (write)
-					fputc(c, file);
-
 			}
 			else if (c == '<')
 			{
@@ -1865,7 +2306,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 void parseAgentHeaderTemplate(char * directory, model_data * modeldata)
 {
 	FILE *file;
-	char filename[100];
+	char filename[1000];
 	char buffer[1000];
 	int i;
 	xmachine * current_xmachine = * modeldata->p_xmachines;
@@ -1887,7 +2328,7 @@ void parseAgentHeaderTemplate(char * directory, model_data * modeldata)
 		fputs(" * \\brief Header for agent type memory access.\n", file);
 		fputs(" */\n\n", file);
 
-		current_variable = current_xmachine->memory->vars;
+		current_variable = current_xmachine->variables;
 		while(current_variable)
 		{
 			strcpy(buffer, current_variable->name);
@@ -1916,179 +2357,6 @@ void parseAgentHeaderTemplate(char * directory, model_data * modeldata)
 
 		current_xmachine = current_xmachine->next;
 	}
-}
-
-void writeRule(rule_data * current_rule_data, FILE *file)
-{
-	if(current_rule_data->time_rule == 1)
-	{
-		if(current_rule_data->not == 1) fputs("!", file);
-		fputs("(", file);
-		fputs("iteration_loop", file);
-		fputs(current_rule_data->op, file);
-		fputs(" == ", file);
-		fputs(current_rule_data->rhs, file);
-		fputs(")", file);
-	}
-	else
-	{
-		if(current_rule_data->not == 1) fputs("!", file);
-		fputs("(", file);
-		if(current_rule_data->lhs == NULL) writeRule(current_rule_data->lhs_rule, file);
-		else fputs(current_rule_data->lhs, file);
-		fputs(" ", file);
-		fputs(current_rule_data->op, file);
-		fputs(" ", file);
-		if(current_rule_data->rhs == NULL) writeRule(current_rule_data->rhs_rule, file);
-		else fputs(current_rule_data->rhs, file);
-		fputs(")", file);
-	}
-}
-
-/** \fn checkRule(rule_data * current_rule_data)
- * \brief Checks the rule to see if it contains agent variables.
- * \param current_rule_data The rule to check.
- */
-int checkRuleAgentVar(rule_data * current_rule_data)
-{
-	int flag = 0;
-
-	if(current_rule_data->time_rule == 1)
-	{
-		if(strncmp(current_rule_data->rhs, "a->", 3) == 0) flag = 1;
-	}
-	else
-	{
-		if(current_rule_data->lhs == NULL)
-		{
-			if(checkRuleAgentVar(current_rule_data->lhs_rule) == 1) flag = 1;
-		}
-		else
-		{
-			if(strncmp(current_rule_data->lhs, "a->", 3) == 0) flag = 1;
-		}
-
-		if(current_rule_data->rhs == NULL)
-		{
-			if(checkRuleAgentVar(current_rule_data->rhs_rule) == 1) flag = 1;
-		}
-		else
-		{
-			if(strncmp(current_rule_data->rhs, "a->", 3) == 0) flag = 1;
-		}
-	}
-
-	return flag;
-}
-
-/** \fn parseRuleFunctionsTemplate(char * directory, model_data * modeldata)
- * \brief Produces rule functions for function conditions and message filters.
- * \param directory The directory to write the files to.
- * \param modeldata The model data.
- */
-void parseRuleFunctionsTemplate(char * directory, model_data * modeldata)
-{
-	FILE *file;
-	char filename[100];
-	xmachine * current_xmachine = * modeldata->p_xmachines;
-	xmachine_function * current_function;
-	xmachine_ioput * current_ioput;
-
-	/* Open the output file */
-	strcpy(filename, directory);
-	strcat(filename, "rules.c");
-	printf("writing file: %s\n", filename);
-	file = fopen(filename, "w");
-
-	fputs("/**\n", file);
-	fputs(" * \\file rules.c\n", file);
-	fputs(" * \\brief Functions created from tagged condition and filter rules.\n", file);
-	fputs(" */\n\n", file);
-	fputs("#include \"header.h\"\n", file);
-
-	/*current_time_unit = * modeldata->p_time_units;
-	while(current_time_unit)
-	{
-
-		current_time_unit = current_time_unit->next;
-	}*/
-	/*<?foreach timeunit?>#define $name $period
-	#define $unit_name_OF_$name $unit_name%$name
-	<?end foreach?>*/
-
-	while(current_xmachine)
-	{
-		// TODO
-		/* Message filters */
-		current_function = current_xmachine->functions;
-		while(current_function)
-		{
-			/* If function has a condition... */
-			if(current_function->condition_function != NULL)
-			{
-				fputs("\nint ", file);
-				fputs(current_function->condition_function, file);
-				fputs("(xmachine_memory_", file);
-				fputs(current_xmachine->name, file);
-				fputs(" *a)\n", file);
-				fputs("{\n", file);
-
-				fputs("\tif(", file);
-				writeRule(current_function->condition_rule, file);
-				fputs(") return 1;\n", file);
-				fputs("\telse return 0;\n", file);
-
-				fputs("}\n", file);
-			}
-
-			current_ioput = current_function->inputs;
-			while(current_ioput)
-			{
-				/* If input message has a filter */
-				if(current_ioput->filter_function != NULL)
-				{
-					/* Check if an agent variable used in the filter */
-					current_ioput->filter_rule->has_agent_var = checkRuleAgentVar(current_ioput->filter_rule);
-
-					fputs("\nint ", file);
-					fputs(current_ioput->filter_function, file);
-					fputs("(const void *msg, const void *params)\n", file);
-					fputs("{\n", file);
-					fputs("\t/* cast data to proper type */\n", file);
-					fputs("\tm_", file);
-					fputs(current_ioput->messagetype, file);
-					fputs(" *m = (m_", file);
-					fputs(current_ioput->messagetype, file);
-					fputs("*)msg;\n", file);
-					/* If agent variable used in the filter then declare and assign varaible a to agent memory */
-					if(current_ioput->filter_rule->has_agent_var)
-					{
-						fputs("\txmachine_memory_", file);
-						fputs(current_xmachine->name, file);
-						fputs(" *a = (xmachine_memory_", file);
-						fputs(current_xmachine->name, file);
-						fputs(" *)params;\n", file);
-					}
-
-					fputs("\n\tif(", file);
-					writeRule(current_ioput->filter_rule, file);
-					fputs(") return 1;\n", file);
-					fputs("\telse return 0;\n", file);
-
-					fputs("}\n", file);
-				}
-
-				current_ioput = current_ioput->next;
-			}
-
-			current_function = current_function->next;
-		}
-
-		current_xmachine = current_xmachine->next;
-	}
-
-	/* Close the files */
-	fclose(file);
 }
 
 void parseUnittest(char * directory, model_data * modeldata)

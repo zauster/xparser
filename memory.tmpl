@@ -5,6 +5,38 @@
 
 #include "header.h"
 
+<?foreach xagent?><?foreach function?>
+void unittest_$name_$current_state_$next_state()
+{
+	<?if function_input?>int rc;<?end if?>
+	<?foreach function_input?>
+	<?if filter?>rc = MB_Iterator_CreateFiltered(b_$name, &i_$name, &$filter, current_xmachine_$agent_name);<?end if?>
+	<?if no_filter?>rc = MB_Iterator_Create(b_$name, &i_$name);<?end if?>
+	#ifdef ERRCHECK
+	if (rc != MB_SUCCESS)
+	{
+	   fprintf(stderr, "ERROR: Could not create Iterator for '$name'\n");
+	   switch(rc) {
+	       case MB_ERR_INVALID:
+	           fprintf(stderr, "\t reason: '$name' board is invalid\n");
+	           break;
+	       case MB_ERR_LOCKED:
+               fprintf(stderr, "\t reason: '$name' board is locked\n");
+               break;
+           case MB_ERR_MEMALLOC:
+               fprintf(stderr, "\t reason: out of memory\n");
+               break;
+           case MB_ERR_INTERNAL:
+               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+               break;
+	   }
+	}
+	#endif
+	<?end foreach?>
+	//return $name();
+}
+<?end foreach?><?end foreach?>
+
 void free_messages()
 {
 	int rc;
@@ -51,6 +83,9 @@ void initialise_pointers()
 	$agent_name_$name_state = init_$agent_name_state();//&temp_xmachine_$agent_name_$name;
 <?end foreach?><?end foreach?>
 <?foreach message?>
+	/* Initialise message sync composite params as NULL */
+	FLAME_m_$name_composite_params = NULL;
+
 	    rc = MB_Create(&b_$name, sizeof(m_$name));
 	    #ifdef ERRCHECK
 	    if (rc != MB_SUCCESS)

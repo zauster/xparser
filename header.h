@@ -37,7 +37,7 @@
 struct char_list
 {
 	char character;				/**< Character being held. */
-	
+
 	struct char_list * next;		/**< Pointer to next character in list. */
 };
 
@@ -50,7 +50,7 @@ struct int_array
 {
 	int size;
 	int total_size;
-	
+
 	int * array;
 };
 
@@ -63,7 +63,7 @@ struct double_array
 {
 	int size;
 	int total_size;
-	
+
 	double * array;
 };
 
@@ -76,7 +76,7 @@ struct char_array
 {
 	int size;
 	int total_size;
-	
+
 	char * array;
 };
 
@@ -87,7 +87,7 @@ struct input_file
 	char * fulldirectory;
 	char * localdirectory;
 	int enabled;
-	
+
 	struct input_file * next;
 };
 
@@ -111,20 +111,10 @@ struct variable
 	char c_type[5];				/**< Variable C type, e.g 'i' or 'f'. */
 	int ismodeldatatype;			/**< Flag for model defined data type. */
 	char * file;			/**< File from where element read. */
-	
+	struct xmachine_message * message;	/**< Pointer to message containing this variable, NULL if not. */
+	struct xmachine * agent;			/**< Pointer to agent containing this variable, NULL if not. */
+
 	struct variable * next;		/**< Pointer to next variable in list. */
-};
-
-/** \struct xmachine_memory
- * \brief Holds list of xmachine memories.
- *
- * Holds list of xmachine memories using a linked list.
- */
-struct xmachine_memory
-{
-	struct variable * vars;		/**< Pointer to X-machine variables in memory. */
-
-	struct xmachine_memory * next;	/**< Pointer to next X-machine memory in list. */
 };
 
 /** \struct xmachine_state
@@ -133,7 +123,8 @@ struct xmachine_memory
 struct xmachine_state
 {
 	char * name;		/**< Pointer to state name. */
-	
+	char * agent_name;	/**< Pointer to agent name that holds this state. */
+
 	struct xmachine_state * next;	/**< Pointer to next state in list. */
 };
 
@@ -143,20 +134,20 @@ struct xmachine_state
 struct xmachine_state_holder
 {
 	struct xmachine_state * state;
-	
+
 	struct xmachine_state_holder * next;	/**< Pointer to next state in list. */
 };
 
 typedef struct xmachine_state_holder xmachine_state_holder;
 
-struct state_pointer
+/*struct state_pointer
 {
 	struct xmachine_state * state;
-	
+
 	struct state_pointer * next;
 };
 
-typedef struct state_pointer state_pointer;
+typedef struct state_pointer state_pointer;*/
 
 /** \struct f_code
  * \brief Holds code.
@@ -164,7 +155,7 @@ typedef struct state_pointer state_pointer;
 struct f_code
 {
 	char * code;	/**< Pointer to code. */
-	
+
 	struct f_code * next;		/**< Pointer to next code in list. */
 };
 
@@ -177,13 +168,15 @@ struct rule_data
 	char * lhs;
 	char * op;
 	char * rhs;
+	struct variable * lhs_variable; /* Pointer to the lhs variable */
+	struct variable * rhs_variable; /* Pointer to the rhs variable */
 	struct rule_data * lhs_rule; /* If rule==NULL then use lhs,op,rhs data */
 	struct rule_data * rhs_rule; /* If rule==NULL then use lhs,op,rhs data */
 	int time_rule;
 	int not;
 	int has_agent_var;
 	int has_message_var;
-	
+
 	struct rule_data * next;
 };
 
@@ -194,7 +187,9 @@ struct xmachine_ioput
 	char * messagetype;
 	char * filter_function;		/**< The filter rule function name. */
 	struct rule_data * filter_rule;
-	
+	struct xmachine_function * function;
+	struct xmachine_message * message;
+
 	struct xmachine_ioput * next;
 };
 
@@ -208,37 +203,40 @@ struct xmachine_function
 	char * name;		/**< Pointer to function name. */
 	char * note;		/**< Pointer to function note. */
 	struct f_code * code;			/**< Pointer to function code. */
-	
+
 	char * agent_name;
-	
+
 	char * file;		/**< File from where element read from. */
-	
+
 	double x;
 	double y;
-	int rank_in;
-	int rank_out;
-	
+	int rank_in;		/**< Execution layer. */
+	int index;			/**< Process order index. */
+	int score;			/**< Order score. */
+
 	struct rule_data * condition_rule;	/**< The condition rule function name. */
 	char * condition_function;
-	
+
 	char * current_state;
 	char * next_state;
 	struct xmachine_ioput * inputs;
 	struct xmachine_ioput * outputs;
-	
+
 	/* Holds first inputs and last outputs of specific message types */
-	struct xmachine_ioput * first_inputs;
-	struct xmachine_ioput * last_outputs;
-	
+	//struct xmachine_ioput * first_inputs;
+	//struct xmachine_ioput * last_outputs;
+	struct sync_pointer * start_syncs;
+	struct sync_pointer * complete_syncs;
+
 	struct adj_function * dependson;	/**< Node list of dependencies. */
 	struct adj_function * dependants;	/**< Node list of dependants. */
-	
+
 	struct adj_function * alldepends;
 	struct adj_function * recentdepends;
-	
+
 	/* To hold depends tag info */
 	struct adj_function * depends;		/**< Pointer to function note. */
-	
+
 	struct xmachine_function * next;	/**< Pointer to next function in list. */
 };
 
@@ -246,9 +244,9 @@ struct adj_function
 {
 	struct xmachine_function * function;
 	char * type;
-	
+
 	char * name;
-	
+
 	struct adj_function * next;
 };
 
@@ -262,9 +260,53 @@ struct env_func
 	int header;	/**< Pointer to flag if header file (1) or functions file (2). */
 	char * code;	/**< Pointer to environment function code. */
 	char * filepath;	/**< Pointer to environment function filepath. */
-	
+
 	struct env_func * next;	/**< Pointer to next environment function in list. */
 };
+
+struct sync
+{
+	struct xmachine_message * message;
+
+	char * name;		/**< The sync name and therefore the filter rule function name. */
+	struct rule_data * filter_rule;
+	struct variable * vars;			/**< Pointer to agent filter variable types. */
+
+	//struct xmachine_state_holder * states;	/**< The states holding agent that could use the filter. */
+
+	struct xmachine * agents;	/**< Agents that have inputting filter functions, states holding agents that could use the filter */
+	int filter_agent_count;
+
+	//struct function_pointer * depends;	/**< Functions that start sync depends on. */
+	//struct function_pointer * dependents;	/**< Functions with input after this sync. */
+	struct function_pointer * lastdepend;	/**< The last function start sync depends on. */
+	struct function_pointer * firstdependent;	/**< The first function with input in this sync. */
+
+	/* Sync start depends on last... */
+	struct function_pointer * outputting_functions;	/**< Functions that output the message type. */
+	struct function_pointer * filter_variable_changing_functions;	/**< Functions that change the variables of filters required by the sync. */
+	struct function_pointer * previous_sync_inputting_functions;	/**< Inputting functions of previous syncs that need to end first. */
+	/* Sync complete just before first... */
+	struct function_pointer * inputting_functions;	/**< Functions that input the message type. */
+
+	struct xmachine_ioput * filters;		/**< Pointer to functions with filters for this sync. */
+
+	struct sync * next;
+};
+
+typedef struct sync sync;
+
+/** \struct sync_pointer
+ * \brief Holds pointer to a sync.
+ */
+struct sync_pointer
+{
+	struct sync * current_sync;	/**< Pointer to sync. */
+
+	struct sync_pointer * next;		/**< Pointer next sync in list. */
+};
+
+typedef struct sync_pointer sync_pointer;
 
 /** \struct xmachine_message
  * \brief Holds name and list of variables for a message type.
@@ -275,12 +317,17 @@ struct xmachine_message
 {
 	char * name;						/**< Pointer to message name. */
 	struct variable * vars;			/**< Pointer to message variables. */
-	struct env_func * functions;		/**< Pointer to dependency functions. */
+//	struct xmachine_ioput * filters;		/**< Pointer to functions with filters for this . */
+//	struct xmachine * agents;		/**< Agent and their variables associated with filters. */
+	//struct variable * agent_vars;		/**< Agent variables associated with filters. */
+//	struct xmachine_state * states;	/**< Agent states that could hold agents that use the filters. */
+	//struct xmachine_function * last_output; /**< Last function that outputs */
+	struct sync * syncs;				/**< List of syncs for this message board. */
 	int var_number;						/**< Number of variables in memory. */
-	int first;
-	int last;
+	//struct xmachine_function * first;			/**< First input function. */
+	//struct xmachine_function * last;			/**< Last output function. */
 	char * file;
-	
+
 	struct xmachine_message * next;	/**< Pointer to next message in list.*/
 };
 
@@ -291,20 +338,20 @@ struct xmachine
 {
 	int number;								/**< X-machine number !check. */
 	char * name;							/**< Pointer X-machine name. */
-	struct xmachine_memory * memory;		/**< Pointer X-machine memory. */
+	struct variable * variables;		/**< Pointer X-machine memory. */
 	struct xmachine_state * states;			/**< Pointer X-machine states. */
 	struct xmachine_function * functions;	/**< Pointer X-machine functions. */
-	
+
 	struct xmachine_state * start_state;
 	struct xmachine_state_holder * end_states;
-	
+
 	char rangevar[50];						/**< Variable name for range */
 	char idvar[50]; 						/**< Variable name for agent id. */
 	char xvar[50];							/**< Variable name for position in x-axis. */
 	char yvar[50];							/**< Variable name for position in y-axis. */
 	char zvar[50];							/**< Variable name for position in z-axis. */
 	int var_number;							/**< Number of variables in memory. */
-	
+
 	struct xmachine * next;				/**< Pointer next X-machine in list. */
 };
 
@@ -315,7 +362,9 @@ struct layer
 {
 	int number;
 	struct function_pointer * functions;	/**< Pointer to list of functions. */
-	
+	struct sync * start_syncs;				/**< List of start syncs. */
+	struct sync * complete_syncs;				/**< List of complete syncs. */
+
 	struct layer * next;					/**< Pointer next X-machine in list. */
 };
 
@@ -325,7 +374,7 @@ struct layer
 struct function_pointer
 {
 	struct xmachine_function * function;	/**< Pointer to list of functions. */
-		
+
 	struct function_pointer * next;		/**< Pointer next X-machine in list. */
 };
 
@@ -336,7 +385,7 @@ struct model_datatype
 {
 	char * name;					/**< Name of the datatype. */
 	char * desc;					/**< Description of the datatype. */
-	struct variable * vars;			/**< Pointer to variables of the datatype. */
+	struct variable * vars;		/**< Pointer to variables of the datatype. */
 	int has_single_vars;			/**< Flag if the datatype holds single variables. */
 	int has_dynamic_arrays;			/**< Flag if the datatype holds dynamic arrays. */
 	int has_arrays;					/**< Flag if the datatype holds arrays. */
@@ -347,9 +396,10 @@ struct model_datatype
 struct flame_communication
 {
 	char * messagetype;
+	struct rule_data * filter_rule;
 	struct xmachine_function * output_function;
 	struct xmachine_function * input_function;
-	
+
 	struct flame_communication * next;
 };
 
@@ -364,7 +414,7 @@ struct time_data
 	int period;
 	struct time_data * unit;
 	int iterations;
-	
+
 	struct time_data * next;
 };
 
@@ -475,6 +525,10 @@ typedef struct function_pointer function_pointer;
 typedef struct model_datatype model_datatype;
 
 /* memory.c */
+sync * addsync(sync ** p_sync);
+void freesync(sync ** p_sync);
+void add_sync_pointer(sync_pointer ** p_sync_pointers, sync * current_sync);
+void free_sync_pointers(sync_pointer ** p_sync_pointers);
 void free_modeldata(model_data * modeldata);
 input_file * add_input_file(input_file ** p_files);
 void free_input_files(input_file ** p_files);
@@ -496,7 +550,7 @@ env_func * addenvfunc(env_func ** p_env_funcs);
 void freeenvfunc(env_func ** p_env_funcs);
 xmachine_message * addxmessage(xmachine_message ** p_xmessage);
 void freexmessages(xmachine_message ** p_xmessage);
-void addxstate(char * name, xmachine_state ** p_xstates);
+void addxstate(char * name, char * agent_name, xmachine_state ** p_xstates);
 void freexstates(xmachine_state ** p_xstates);
 xmachine_function * addxfunction(xmachine_function ** p_xfunctions);
 void freexfunctions(xmachine_function ** p_xfunctions);
@@ -508,7 +562,7 @@ void addfunction_pointer(function_pointer ** p_function_pointers, xmachine_funct
 void freefunction_pointers(function_pointer ** p_function_pointers);
 model_datatype * adddatatype(model_datatype ** p_datatypes);
 void freedatatypes(model_datatype ** p_datatypes);
-void add_flame_communication(char * messagetype, xmachine_function * function1, xmachine_function * function2, flame_communication ** communications);
+void add_flame_communication(char * messagetype, rule_data * filter_rule, xmachine_function * function1, xmachine_function * function2, flame_communication ** communications);
 void free_flame_communications(flame_communication ** communications);
 adj_function * add_depends_adj_function(xmachine_function * current_function);
 void add_adj_function_simple(xmachine_function * function1, xmachine_function * function2);
@@ -554,5 +608,4 @@ int create_dependency_graph(char * filepath, model_data * modeldata);
 /* parsetemplate.c */
 void parseTemplate(char * filename, char * templatename, model_data * modeldata);
 void parseAgentHeaderTemplate(char * directory, model_data * modeldata);
-void parseRuleFunctionsTemplate(char * directory, model_data * modeldata);
 void parseUnittest(char * directory, model_data * modeldata);

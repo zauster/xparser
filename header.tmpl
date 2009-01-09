@@ -192,6 +192,10 @@ struct xmachine
 	//struct xmachine * next;	/**< Pointer to next X-machine in the list.  */
 };
 <?foreach message?>
+/** \var void* FLAME_m_$name_composite_params\n
+ * \brief Pointer to message sync agent composite params */
+void* FLAME_m_$name_composite_params;
+
 /** \struct m_$name
  * \brief Holds message of type $name_message.
  */
@@ -482,7 +486,9 @@ void add_$name_message(<?foreach messagevar?>$type $name<?if static_array?>[]<?e
 m_$name * add_$name_message_internal(void);
 m_$name * get_first_$name_message(void);
 m_$name * get_next_$name_message(m_$name * current);
-void free$namemessages(void);<?end foreach?>
+void free$namemessages(void);
+<?if filter?>int FLAME_composite_filter_$name(const void *msg, const void *composite_params);
+int FLAME_build_filter_param_$name();<?end if?><?end foreach?>
 <?foreach allvar?><?if not_modeldatatype?><?if not_array?>
 void set_$name($type <?if dynamic_array?>* <?end if?><?if static_array?>*<?end if?>$name<?if static_array?>[]<?end if?>);<?end if?><?end if?>
 $type <?if modeldatatype?>* <?end if?><?if not_modeldatatype?><?if array?>* <?end if?><?end if?>get_$name();<?end foreach?>
@@ -502,5 +508,8 @@ void generate_partitions(double cloud_data[6], int partitions, int partition_met
 <?end foreach?>
 /* memory.c */
 xmachine * add_xmachine(void);
+/* rules.c */
+<?foreach message?><?foreach sync?><?if filter?>int FLAME_build_filter_param_$name();
+<?end if?><?end foreach?><?end foreach?>
 /* timing.c */
 double get_time(void);

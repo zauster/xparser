@@ -1,5 +1,67 @@
 #include "header.h"
 
+/** \fn checkRule(rule_data * current_rule_data)
+ * \brief Checks the rule to see if it contains agent variables.
+ * \param current_rule_data The rule to check.
+ */
+int checkRuleAgentVar(rule_data * current_rule_data)
+{
+	int flag = 0;
+
+	if(current_rule_data->time_rule == 1)
+	{
+		if(strncmp(current_rule_data->rhs, "a.", 2) == 0) flag = 1;
+	}
+	else
+	{
+		if(current_rule_data->lhs == NULL)
+		{
+			if(checkRuleAgentVar(current_rule_data->lhs_rule) == 1) flag = 1;
+		}
+		else
+		{
+			if(strncmp(current_rule_data->lhs, "a.", 2) == 0) flag = 1;
+		}
+
+		if(current_rule_data->rhs == NULL)
+		{
+			if(checkRuleAgentVar(current_rule_data->rhs_rule) == 1) flag = 1;
+		}
+		else
+		{
+			if(strncmp(current_rule_data->rhs, "a.", 2) == 0) flag = 1;
+		}
+	}
+
+	return flag;
+}
+
+int checkRuleMessageVar(rule_data * current_rule_data)
+{
+	int flag = 0;
+
+		if(current_rule_data->lhs == NULL)
+		{
+			if(checkRuleMessageVar(current_rule_data->lhs_rule) == 1) flag = 1;
+		}
+		else
+		{
+			if(strncmp(current_rule_data->lhs, "m.", 2) == 0) flag = 1;
+		}
+
+		if(current_rule_data->rhs == NULL)
+		{
+			if(checkRuleAgentVar(current_rule_data->rhs_rule) == 1) flag = 1;
+		}
+		else
+		{
+			if(strncmp(current_rule_data->rhs, "m.", 2) == 0) flag = 1;
+		}
+
+	return flag;
+}
+
+
 void handleVariableType(char_array * current_string, variable * current_variable, model_data * modeldata)
 {
 	model_datatype * current_datatype;
@@ -206,7 +268,6 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	int model, filter, phase, enabled, not, time;
 	int not_value;
 	/* Pointer to new structs */
-	xmachine_memory * current_memory;
 	xmachine_message * current_message;
 	xmachine_state * current_state;
 	xmachine_function * current_function;
@@ -413,32 +474,27 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			/*printf("string = ");*/
 			/*print_char_array(current_string);*/
 
-			/* Handle truncated empty content tag */
-			/* If last character of string in tag is not a slash */
-			if(current_string->array[current_string->size-1] != '/')
+			/* Handle XML nested tag errors */
+			/* If start tag or xml start tag */
+			if(current_string->array[0] != '/')
 			{
-				/* Handle XML nested tag errors */
-				/* If start tag or xml start tag */
-				if(current_string->array[0] != '/')
+				/* Add to list of tags */
+				strcpy(&chartag[numtag][0], current_string->array);
+				tagline[numtag] = linenumber;
+				/* Advance list to next free place */
+				numtag++;
+			}
+			/* If end tag */
+			else
+			{
+				/* Look at last tag */
+				numtag--;
+				/* If different then exit */
+				if(strcmp(&current_string->array[1], &chartag[numtag][0]) != 0 && strcmp(current_string->array, "/xmodel") != 0)
 				{
-					/* Add to list of tags */
-					strcpy(&chartag[numtag][0], current_string->array);
-					tagline[numtag] = linenumber;
-					/* Advance list to next free place */
-					numtag++;
-				}
-				/* If end tag */
-				else
-				{
-					/* Look at last tag */
-					numtag--;
-					/* If different then exit */
-					if(strcmp(&current_string->array[1], &chartag[numtag][0]) != 0 && strcmp(current_string->array, "/xmodel") != 0)
-					{
-						fprintf(stderr, "ERROR: The tag <%s> on line number %i\n", current_string->array, linenumber);
-						fprintf(stderr, "ERROR: doesn't close the tag <%s> on line number %i\n", &chartag[numtag][0], tagline[numtag]);
-						exit(1);
-					}
+					fprintf(stderr, "ERROR: The tag <%s> on line number %i\n", current_string->array, linenumber);
+					fprintf(stderr, "ERROR: doesn't close the tag <%s> on line number %i\n", &chartag[numtag][0], tagline[numtag]);
+					exit(1);
 				}
 			}
 
@@ -482,7 +538,11 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				var = 1;
 				if(datatype == 1) current_variable = addvariable(p_variable);
 				else if(environment == 1) current_variable = addvariable(modeldata->p_envvars);
-				else if(memory == 1) current_variable = addvariable(&current_memory->vars);
+				else if(memory == 1)
+				{
+					current_variable = addvariable(&current_xmachine->variables);
+					current_variable->agent = current_xmachine;
+				}
 				else current_variable = addvariable(p_variable);
 
 				current_variable->file = copystr(inputfile->fullfilepath);
@@ -558,6 +618,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				input = 1;
 
 				current_ioput = addioput(&current_function->inputs);
+				current_ioput->function = current_function;
 			}
 			if(strcmp(current_string->array, "/input") == 0) { input = 0; }
 			if(strcmp(current_string->array, "output") == 0)
@@ -565,6 +626,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				output = 1;
 
 				current_ioput = addioput(&current_function->outputs);
+				current_ioput->function = current_function;
 			}
 			if(strcmp(current_string->array, "/output") == 0) { output = 0; }
 			if(strcmp(current_string->array, "messagetype") == 0 || strcmp(current_string->array, "messageName") == 0) { messagetype = 1; }
@@ -592,10 +654,10 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			{
 				function = 0;
 
-				if(current_function->current_state != NULL) addxstate(current_function->current_state, &current_xmachine->states);
-				if(current_function->next_state != NULL) addxstate(current_function->next_state, &current_xmachine->states);
-
 				current_function->agent_name = copystr(current_xmachine->name);
+
+				if(current_function->current_state != NULL) addxstate(current_function->current_state, current_function->agent_name, &current_xmachine->states);
+				if(current_function->next_state != NULL) addxstate(current_function->next_state, current_function->agent_name, &current_xmachine->states);
 			}
 			if(strcmp(current_string->array, "header") == 0) { header = 1; current_envfunc = addenvfunc(modeldata->p_envfuncs); }
 			if(strcmp(current_string->array, "/header") == 0) { header = 0; }
@@ -628,9 +690,11 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					variable_count++;
 					if(current_variable->arraylength == -1 || (current_variable->ismodeldatatype == 1 && current_variable->datatype->has_dynamic_arrays == 1))
 					{
-						fprintf(stderr, "Error: %s - dynamic array found in message\n", current_variable->name);
+						fprintf(stderr, "Error: %s - dyamic array found in message\n", current_variable->name);
 						dynamic_array_found = 1;
 					}
+
+					current_variable->message = current_message;
 
 					current_variable = current_variable->next;
 				}
@@ -790,6 +854,9 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/filter") == 0)
 			{
 				filter = 0;
+				/* Check if filter rule contains agent/message variables */
+				current_ioput->filter_rule->has_agent_var = checkRuleAgentVar(current_ioput->filter_rule);
+				current_ioput->filter_rule->has_message_var = checkRuleMessageVar(current_ioput->filter_rule);
 			}
 			if(strcmp(current_string->array, "value") == 0) { value = 1; }
 			if(strcmp(current_string->array, "/value") == 0) { value = 0; }
@@ -1186,7 +1253,6 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				if(name)
 				{
 					current_xmachine = addxmachine(modeldata->p_xmachines, current_string->array);
-					current_memory = current_xmachine->memory;
 					printf("Reading xagent named : ");
 					printf(current_xmachine->name);
 					printf("\n");
@@ -1262,10 +1328,11 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	fclose(file);
 }
 
-void handleRuleValue(char ** p_value, xmachine_function * current_function, xmachine * current_xmachine, char * messagetype, model_data * modeldata)
+void handleRuleValue(char ** p_value, variable ** p_variable, xmachine_function * current_function, xmachine * current_xmachine, char * messagetype, model_data * modeldata)
 {
 	variable * current_variable;
 	xmachine_message * current_message;
+	//xmachine * current_xmachine2;
 	char buffer[1000];
 	int found, i, j;
 
@@ -1275,10 +1342,14 @@ void handleRuleValue(char ** p_value, xmachine_function * current_function, xmac
 		/* check valid agent memory valiable */
 		found = 0;
 		strcpy(buffer, *p_value+2);
-		current_variable = current_xmachine->memory->vars;
+		current_variable = current_xmachine->variables;
 		while(current_variable)
 		{
-			if(strcmp(buffer, current_variable->name) == 0) found = 1;
+			if(strcmp(buffer, current_variable->name) == 0)
+			{
+				found = 1;
+				*p_variable = current_variable;
+			}
 
 			current_variable = current_variable->next;
 		}
@@ -1289,6 +1360,46 @@ void handleRuleValue(char ** p_value, xmachine_function * current_function, xmac
 			fprintf(stderr, "       in file: '%s'\n", current_function->file);
 			exit(0);
 		}
+
+		/* Save agent variable to message type agent_var filter list */
+/*		current_message = *modeldata->p_xmessages;
+		if(messagetype == NULL) current_message = NULL;
+		while(current_message)
+		{
+			if(strcmp(messagetype, current_message->name) == 0)
+			{
+				// Check agent variable not already in list
+				found = 0;
+
+
+				for(current_xmachine2 = current_message->agents; current_xmachine2; current_xmachine2 = current_xmachine2->next)
+				{
+					if(strcmp(current_xmachine2->name, current_xmachine->name) == 0)
+					{
+						for(current_variable = current_xmachine2->variables; current_variable; current_variable = current_variable->next)
+						{
+							if(strcmp(current_variable->name, buffer) == 0) found = 1;
+						}
+					}
+				}
+
+
+
+				if(found == 0)
+				{
+					current_xmachine2 = addxmachine(&current_message->agents, current_xmachine->name);
+					// TODO
+
+					current_variable = addvariable(&current_xmachine2->variables);
+					current_variable->name = copystr(buffer);
+					current_variable->type = copystr((*p_variable)->type);
+					current_variable->agent = current_xmachine;
+					strcpy(current_variable->c_type, (*p_variable)->c_type);
+				}
+			}
+
+			current_message = current_message->next;
+		}*/
 
 		/* Update value */
 		strcpy(buffer, "a->");
@@ -1309,7 +1420,11 @@ void handleRuleValue(char ** p_value, xmachine_function * current_function, xmac
 				current_variable = current_message->vars;
 				while(current_variable)
 				{
-					if(strcmp(buffer, current_variable->name) == 0) found = 1;
+					if(strcmp(buffer, current_variable->name) == 0)
+					{
+						found = 1;
+						*p_variable = current_variable;
+					}
 
 					current_variable = current_variable->next;
 				}
@@ -1320,6 +1435,8 @@ void handleRuleValue(char ** p_value, xmachine_function * current_function, xmac
 		if(found == 0)
 		{
 			fprintf(stderr, "ERROR: value '%s' in filter rule not in message variables\n", buffer);
+			fprintf(stderr, "       in function '%s' %s->%s in agent '%s'\n", current_function->name, current_function->current_state, current_function->next_state, current_xmachine->name);
+			fprintf(stderr, "       in file: '%s'\n", current_function->file);
 			exit(0);
 		}
 
@@ -1395,16 +1512,16 @@ void handleRule(rule_data * current_rule_data, xmachine_function * current_funct
 				exit(0);
 			}
 
-			handleRuleValue(&current_rule_data->rhs, current_function, current_xmachine, messagetype, modeldata);
+			handleRuleValue(&current_rule_data->rhs, &current_rule_data->rhs_variable, current_function, current_xmachine, messagetype, modeldata);
 		}
 		else
 		{
 			/* Handle values */
 			if(current_rule_data->lhs == NULL) handleRule(current_rule_data->lhs_rule, current_function, current_xmachine, messagetype, modeldata);
-			else handleRuleValue(&current_rule_data->lhs, current_function, current_xmachine, messagetype, modeldata);
+			else handleRuleValue(&current_rule_data->lhs, &current_rule_data->lhs_variable, current_function, current_xmachine, messagetype, modeldata);
 
 			if(current_rule_data->rhs == NULL) handleRule(current_rule_data->rhs_rule, current_function, current_xmachine, messagetype, modeldata);
-			else handleRuleValue(&current_rule_data->rhs, current_function, current_xmachine, messagetype, modeldata);
+			else handleRuleValue(&current_rule_data->rhs, &current_rule_data->rhs_variable, current_function, current_xmachine, messagetype, modeldata);
 
 			/* Handle op */
 			if(strcmp(current_rule_data->op, "EQ") == 0) { strcpy(current_rule_data->op, "=="); }
@@ -1433,7 +1550,6 @@ int checkmodel(model_data * modeldata)
 	variable * current_variable;
 	variable * current_variable2;
 	model_datatype * current_datatype;
-	model_datatype * current_datatype2;
 	xmachine_function * current_function;
 	xmachine_function * current_function2;
 	adj_function * current_adj_function;
@@ -1441,99 +1557,17 @@ int checkmodel(model_data * modeldata)
 	rule_data * current_rule_data;
 	xmachine_message * current_message;
 	xmachine_message * current_message2;
-	xmachine_state * current_state;
 	variable * allvar;
 	char buffer[1000];
 	int variable_count;
 	int found;
 	int state_number;
-	int k, m;
 
 	/* Check model for:
 	 * agent/message variables are only known data types
 	 * agent/message variables only appear once, show warning for duplicates and show from which files
 	 * try and parse functions files for implementations of functions defined in model xml
 	 * */
-
-	/* Find start state of agents, find error if more than one? */
-	/* For each agent */
-	current_xmachine = * modeldata->p_xmachines;
-	current_xmachine2 = NULL;
-	while(current_xmachine)
-	{
-		current_state = current_xmachine->states;
-		while(current_state)
-		{
-			k = 0;
-			m = 0;
-			current_function = current_xmachine->functions;
-			while(current_function)
-			{
-				if(strcmp(current_function->next_state, current_state->name) == 0)
-					k = 1;
-
-				if(strcmp(current_function->current_state, current_state->name) == 0)
-					m++;
-
-				current_function = current_function->next;
-			}
-
-			if(k == 0)
-			{
-				/*printf("%s - %s\n", current_xmachine->name, current_state->name);*/
-				if(current_xmachine->start_state == NULL)
-				{
-					current_xmachine->start_state = current_state;
-				}
-				else
-				{
-					fprintf(stderr, "ERROR: multiple start states found in '%s' agent\n", current_xmachine->name);
-					fprintf(stderr, "\tincludes %s and %s states\n", current_xmachine->start_state->name, current_state->name);
-					return -1;
-				}
-			}
-
-			if(m == 0)
-			{
-				/*printf("END STATE: %s - %s\n", current_xmachine->name, current_state->name);*/
-				addstateholder(current_state, &current_xmachine->end_states);
-			}
-
-			if(m > 1)
-			{
-				/*printf("More than one outgoing edge: %s - %s\n", current_xmachine->name, current_state->name);*/
-			}
-
-			current_state = current_state->next;
-		}
-
-		/* if no start state then error */
-		if(current_xmachine->start_state == NULL)
-		{
-			/*fprintf(stderr, "ERROR: no start state found in '%s' agent\n", current_xmachine->name);
-			return -1;*/
-			fprintf(stderr, "WARNING: no start state found in '%s' agent, agent removed from model\n", current_xmachine->name);
-			/* Remove agent from the agent list */
-			if(current_xmachine2 == NULL) * modeldata->p_xmachines = current_xmachine->next;
-			else current_xmachine2->next = current_xmachine->next;
-
-			free(current_xmachine->name);
-			freexmemory(&current_xmachine->memory);
-			freexstates(&current_xmachine->states);
-			freexfunctions(&current_xmachine->functions);
-			freestateholder(&current_xmachine->end_states);
-			free(current_xmachine);
-
-			if(current_xmachine2 == NULL) current_xmachine = * modeldata->p_xmachines;
-			else current_xmachine = current_xmachine2->next;
-		}
-		else
-		{
-			current_xmachine2 = current_xmachine;
-			current_xmachine = current_xmachine->next;
-		}
-	}
-
 
 	/* Check for no agents */
 	if(*modeldata->p_xmachines == NULL)
@@ -1570,7 +1604,7 @@ int checkmodel(model_data * modeldata)
 	current_xmachine2 = NULL;
 	while(current_xmachine)
 	{
-		current_variable = current_xmachine->memory->vars;
+		current_variable = current_xmachine->variables;
 
 		/* Error if no variables */
 		if(current_variable == NULL)
@@ -1583,7 +1617,7 @@ int checkmodel(model_data * modeldata)
 			else current_xmachine2->next = current_xmachine->next;
 
 			free(current_xmachine->name);
-			freexmemory(&current_xmachine->memory);
+			freevariables(&current_xmachine->variables);
 			freexstates(&current_xmachine->states);
 			freexfunctions(&current_xmachine->functions);
 			freestateholder(&current_xmachine->end_states);
@@ -1647,10 +1681,10 @@ int checkmodel(model_data * modeldata)
 			}
 
 				/* Error if a variable name is defined twice in same agent */
-			current_variable = current_xmachine->memory->vars;
+			current_variable = current_xmachine->variables;
 			while(current_variable)
 			{
-				current_variable2 = current_xmachine->memory->vars;
+				current_variable2 = current_xmachine->variables;
 				while(current_variable2)
 				{
 					if(strcmp(current_variable->name, current_variable2->name) == 0 && current_variable != current_variable2)
@@ -1667,7 +1701,7 @@ int checkmodel(model_data * modeldata)
 				current_variable = current_variable->next;
 			}
 
-			current_variable = current_xmachine->memory->vars;
+			current_variable = current_xmachine->variables;
 			while(current_variable)
 			{
 				/* Handle model defined data types */
@@ -1703,7 +1737,7 @@ int checkmodel(model_data * modeldata)
 			strcpy(current_xmachine->zvar, "0.0");
 			variable_count = 0;
 
-			current_variable = current_xmachine->memory->vars;
+			current_variable = current_xmachine->variables;
 			while(current_variable)
 			{
 				if(current_variable->arraylength != 0) modeldata->agents_include_array_variables = 1;
@@ -1769,57 +1803,11 @@ int checkmodel(model_data * modeldata)
 		}
 	}
 
-	/* Check environment variables do not have same names as agent variables */
-	for(current_variable = *modeldata->p_envvars; current_variable != NULL; current_variable = current_variable->next)
-	{
-		for(current_xmachine = *modeldata->p_xmachines; current_xmachine != NULL; current_xmachine = current_xmachine->next)
-		{
-			for(current_variable2 = current_xmachine->memory->vars; current_variable2 != NULL; current_variable2 = current_variable2->next)
-			{
-				if(strcmp(current_variable->name, current_variable2->name) == 0)
-				{
-					printf("Error: environment variable '%s' has same name as agent variable in agent '%s'\n", current_variable->name, current_xmachine->name);
-					return -1;
-				}
-			}
-		}
-	}
-	
-	/* Check for duplicate names in environment variables */
-	for(current_variable = *modeldata->p_envvars; current_variable != NULL; current_variable = current_variable->next)
-	{
-		for(current_variable2 = *modeldata->p_envvars; current_variable2 != NULL; current_variable2 = current_variable2->next)
-		{
-			if(current_variable != current_variable2)
-			{
-				if(strcmp(current_variable->name, current_variable2->name) == 0)
-				{
-					printf("Error: environment variable name '%s' has been defined more than once\n", current_variable->name);
-					return -1;
-				}
-			}
-		}
-	}
-	
-	/* Check data types do not have the same name */
-	for(current_datatype = *modeldata->p_datatypes; current_datatype != NULL; current_datatype = current_datatype->next)
-	{
-		for(current_datatype2 = *modeldata->p_datatypes; current_datatype2 != NULL; current_datatype2 = current_datatype2->next)
-		{
-			if(current_datatype != current_datatype2)
-			{
-				if(strcmp(current_datatype->name, current_datatype2->name) == 0)
-				{
-					printf("Error: the datatype name '%s' has been defined more than once\n", current_datatype->name);
-					return -1;
-				}
-			}
-		}
-	}
 
 	int newlayer = 0;
 	int totallayers = 0;
-	m = 0;
+	int m = 0;
+	int k;
 	/* If functions have old style depends tags create states */
 	if(modeldata->depends_style == 1)
 	{
@@ -1959,7 +1947,7 @@ int checkmodel(model_data * modeldata)
 						state_number++;
 						sprintf(buffer, "%i", state_number);
 						current_function->next_state = copystr(buffer);
-						addxstate(current_function->current_state, &current_xmachine->states);
+						addxstate(current_function->current_state, current_function->agent_name, &current_xmachine->states);
 						/* Save last function */
 						current_function2 = current_function;
 					}
@@ -1973,7 +1961,7 @@ int checkmodel(model_data * modeldata)
 			free(current_function2->next_state);
 			sprintf(buffer, "%s", "end");
 			current_function2->next_state = copystr(buffer);
-			addxstate(current_function2->next_state, &current_xmachine->states);
+			addxstate(current_function2->next_state, current_function2->agent_name, &current_xmachine->states);
 
 			current_function = current_xmachine->functions;
 			while(current_function)
@@ -2024,6 +2012,7 @@ int checkmodel(model_data * modeldata)
 						if(found == 0)
 						{
 							current_ioput = addioput(&current_function->inputs);
+							current_ioput->function = current_function;
 							current_ioput->messagetype = copystr(current_adj_function->type);
 						}
 						/* Add output to depends on function */
@@ -2039,6 +2028,7 @@ int checkmodel(model_data * modeldata)
 						{
 							current_ioput = addioput(&current_adj_function->function->outputs);
 							current_ioput->messagetype = copystr(current_adj_function->type);
+							current_ioput->function = current_function;
 						}
 					}
 
@@ -2064,14 +2054,14 @@ int checkmodel(model_data * modeldata)
 			/* If function has a condition... */
 			if(current_function->condition_rule != NULL)
 			{
-				strcpy(buffer, current_xmachine->name);
+				strcpy(buffer, "FLAME_condition_");
+				strcat(buffer, current_xmachine->name);
 				strcat(buffer, "_");
 				strcat(buffer, current_function->name);
 				strcat(buffer, "_");
 				strcat(buffer, current_function->current_state);
 				strcat(buffer, "_");
 				strcat(buffer, current_function->next_state);
-				strcat(buffer, "_condition");
 				current_function->condition_function = copystr(buffer);
 
 				handleRule(current_function->condition_rule, current_function, current_xmachine, NULL, modeldata);
@@ -2088,6 +2078,7 @@ int checkmodel(model_data * modeldata)
 					if(strcmp(current_ioput->messagetype, current_message->name) == 0)
 					{
 						found = 1;
+						current_ioput->message = current_message;
 					}
 
 					current_message = current_message->next;
@@ -2100,16 +2091,21 @@ int checkmodel(model_data * modeldata)
 				}
 
 
+
 				/* If input message has a filter */
 				if(current_ioput->filter_rule != NULL)
 				{
 					current_rule_data = current_ioput->filter_rule;
-					strcpy(buffer, current_xmachine->name);
+					strcpy(buffer, "FLAME_filter_");
+					strcat(buffer, current_xmachine->name);
 					strcat(buffer, "_");
 					strcat(buffer, current_function->name);
 					strcat(buffer, "_");
+					strcat(buffer, current_function->current_state);
+					strcat(buffer, "_");
+					strcat(buffer, current_function->next_state);
+					strcat(buffer, "_");
 					strcat(buffer, current_ioput->messagetype);
-					strcat(buffer, "_filter");
 					current_ioput->filter_function = copystr(buffer);
 
 					handleRule(current_ioput->filter_rule, current_function, current_xmachine, current_ioput->messagetype, modeldata);

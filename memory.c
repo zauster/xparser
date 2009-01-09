@@ -66,6 +66,104 @@ void free_input_files(input_file ** p_files)
 	*p_files = NULL;
 }
 
+/** \fn sync * addfcode(sync ** p_code)
+ * \brief Allocate memory for a linked list of datatype code.
+ * \param p_code Pointer Pointer to the code list.
+ * \return Pointer to the added code.
+ */
+sync * addsync(sync ** p_sync)
+{
+	sync * current, * tmp = NULL;
+	current = *p_sync;
+
+	while(current)
+	{
+		tmp = current;
+		current = current->next;
+	}
+	/* And current is the new element */
+	current = (sync *)malloc(sizeof(sync));
+	/* Make tmp->next point to current if tmp exists */
+	if(tmp) tmp->next = current;
+	else
+	{
+		*p_sync = current;
+	}
+	/* Make current->next point to NULL */
+	current->message = NULL;
+	current->name = NULL;
+	current->filter_rule = NULL;
+	current->vars = NULL;
+	current->agents = NULL;
+	current->filter_agent_count = 0;
+	current->lastdepend = NULL;
+	current->firstdependent = NULL;
+	current->outputting_functions = NULL;
+	current->filter_variable_changing_functions = NULL;
+	current->previous_sync_inputting_functions = NULL;
+	current->inputting_functions = NULL;
+	current->filters = NULL;
+	current->next = NULL;
+
+	/* Return new element */
+	return current;
+}
+
+void freesync(sync ** p_sync)
+{
+	sync * temp, * head;
+	head = *p_sync;
+	/* Loop until new elements of cells left */
+	while(head)
+	{
+		temp = head->next;
+		free(head->name);
+		free_rule_data(&head->filter_rule);
+		freevariables(&head->vars);
+		freexmachines(&head->agents);
+		freefunction_pointers(&head->outputting_functions);
+		freefunction_pointers(&head->filter_variable_changing_functions);
+		//freesync(&head->previous_sync);
+		freefunction_pointers(&head->inputting_functions);
+		free_ioput(&head->filters);
+		free(head);
+		head = temp;
+	}
+
+	*p_sync = NULL;
+}
+
+void add_sync_pointer(sync_pointer ** p_sync_pointers, sync * current_sync)
+{
+	sync_pointer * current;
+
+	/* And current is the new element */
+	if((current = (sync_pointer *)malloc(sizeof(sync_pointer))) == NULL)
+	{
+		printf("Error: Cannot allocate memory\n");
+		exit(0);
+	}
+	/* Make current->next point to NULL */
+	current->current_sync = current_sync;
+	current->next = *p_sync_pointers;
+	*p_sync_pointers = current;
+}
+
+void free_sync_pointers(sync_pointer ** p_sync_pointers)
+{
+	sync_pointer * temp, * head;
+	head = *p_sync_pointers;
+	/* Loop until new elements of cells left */
+	while(head)
+	{
+		temp = head->next;
+		free(head);
+		head = temp;
+	}
+
+	*p_sync_pointers = NULL;
+}
+
 xmachine_ioput * addioput(xmachine_ioput ** p_ioput)
 {
 	xmachine_ioput * current, * tmp = NULL;
@@ -88,7 +186,9 @@ xmachine_ioput * addioput(xmachine_ioput ** p_ioput)
 	current->next = NULL;
 	current->filter_function = NULL;
 	current->filter_rule = NULL;
-	
+	current->function = NULL;
+	current->message = NULL;
+
 	/* Return new element */
 	return current;
 }
@@ -194,7 +294,9 @@ variable * addvariable(variable ** p_vars)
 	current->file = NULL;
 	current->next = NULL;
 	current->typenotarray = NULL;
-	
+	current->message = NULL;
+	current->agent = NULL;
+
 	/* Return new element */
 	return current;
 }
@@ -226,66 +328,6 @@ void freevariables(variable ** p_vars)
 	}
 	
 	*p_vars = NULL;
-}
-
-/** \fn xmachine_memory * addxmemory(xmachine_memory ** p_xmemory)
- * \brief Allocate memory for a linked list of datatype xmachine.
- * \param p_xmemory Pointer Pointer to the xmachines list.
- * \return Pointer to the added xmachine.
- */
-xmachine_memory * addxmemory(xmachine_memory ** p_xmemory)
-{
-	xmachine_memory * current, * temp = NULL;
-	current = *p_xmemory;
-	
-	if(p_xmemory != NULL)
-	{
-		while(current)
-		{
-			temp = current;
-			current = current->next;
-		}
-	}
-	/* And current is the new element */
-	if((current = (xmachine_memory *)malloc(sizeof(xmachine_memory))) == NULL)
-	{
-		printf("Error: Cannot allocate memory\n");
-		exit(0);
-	}
-	/* Make tmp->next point to current if tmp exists */
-	if(temp) temp->next = current;
-	else
-	{
-		*p_xmemory = current;
-	}
-	/* Make current->next point to NULL */
-	current->vars = NULL;
-	current->next = NULL;
-
-	/* Return new element */
-	return current;
-}
-
-/** \fn void freexmemory(xmachine_memory ** p_xmemory)
- * \brief Free memory for a linked list of datatype xmachine.
- * \param p_xmemory Pointer Pointer to the xmachines list.
- */
-void freexmemory(xmachine_memory ** p_xmemory)
-{
-	xmachine_memory * temp, * head;
-	head = *p_xmemory;
-	
-	/* Loop until new elements of cells left */
-	while(head)
-	{
-		temp = head->next;
-		/* Free the cell memory */
-		freevariables(&head->vars);
-		free(head);
-		head = temp;
-	}
-	
-	*p_xmemory = NULL;
 }
 
 /** \fn env_func * addenvfunc(env_func ** p_env_funcs)
@@ -377,10 +419,13 @@ xmachine_message * addxmessage(xmachine_message ** p_xmessage)
 	/* Make current->next point to NULL */
 	current->name = NULL;
 	current->vars = NULL;
-	current->functions = NULL;
+	//current->filters = NULL;
+	//current->agents = NULL;
+	//current->states = NULL;
+	current->syncs = NULL;
 	current->next = NULL;
-	current->first = 0;
-	current->last = 0;
+	//current->first = NULL;
+	//current->last = NULL;
 	current->file = NULL;
 
 	/* Return new element */
@@ -403,7 +448,10 @@ void freexmessages(xmachine_message ** p_xmessage)
 		/* Free the cell memory */
 		free(head->name);
 		freevariables(&head->vars);
-		freeenvfunc(&head->functions);
+		//free_ioput(&head->filters);
+		//freexmachines(&head->agents);
+		//freexstates(&head->states);
+		freesync(&head->syncs);
 		free(head->file);
 		free(head);
 		head = temp;
@@ -448,7 +496,7 @@ void freestateholder(xmachine_state_holder ** p_list)
  * \param p_xstates Pointer Pointer to the states list.
  * \return Pointer to the added state.
  */
-void addxstate(char * name, xmachine_state ** p_xstates)
+void addxstate(char * name, char * agent_name, xmachine_state ** p_xstates)
 {
 	xmachine_state * current, * temp;
 	current = *p_xstates;
@@ -457,8 +505,8 @@ void addxstate(char * name, xmachine_state ** p_xstates)
 	
 	while(current && flag == 0)
 	{
-		if(strcmp(current->name, name) == 0) flag = 1;
-		
+		if(strcmp(current->name, name) == 0 && strcmp(current->agent_name, agent_name) == 0) flag = 1;
+
 		current = current->next;
 	}
 	
@@ -476,6 +524,7 @@ void addxstate(char * name, xmachine_state ** p_xstates)
 		
 		/* Make current->next point to NULL */
 		current->name = copystr(name);
+		current->agent_name = copystr(agent_name);
 	}
 }
 
@@ -493,6 +542,7 @@ void freexstates(xmachine_state ** p_xstates)
 		temp = head->next;
 		/* Free the cell memory */
 		free(head->name);
+		free(head->agent_name);
 		free(head);
 		head = temp;
 	}
@@ -500,7 +550,7 @@ void freexstates(xmachine_state ** p_xstates)
 	*p_xstates = NULL;
 }
 
-void add_flame_communication(char * messagetype, xmachine_function * function1, xmachine_function * function2, flame_communication ** communications)
+void add_flame_communication(char * messagetype, rule_data * filter_rule, xmachine_function * function1, xmachine_function * function2, flame_communication ** communications)
 {
 	flame_communication * current, * tmp = * communications;
 	
@@ -512,7 +562,8 @@ void add_flame_communication(char * messagetype, xmachine_function * function1, 
 	
 	current->input_function = function1;
 	current->output_function = function2;
-	
+	current->filter_rule = filter_rule;
+
 	current->messagetype = copystr(messagetype);
 }
 
@@ -746,6 +797,8 @@ rule_data * add_rule_data(rule_data ** p_data)
 	current->lhs = NULL;
 	current->rhs = NULL;
 	current->op = NULL;
+	current->lhs_variable = NULL;
+	current->lhs_variable = NULL;
 	current->lhs_rule = NULL;
 	current->rhs_rule = NULL;
 	current->next = NULL;
@@ -815,8 +868,10 @@ xmachine_function * addxfunction(xmachine_function ** p_xfunctions)
 	current->outputs = NULL;
 	current->current_state = NULL;
 	current->next_state = NULL;
-	current->first_inputs = NULL;
-	current->last_outputs = NULL;
+	//current->first_inputs = NULL;
+	//current->last_outputs = NULL;
+	current->start_syncs = NULL;
+	current->complete_syncs = NULL;
 	current->dependson = NULL;
 	current->dependants = NULL;
 	current->alldepends = NULL;
@@ -827,7 +882,8 @@ xmachine_function * addxfunction(xmachine_function ** p_xfunctions)
 	current->x = 0.0;
 	current->y = 0.0;
 	current->rank_in = -1;
-	current->rank_out = -1;
+	current->index = -1;
+	current->score = 0;
 	current->condition_rule = NULL;
 	current->condition_function = NULL;
 
@@ -858,8 +914,10 @@ void freexfunctions(xmachine_function ** p_xfunctions)
 		freefcode(&head->code);
 		free_ioput(&head->inputs);
 		free_ioput(&head->outputs);
-		free_ioput(&head->first_inputs);
-		free_ioput(&head->last_outputs);
+		//free_ioput(&head->first_inputs);
+		//free_ioput(&head->last_outputs);
+		free_sync_pointers(&head->start_syncs);
+		free_sync_pointers(&head->complete_syncs);
 		free_adj_function(head->dependson);
 		free_adj_function(head->dependants);
 		free_adj_function(head->alldepends);
@@ -908,8 +966,7 @@ xmachine * addxmachine(xmachine ** p_xmachines, char * name)
 	/* Make current->next point to NULL */
 	current->number = number;
 	current->name = copystr(name);
-	current->memory = NULL;
-	addxmemory(&current->memory);
+	current->variables = NULL;
 	current->states = NULL;
 	current->functions = NULL;
 	
@@ -944,7 +1001,7 @@ void freexmachines(xmachine ** p_xmachines)
 		temp = head->next;
 		/* Free the cell memory */
 		free(head->name);
-		freexmemory(&head->memory);
+		freevariables(&head->variables);
 		freexstates(&head->states);
 		freexfunctions(&head->functions);
 		freestateholder(&head->end_states);
@@ -989,7 +1046,10 @@ layer * addlayer(layer ** p_layer)
 		current->next = NULL;
 		current->number = temp->number + 1;
 	}
-	
+
+	current->start_syncs = NULL;
+	current->complete_syncs = NULL;
+
 	/* Return new element */
 	return current;
 }
@@ -1008,6 +1068,8 @@ void freelayers(layer ** p_layers)
 		temp = head->next;
 		/* Free the cell memory */
 		freefunction_pointers(&head->functions);
+		freesync(&head->start_syncs);
+		freesync(&head->complete_syncs);
 		free(head);
 		head = temp;
 	}
@@ -1076,9 +1138,6 @@ model_datatype * adddatatype(model_datatype ** p_datatypes)
 	current->next = NULL;
 	current->desc = NULL;
 	current->name = NULL;
-	current->has_single_vars = 0;
-	current->has_dynamic_arrays = 0;
-	current->has_arrays = 0;
 	/* Find end of list */
 	if(* p_datatypes == NULL)
 	{
@@ -1156,13 +1215,13 @@ void sort_int_array(int_array * array)
 	/* Using bubble sorts nested loops */
 	for(i=0; i<(array->size-1); i++)
 	{
-		for(j=0; j<(array->size-1)-i; j++) 
+		for(j=0; j<(array->size-1)-i; j++)
 		{
 			/* Comparing the values between neighbours */
 			if(*(array->array+j+1) < *(array->array+j))
 			{
 				/* Swap neighbours */
-				temp = *(array->array+j); 
+				temp = *(array->array+j);
 				*(array->array+j) = *(array->array+j+1);
 				*(array->array+j+1) = temp;
 			}

@@ -1,0 +1,212 @@
+/**
+ * \file rules.c
+ * \brief Functions created from tagged condition and filter rules.
+ */
+
+#include "header.h"
+
+void* cparams_create(int agent_number, int * agent_count, size_t * agent_struct_size, size_t * cparam_size)
+{
+	void *data;
+	char *ptr;
+	int  *ptr_count;
+	int i;
+	size_t total_param_size = 0;
+
+	for(i = 0; i < agent_number; i++)
+	{
+		total_param_size += agent_count[i] * agent_struct_size[i];
+	}
+
+	//assert(count > 0);
+	//assert(total_param_size > 0);
+	/* Does libmboard free this memory? */
+	data = malloc(agent_number*sizeof(int) + total_param_size);
+	*cparam_size = agent_number*sizeof(int) + total_param_size;
+	assert(data != NULL);
+
+	ptr = (char *)data;
+	for(i = 0; i < agent_number; i++)
+	{
+		ptr_count = (int*)ptr;
+		*ptr_count = agent_count[i];
+		ptr += sizeof(int);
+	}
+
+	return data;
+}
+
+/* Agent function condition functions */
+<?foreach xagent?><?foreach function?><?if condition?>int $condition(xmachine_memory_$agent_name *a)
+{
+	if($rule) return 1;
+	else return 0;
+}
+
+<?end if?><?end foreach?><?end foreach?>/* Agent function input filter functions */
+<?foreach xagent?><?foreach function?><?foreach function_input?><?if filter?>int $filter(const void *msg, const void *params)
+{
+	/* cast data to proper type */
+	<?if has_message_var?>m_$name *m = (m_$name*)msg;<?end if?>
+	<?if has_agent_var?>xmachine_memory_$agent_name *a = (xmachine_memory_$agent_name *)params;<?end if?>
+
+	if($rule) return 1;
+	else return 0;
+}
+<?end if?><?end foreach?><?end foreach?><?end foreach?>
+<?foreach message?><?foreach sync?><?if filter?>/* Filter handling functions for message type $messagename for input layer $layer */
+<?foreach xagent?>
+struct FLAME_param_$name_$message_name_$layer
+{<?foreach xagentvar?>
+	$type $name; /* Parameter for $agent_name filter */<?end foreach?>
+};
+<?end foreach?>
+
+int FLAME_sync_filter_$name(const void *msg, const void *composite_params)
+{
+	<?if parallel?>//printf("%d> ", node_number);<?end if?>
+	//printf("**** FLAME_sync_filter_$name\n");
+
+	int i;
+	//size_t param_size;
+	char *ptr;
+	int agent_count[$filteragentcount];
+	int agent_number = 0;
+	int rc;
+
+	/* ptr cast as char* so we can do address arithmetic */
+	assert(composite_params != NULL);
+	ptr = (char *)composite_params;
+
+	for(i = 0; i < $filteragentcount; i++)
+	{
+		//printf("\tagent_count[%d] = %d\n", i, *(int*)ptr);
+		agent_count[i] = *(int*)ptr;
+		ptr += sizeof(int);
+	}
+
+	<?foreach xagent?>
+	for(i = 0; i < agent_count[agent_number]; i++)
+	{
+		//printf("\t[%d] $agent_name", i);
+		<?foreach xagentvar?>
+		//printf("\t$name=%$c_type", *($type*)ptr);
+		ptr += sizeof($type);<?end foreach?>
+		//printf("\n");
+
+		<?foreach function?>rc = $name(msg, (void*)ptr);
+		if ( rc == 1) return rc;
+		<?end foreach?>
+	}
+	agent_number++;
+	<?end foreach?>
+
+	return 0;
+}
+
+int FLAME_build_filter_param_$name()
+{
+	//struct FLAME_param_$name temp_param;
+	//void *composite_params = NULL;
+	//size_t cparams_size;
+	char *ptr;
+	int agent_count[$filteragentcount];
+	size_t agent_struct_size[$filteragentcount];
+	int agent_number = 0;
+	size_t cparam_size = 0;
+	int i, rc;
+	int count = 0;
+    MBt_Function f_handle;
+	<?foreach syncvar?>$type * $type_pointer;
+	<?end foreach?>
+
+	for(i = 0; i < $filteragentcount; i++)
+	{
+		agent_count[i] = 0;
+		agent_struct_size[i] = 0;
+	}
+
+	/* Loop though all previous states that hold agents that could use this filter */
+	<?foreach xagent?><?foreach state?>agent_count[agent_number] += $agent_name_$name_state->count;
+	<?end foreach?>agent_struct_size[agent_number] = sizeof(struct FLAME_param_$name_$message_name_$layer);
+	agent_number++;
+	<?end foreach?>
+
+	<?if parallel?>//printf("%d> ", node_number);<?end if?>
+	//printf("FLAME_build_filter_param_$name() - agent_number = %d\n", $filteragentcount);
+
+	for(i = 0; i < $filteragentcount; i++)
+	{
+		//printf("\tagent_count[%d] = %d\n", i, agent_count[i]);
+		count += agent_count[i];
+		//param_size += agent_struct_size[i];
+	}
+
+	//if(count > 0 && param_size > 0)
+	//{
+		FLAME_m_$messagename_composite_params = cparams_create(agent_number, agent_count, agent_struct_size, &cparam_size);
+
+		ptr = (char *)FLAME_m_$messagename_composite_params;
+		ptr += $filteragentcount * sizeof(int);
+		<?foreach xagent?><?foreach state?>
+		current_xmachine_$agent_name_holder = $agent_name_$name_state->agents;
+		while(current_xmachine_$agent_name_holder)
+		{
+			<?foreach xagentvar?>
+			//printf("[%d] $agent_name\t$name\t%$c_type\n", i, current_xmachine_$agent_name_holder->agent->$name);
+			$type_pointer = ($type*)ptr;
+			*$type_pointer = current_xmachine_$agent_name_holder->agent->$name;
+			ptr += sizeof($type);<?end foreach?>
+			current_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
+		}
+		<?end foreach?><?end foreach?>
+
+		/* Test print */
+		ptr = (char *)FLAME_m_$messagename_composite_params;
+		for(i = 0; i < $filteragentcount; i++)
+		{
+			//printf("\tagent_count[%d] = %d\n", i, *(int*)ptr);
+			agent_count[i] = *(int*)ptr;
+			ptr += sizeof(int);
+		}
+		<?foreach xagent?>
+		for(i = 0; i < agent_count[$xagent_count]; i++)
+		{//printf("\t[%d] $agent_name", i);
+			<?foreach xagentvar?>
+		//printf("\t$name=%$c_type", *($type*)ptr);
+			ptr += sizeof($type);<?end foreach?>
+			//printf("\n");
+		}
+		<?end foreach?>
+
+	//printf("cparam_size = %lu\n", cparam_size);
+
+	/* register the function */
+	rc = MB_Function_Register(&f_handle, &FLAME_sync_filter_$name);
+	if ( rc != MB_SUCCESS )
+	{
+		fprintf(stderr, "Error while registering function\n");
+
+		/* check valur of rc to determine reason of failure. Handle error */
+		/* don't continue if error can't be handled */
+		exit(1);
+	}
+
+	/* assign function to board, assuming myboard has been created */
+	//rc = MB_Function_Assign(mboard, f_handle, &myparam, sizeof(myFilterParam));
+	rc = MB_Function_Assign(b_$messagename, f_handle, FLAME_m_$messagename_composite_params, cparam_size);
+	if ( rc != MB_SUCCESS )
+	{
+		fprintf(stderr, "Error while assigning function to board\n");
+
+		/* check valur of rc to determine reason of failure. Handle error */
+		/* don't continue if error can't be handled */
+		exit(1);
+	}
+
+	/* temp */
+	//free(composite_params);
+
+	return 0;
+}
+<?end if?><?end foreach?><?end foreach?>

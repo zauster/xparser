@@ -267,8 +267,10 @@ int main(int argc, char * argv[])
 	strcpy(filename, directory); strcat(filename, "Doxyfile");
 	strcpy(templatename, templatedirectory); strcat(templatename, "Doxyfile.tmpl");
 	parseTemplate(filename, templatename, modeldata);
+	strcpy(filename, directory); strcat(filename, "rules.c");
+	strcpy(templatename, templatedirectory); strcat(templatename, "rules.tmpl");
+	parseTemplate(filename, templatename, modeldata);
 	parseAgentHeaderTemplate(directory, modeldata);
-	parseRuleFunctionsTemplate(directory, modeldata);
 	/*parseUnittest(directory, modeldata);*/
 	
 	free_modeldata(modeldata);
