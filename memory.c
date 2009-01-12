@@ -1547,3 +1547,196 @@ void print_char_array(char_array * array)
 {
 	printf("%s\n", array->array);
 }
+
+
+/**
+ * functions for creating linked list of colours for agents and models
+ * 
+ */
+
+void addagent_colour(agent_colour **p_agent_colours, char * name, int colour_value)
+{
+//	int number = 0;
+	agent_colour * temp = *p_agent_colours;
+	agent_colour * current = NULL;
+	
+	/*while(current)
+	{
+		 If agent name already exists 
+		//if(strcmp(current->name, name) != 0) 
+			//return current;
+		
+		temp = current;
+		current = current->next;
+		number++;
+		
+	}*/
+	
+	/* And current is the new element */
+	current = (agent_colour *)malloc(sizeof(agent_colour));
+	/*if((temp = (agent_colour *)malloc(sizeof(agent_colour))) == NULL)
+	{
+		printf("Error: Cannot allocate memory\n");
+		exit(0);
+	}*/
+	current->next=temp;
+	*p_agent_colours = current;
+	/* Make tmp->next point to current if tmp exists */
+	/*if(temp) 
+		temp->next = current;
+	else
+	{
+		*p_agent_colours = current;
+	}*/
+	/* Make current->next point to NULL */
+	
+	current->name = copystr(name);
+	current->colour = colour_value;
+	//printf("****************** %s, %d",current->name,current->colour);
+	/* Return new element */
+	//return current;
+}
+
+/** \fn void freexmachines(xmachine ** p_xmachines)
+ * \brief Free memory for a linked list of datatype xmachine.
+ * \param p_xmachines Pointer Pointer to the xmachines list.
+ */
+void freeagent_colours(agent_colour ** p_agent_colours)
+{
+	agent_colour * temp, * head;
+	head = *p_agent_colours;
+	/* Loop until new elements of cells left */
+	while(head)
+	{
+		temp = head->next;
+		/* Free the cell memory */
+	//	printf("MK: freeing %s\n",head->name);
+		free(head->name);
+		
+		//free(head->colour);
+		free(head);
+		head = temp;
+	}
+	
+	*p_agent_colours = NULL;
+}
+
+int displayagent_colour(agent_colour **p_agent_colours, char * name)
+{
+	agent_colour * current = *p_agent_colours;
+	//agent_colour * temp = NULL;
+	int colour=0;
+	while(current)
+	{
+		//printf("&&&&&&&&&&&Comparing %s with %s ", current->name,name);
+		if(strcmp(current->name, name) == 0) 
+			colour=current->colour;
+		
+			
+		current = current->next;
+	}
+	
+	return colour;
+}
+
+void addmodel_colour(model_colour **p_model_colours,char *name, int colour)
+{
+	model_colour *current,*temp;
+	current=*p_model_colours;
+	temp=*p_model_colours;
+//	int colour_old=0;//current->colour;
+	int flag=0;
+//	int counter=0;
+	
+	/*while(temp)
+	{
+		counter++;
+		printf("reading %s ",temp->name);
+		temp=temp->next;
+	}*/
+	
+	if(colour>=15)
+	{
+		colour=0;
+	}
+	
+	while((current) && (flag==0))
+	{
+		if(strcmp(current->name,name)==0) 
+			flag=1;
+		//counter++;
+		//printf("\n%s,%d",current->name,colour_old);	
+		current=current->next;
+	}
+	
+	if(flag==0)
+	{
+		
+		if((current=(model_colour *)malloc(sizeof(model_colour)))==NULL)
+		{
+			printf("No memory allocated\n");
+			exit(0);
+		}
+		current->next=temp;
+		*p_model_colours=current;
+		
+		current->name=copystr(name);
+		current->colour = colour;
+	}
+	//printf("Number of model files is %d\n", counter);
+}
+
+
+void freemodel_colours(model_colour **p_model_colours)
+{
+	model_colour * temp, * head;
+	head = *p_model_colours;
+	/* Loop until new elements of cells left */
+	while(head)
+	{
+		temp = head->next;
+		/* Free the cell memory */
+		//printf("MODEL FILE COLOURS ARE:");
+	//	printf("%s is colour %d \n",head->name, head->colour);
+		free(head->name);
+		
+		//free(head->colour);
+		free(head);
+		head = temp;
+	}
+	
+	*p_model_colours = NULL;
+}
+
+
+int displaymodel_colour(model_colour **p_model_colours, char * name)
+{
+	model_colour * current = *p_model_colours;
+	//agent_colour * temp = NULL;
+	int colour=0;
+	while(current)
+	{
+		//printf("&&&&&&&&&&&Comparing %s with %s ", current->name,name);
+		if(strcmp(current->name, name) == 0) 
+			colour=current->colour;
+		
+			
+		current = current->next;
+	}
+	
+	return colour;
+}
+ 
+int length_colour(model_colour **p_model_colours)
+{
+	int count=0;
+	model_colour *current=*p_model_colours;
+	
+	while(current!=NULL)
+	{
+		count++;
+		current=current->next;
+	}
+	return count;
+}
+

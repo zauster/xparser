@@ -420,6 +420,35 @@ struct time_data
 
 typedef struct time_data time_data;
 
+
+/** \struct agent_colour for link list
+ * \brief Holds agent colour.
+ */
+struct agent_colour
+{
+	char * name;							/**< Pointer X-machine name. */
+	int colour;								/**< X-machine colour in map */
+	
+	struct agent_colour * next;
+};
+
+typedef struct agent_colour agent_colour;
+
+
+
+/** \struct agent_colour for link list
+ * \brief Holds agent colour.
+ */
+struct model_colour
+{
+	char * name;							/**< Pointer X-machine name. */
+	int colour;								/**< X-machine colour in map */
+	
+	struct model_colour * next;
+};
+
+typedef struct model_colour model_colour;
+
 /** \struct model_data
  * \brief Holds model data.
  */
@@ -571,6 +600,15 @@ void add_adj_function_recent(xmachine_function * function1, xmachine_function * 
 void remove_adj_function_recent(xmachine_function * function1);
 void add_adj_function(xmachine_function * function1, xmachine_function * function2, char * type);
 void free_adj_function(adj_function *adj_functions);
+
+//functions for output_colour
+void addagent_colour(agent_colour **p_agent_colours, char * name, int colour_value);
+void freeagent_colours(agent_colour **p_agent_colours);
+int displayagent_colour(agent_colour **p_agent_colours, char * name);
+void addmodel_colour(model_colour **p_model_colours, char * name, int colour_value);
+void freemodel_colours(model_colour **p_model_colours);
+int displaymodel_colour(model_colour **p_model_colours, char * name);
+int length_colour(model_colour **p_model_colours);
 /* charlist.c */
 void ws(int tabcount, char * string);
 void printcharlist(char_list ** p_charlist);

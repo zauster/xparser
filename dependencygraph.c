@@ -1,5 +1,14 @@
 #include "header.h"
 
+/**
+ * Added colour arrays
+ * added output_stategraph_colour() fn
+ * **/
+ 
+ 
+const char *colour_map[]={"blue", "blueviolet", "brown" ,"burlywood4", "cadetblue", "chartreuse","darkgreen","deeppink",  "cyan4", "firebrick", "gold", "lightpink3", "lightslateblue", "magenta", "red", "yellow"};
+const char *colour_map_light[]={"antiquewhite", "aquamarine", "azure3" ,"brown1", "chartreuse1", "orchid1","lightsalmon4","darkgoldenrod1",  "darkkhaki", "darkolivegreen3", "darkslateblue", "forestgreen", "gray70", "indianred", "lightslateblue", "maroon3"};
+ 
 void output_dgraph(char * filename, char * filepath, model_data * modeldata)
 {
 	/* File to write to */
@@ -1088,6 +1097,311 @@ void output_process_order_graph(char * filename, char * filepath, model_data * m
 
 	/* Close the file */
 	fclose(file);
+}
+
+
+void output_stategraph_colour(char * filename, char * filepath, model_data * modeldata, int flag)
+{
+	/* File to write to */
+	FILE *file;
+	/* Buffer for concatenating strings */
+	char buffer[1000];
+	int i;
+	int counter_colour=0;
+	int counter_colour_2=0;
+	int display_colour=0;
+	int model_display_colour=0;
+	int length_colour_int=0;
+	xmachine * current_xmachine;
+	xmachine_function * current_function;
+	xmachine_state * current_state;
+	flame_communication * current_communication;
+
+	model_colour *p_model_colours=NULL;
+	agent_colour *p_agent_colours=NULL;
+	//agent_colour *agent_colour_tail=NULL;
+	
+	//agent_colour *temp_agent_colour;
+	
+	
+	//model_colour *temp_model_colour;
+	
+	/* place in 'data' the file to write to */
+	sprintf(buffer, "%s%s", filepath, filename);
+	/* print out the location of the source file */
+	printf("writing file: %s\n", buffer);
+	/* open the file to write to */
+	file = fopen(buffer, "w");
+
+	fputs("digraph state_graph {\n", file);
+	fputs("\trankdir=TB;\n", file);
+	fputs("\tsize=\"8,5;\"\n", file);
+	//fputs("\tnode [shape = rect];\n", file);
+
+	/* Invisible level nodes */
+	for(i = 0; i <= modeldata->layer_total; i++)
+	{
+		fputs("\tlayer_", file);
+		sprintf(buffer, "%d", i);
+		fputs(buffer, file);
+		//fputs(" [style=invis, shape=point];\n", file);
+		fputs(" [shape=plaintext, label=\"layer ", file);
+		sprintf(buffer, "%d", i);
+		fputs(buffer, file);
+		fputs("\"];\n", file);
+		//fputs(";\n", file);
+
+		if(i != 0)
+		{
+			fputs("\tlayer_", file);
+			sprintf(buffer, "%d", i-1);
+			fputs(buffer, file);
+			fputs(" -> layer_", file);
+			sprintf(buffer, "%d", i);
+			fputs(buffer, file);
+			fputs(" [style=invis];\n", file);
+		}
+	}
+
+	fputs("\t\n\t/* States */\n", file);
+	/* For every state */
+	current_xmachine = * modeldata->p_xmachines;
+	
+	counter_colour=-1;
+	while(current_xmachine)
+	{
+		counter_colour++;
+		if(counter_colour>=15)//more than 16 agents
+		{
+			counter_colour=0;
+		}
+		current_state = current_xmachine->states;
+		while(current_state)
+		{
+			//assign colour to start state
+			if(current_state==current_xmachine->start_state)
+			{//fputs("\", color=green]; \n", file);
+				
+				fputs("\t", file);
+				fputs(current_xmachine->name, file);
+				fputs("_", file);
+				fputs(current_state->name, file);
+				fputs(" [label = \"", file);
+				fputs(current_state->name, file);
+				fputs("\", color=",file);
+				fputs(colour_map[counter_colour],file);
+				fputs("]; \n", file);
+				printf("M:%s - %s - colour %s \n", current_xmachine->name, current_state->name, colour_map[counter_colour]);
+				//printf("M3 %s",current_xmachine->number);
+				//add the colour map linked list here
+				/*if((temp_agent_colour=malloc(sizeof(agent_colour)))==NULL)
+				{					
+					add_agent_colours(p_agent_colours, current_xmachine->name, counter_colour);
+				}*/
+				addagent_colour(&p_agent_colours,current_xmachine->name,counter_colour);
+				
+			}
+			//else print normal state colour
+			else
+			{ 
+				fputs("\t", file);
+				fputs(current_xmachine->name, file);
+				fputs("_", file);
+				fputs(current_state->name, file);
+				fputs(" [label = \"", file);
+				fputs(current_state->name, file);
+				fputs("\"]\n", file);
+			}
+
+			current_state = current_state->next;
+		}
+		
+		current_xmachine = current_xmachine->next;
+	}
+	/* For every function */
+	current_xmachine = * modeldata->p_xmachines;
+	while(current_xmachine)
+	{
+		counter_colour_2=-1;
+		current_function = current_xmachine->functions;
+		while(current_function)
+		{
+			counter_colour_2++;
+			if(counter_colour_2>=15) 
+				counter_colour_2=0;
+			//printf("Length of linked list is %d \n",length_colour(&p_model_colours));
+			length_colour_int=length_colour(&p_model_colours);
+			addmodel_colour(&p_model_colours,current_function->file,length_colour_int);
+			fputs("\t", file);
+			fputs(current_xmachine->name, file);
+			fputs("_", file);
+			fputs(current_function->name, file);
+			fputs("_", file);
+			fputs(current_function->current_state, file);
+			fputs("_", file);
+			fputs(current_function->next_state, file);
+			fputs(" [label = \"", file);
+			fputs(current_function->name, file);
+			//fputs("\", shape = rect]\n", file);
+			//printf("^^^^^ Function %s in file %s\n",current_function->name, current_function->file );
+			fputs("\", shape = box,style=filled,color=",file);
+			model_display_colour=displaymodel_colour(&p_model_colours,current_function->file);
+			fputs(colour_map_light[model_display_colour],file);
+			fputs("];\n", file);
+			//printout colours somewhere
+			
+			
+			current_function = current_function->next;
+		}
+
+		current_xmachine = current_xmachine->next;
+	}
+	fputs("\t\n\t/* Transitions */\n", file);
+	/* For every transition */
+	/* For each agent */
+	current_xmachine = * modeldata->p_xmachines;
+	while(current_xmachine)
+	{
+		if(flag == 0)
+		{
+			fputs("subgraph cluster_", file);
+			fputs(current_xmachine->name, file);
+			fputs(" {\n", file);
+			fputs("\tlabel = \"Agent ", file);
+			fputs(current_xmachine->name, file);
+			fputs("\";\n", file);
+		}
+
+		/* For each function */
+		current_function = current_xmachine->functions;
+		while(current_function)
+		{
+			fputs("\t", file);
+			fputs(current_xmachine->name, file);
+			fputs("_", file);
+			fputs(current_function->current_state, file);
+			fputs(" -> ", file);
+			fputs(current_xmachine->name, file);
+			fputs("_", file);
+			fputs(current_function->name, file);
+			fputs("_", file);
+			fputs(current_function->current_state, file);
+			fputs("_", file);
+			fputs(current_function->next_state, file);
+			if(current_function->condition_function == NULL)
+			{
+				fputs(";\n", file);
+			}
+			else
+			{
+				fputs(" [ label = \"", file);
+				// TODO
+				//fputs(current_function->condition, file);
+				printRule(current_function->condition_rule, file);
+				fputs("\"];\n", file);
+			}
+
+
+			fputs("\t", file);
+			fputs(current_xmachine->name, file);
+			fputs("_", file);
+			fputs(current_function->name, file);
+			fputs("_", file);
+			fputs(current_function->current_state, file);
+			fputs("_", file);
+			fputs(current_function->next_state, file);
+			fputs(" -> ", file);
+			fputs(current_xmachine->name, file);
+			fputs("_", file);
+			fputs(current_function->next_state, file);
+			fputs(";\n", file);
+
+			current_function = current_function->next;
+		}
+
+		if(flag == 0)
+		{
+			fputs("}\n", file);
+		}
+
+		current_xmachine = current_xmachine->next;
+	}
+	fputs("\t\n\t/* Communications */\n", file);
+	/* For every communication */
+	current_communication = * modeldata->p_communications;
+	while(current_communication)
+	{
+		fputs("\t", file);
+		fputs(current_communication->output_function->agent_name, file);
+		fputs("_", file);
+		fputs(current_communication->output_function->name, file);
+		fputs("_", file);
+		fputs(current_communication->output_function->current_state, file);
+		fputs("_", file);
+		fputs(current_communication->output_function->next_state, file);
+		fputs(" -> ", file);
+		fputs(current_communication->input_function->agent_name, file);
+		fputs("_", file);
+		fputs(current_communication->input_function->name, file);
+		fputs("_", file);
+		fputs(current_communication->input_function->current_state, file);
+		fputs("_", file);
+		fputs(current_communication->input_function->next_state, file);
+		fputs(" [ label = \"", file);
+		fputs(current_communication->messagetype, file);
+		//fputs("\" color=\"#00ff00\" constraint=false];\n", file);
+		
+		display_colour=displayagent_colour(&p_agent_colours,current_communication->output_function->agent_name);
+		//printf("colousr111111111 %s ", colour_map[display_colour]);
+		current_communication = current_communication->next;
+		fputs("\" color=",file);
+		fputs(colour_map[display_colour],file);
+		fputs(" constraint=false];\n", file);
+	}
+
+	for(i = 0; i <= modeldata->layer_total; i++)
+	{
+		fputs("\t{ rank=same; layer_", file);
+		sprintf(buffer, "%d", i);
+		fputs(buffer, file);
+		fputs("; ", file);
+
+		current_xmachine = * modeldata->p_xmachines;
+		while(current_xmachine)
+		{
+			// For each function
+			current_function = current_xmachine->functions;
+			while(current_function)
+			{
+				if(current_function->rank_in == i)
+				{
+					fputs(" ", file);
+					fputs(current_xmachine->name, file);
+					fputs("_", file);
+					fputs(current_function->name, file);
+					fputs("_", file);
+					fputs(current_function->current_state, file);
+					fputs("_", file);
+					fputs(current_function->next_state, file);
+					fputs("; ", file);
+				}
+
+				current_function = current_function->next;
+			}
+
+			current_xmachine = current_xmachine->next;
+		}
+
+		fputs("}\n", file);
+	}
+	fputs("}", file);
+
+	freeagent_colours(&p_agent_colours);
+	freemodel_colours(&p_model_colours);
+	/* Close the file */
+	fclose(file);
+	//free colour list
+	
 }
 
 int find_loop(xmachine_function * current, xmachine_function * depends)
@@ -2323,6 +2637,7 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 
 	/*if(modeldata->depends_style == 0)*/
 	output_stategraph("stategraph.dot", filepath, modeldata, 1);
+	output_stategraph_colour("stategraph_colour.dot", filepath, modeldata, 1);
 	/*if(modeldata->depends_style == 1) output_dgraph("dgraph.dot", filepath, modeldata);*/
 	//output_communication_graph("communication_graph.dot", filepath, modeldata);
 	output_process_order_graph("process_order_graph.dot", filepath, modeldata);
