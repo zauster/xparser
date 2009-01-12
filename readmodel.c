@@ -474,27 +474,32 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			/*printf("string = ");*/
 			/*print_char_array(current_string);*/
 
-			/* Handle XML nested tag errors */
-			/* If start tag or xml start tag */
-			if(current_string->array[0] != '/')
+			/* Handle truncated empty content tag */
+			/* If last character of string in tag is not a slash */
+			if(current_string->array[current_string->size-1] != '/')
 			{
-				/* Add to list of tags */
-				strcpy(&chartag[numtag][0], current_string->array);
-				tagline[numtag] = linenumber;
-				/* Advance list to next free place */
-				numtag++;
-			}
-			/* If end tag */
-			else
-			{
-				/* Look at last tag */
-				numtag--;
-				/* If different then exit */
-				if(strcmp(&current_string->array[1], &chartag[numtag][0]) != 0 && strcmp(current_string->array, "/xmodel") != 0)
+				/* Handle XML nested tag errors */
+				/* If start tag or xml start tag */
+				if(current_string->array[0] != '/')
 				{
-					fprintf(stderr, "ERROR: The tag <%s> on line number %i\n", current_string->array, linenumber);
-					fprintf(stderr, "ERROR: doesn't close the tag <%s> on line number %i\n", &chartag[numtag][0], tagline[numtag]);
-					exit(1);
+					/* Add to list of tags */
+					strcpy(&chartag[numtag][0], current_string->array);
+					tagline[numtag] = linenumber;
+					/* Advance list to next free place */
+					numtag++;
+				}
+				/* If end tag */
+				else
+				{
+					/* Look at last tag */
+					numtag--;
+					/* If different then exit */
+					if(strcmp(&current_string->array[1], &chartag[numtag][0]) != 0 && strcmp(current_string->array, "/xmodel") != 0)
+					{
+						fprintf(stderr, "ERROR: The tag <%s> on line number %i\n", current_string->array, linenumber);
+						fprintf(stderr, "ERROR: doesn't close the tag <%s> on line number %i\n", &chartag[numtag][0], tagline[numtag]);
+						exit(1);
+					}
 				}
 			}
 
