@@ -1179,7 +1179,7 @@ void output_stategraph_colour(char * filename, char * filepath, model_data * mod
 		while(current_state)
 		{
 			//assign colour to start state
-			if(current_state==current_xmachine->start_state)
+		/*	if(current_state==current_xmachine->start_state)
 			{//fputs("\", color=green]; \n", file);
 				
 				fputs("\t", file);
@@ -1191,13 +1191,13 @@ void output_stategraph_colour(char * filename, char * filepath, model_data * mod
 				fputs("\", color=",file);
 				fputs(colour_map[counter_colour],file);
 				fputs("]; \n", file);
-				printf("M:%s - %s - colour %s \n", current_xmachine->name, current_state->name, colour_map[counter_colour]);
+				//printf("M:%s - %s - colour %s \n", current_xmachine->name, current_state->name, colour_map[counter_colour]);
 				//printf("M3 %s",current_xmachine->number);
 				//add the colour map linked list here
-				/*if((temp_agent_colour=malloc(sizeof(agent_colour)))==NULL)
-				{					
-					add_agent_colours(p_agent_colours, current_xmachine->name, counter_colour);
-				}*/
+				//if((temp_agent_colour=malloc(sizeof(agent_colour)))==NULL)
+				//{					
+				//	add_agent_colours(p_agent_colours, current_xmachine->name, counter_colour);
+				//}
 				addagent_colour(&p_agent_colours,current_xmachine->name,counter_colour);
 				
 			}
@@ -1211,8 +1211,14 @@ void output_stategraph_colour(char * filename, char * filepath, model_data * mod
 				fputs(" [label = \"", file);
 				fputs(current_state->name, file);
 				fputs("\"]\n", file);
-			}
-
+			}*/
+				fputs("\t", file);
+				fputs(current_xmachine->name, file);
+				fputs("_", file);
+				fputs(current_state->name, file);
+				fputs(" [label = \"", file);
+				fputs(current_state->name, file);
+				fputs("\"]\n", file);
 			current_state = current_state->next;
 		}
 		
@@ -1349,14 +1355,14 @@ void output_stategraph_colour(char * filename, char * filepath, model_data * mod
 		fputs(current_communication->input_function->next_state, file);
 		fputs(" [ label = \"", file);
 		fputs(current_communication->messagetype, file);
-		//fputs("\" color=\"#00ff00\" constraint=false];\n", file);
+		fputs("\" color=\"#00ff00\" constraint=false];\n", file);
 		
-		display_colour=displayagent_colour(&p_agent_colours,current_communication->output_function->agent_name);
+		//display_colour=displayagent_colour(&p_agent_colours,current_communication->output_function->agent_name);
 		//printf("colousr111111111 %s ", colour_map[display_colour]);
 		current_communication = current_communication->next;
-		fputs("\" color=",file);
-		fputs(colour_map[display_colour],file);
-		fputs(" constraint=false];\n", file);
+		//fputs("\" color=",file);
+		//fputs(colour_map[display_colour],file);
+		//fputs(" constraint=false];\n", file);
 	}
 
 	for(i = 0; i <= modeldata->layer_total; i++)
