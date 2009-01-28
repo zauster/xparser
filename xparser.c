@@ -11,7 +11,7 @@
  * \brief Architecture for agent-based modelling based on X-machines.
  */
 
-/** \mainpage Xparser - parser tool for the X-agents framework
+/** \mainpage xparser - parser tool for the FLAME framework
  *
  * \section intro_sec Introduction
  *
@@ -21,7 +21,7 @@
  *
  * The command line is:
  *
- * 	xparser [-p | -s] [XMML file]
+ * xparser [-p | -s] [XMML file]
  *
  * xparser without any arguments will produce:
  *
@@ -38,10 +38,6 @@
  *
  * Compile using a C compiler. A Make file is provided. xparser has been tested
  * on a large number of UNIX based systems. 
- *
- * \section changelog
- *
- * 0.11.0 Can handle arrays in agent memory in serial (not parallel)
  */
 
 #include "header.h"

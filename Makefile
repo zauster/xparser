@@ -23,7 +23,10 @@ test: all
 	make --directory=tests/
 
 testclean:
-	$(RM) tests/*.o tests/run_test.exe tests/run_test
+	$(RM) tests/*.o tests/run_test.exe tests/run_test tests/stderr.out tests/stdout.out
+	make --directory=tests/test1/ vclean
+	make --directory=tests/test2/ vclean
+	make --directory=tests/test3/ vclean
 
 docs: docs/user_manual/user_manual.ps docs/developer_manual/developer_manual.ps
 

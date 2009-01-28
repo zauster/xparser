@@ -8,7 +8,13 @@
  
 const char *colour_map[]={"blue", "blueviolet", "brown" ,"burlywood4", "cadetblue", "chartreuse","darkgreen","deeppink",  "cyan4", "firebrick", "gold", "lightpink3", "lightslateblue", "magenta", "red", "yellow"};
 const char *colour_map_light[]={"antiquewhite", "aquamarine", "azure3" ,"brown1", "chartreuse1", "orchid1","lightsalmon4","darkgoldenrod1",  "darkkhaki", "darkolivegreen3", "darkslateblue", "forestgreen", "gray70", "indianred", "lightslateblue", "maroon3"};
- 
+
+/** \fn void output_dgraph(char * filename, char * filepath, model_data * modeldata)
+ * \brief Create a dependency graph of a model.
+ * \param filename Name of file to write to.
+ * \param filepath Path to write file to.
+ * \param modeldata Data from the model.
+ */
 void output_dgraph(char * filename, char * filepath, model_data * modeldata)
 {
 	/* File to write to */
@@ -71,6 +77,11 @@ void output_dgraph(char * filename, char * filepath, model_data * modeldata)
 	fclose(file);
 }
 
+/** \fn void printRule(rule_data * current_rule_data, FILE *file)
+ * \brief Print to a file the string representation of a rule.
+ * \param current_rule_data The rule to print.
+ * \param file The file to write to.
+ */
 void printRule(rule_data * current_rule_data, FILE *file)
 {
 	/* If current_rule_data is NULL */
@@ -107,6 +118,13 @@ void printRule(rule_data * current_rule_data, FILE *file)
 	}
 }
 
+/** \fn void output_stategraph(char * filename, char * filepath, model_data * modeldata, int flag)
+ * \brief Create a state graph of a model.
+ * \param filename Name of file to write to.
+ * \param filepath Path to write file to.
+ * \param modeldata Data from the model.
+ * \param flag Flag to specify use of subgraph clusters in dot output.
+ */
 void output_stategraph(char * filename, char * filepath, model_data * modeldata, int flag)
 {
 	/* File to write to */
@@ -607,7 +625,7 @@ void output_stategraph(char * filename, char * filepath, model_data * modeldata,
 	fclose(file);
 }
 
-/** \fn output_communication_graph(char * filename, char * filepath, model_data * modeldata)
+/** \fn void output_communication_graph(char * filename, char * filepath, model_data * modeldata)
  * \brief Create a graph of communication between agent types.
  * \param filename Name of file to write to.
  * \param filepath Path to write file to.
@@ -1555,6 +1573,13 @@ void calculate_filter_agent_states(model_data * modeldata)
 	}*/
 }
 
+/** \fn int find_agent_start_states(model_data * modeldata)
+ * \brief Finds agent start states.
+ * \param modeldata Data from the model.
+ * \return Error code, 0 is success
+ * 
+ * This function searches each agent types functions for start and next states.
+ */
 int find_agent_start_states(model_data * modeldata)
 {
 	xmachine * current_xmachine;
@@ -2657,3 +2682,33 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 
 	return 0;
 }
+
+/** \defgroup dependencygraph Dependency Graph
+ *
+ * The dependency graph
+ * 
+ * \dot
+ * digraph finite_state_machine
+ * {
+ *	rankdir=LR;
+ *	size="8,5"
+ *	node [shape = doublecircle]; LR_0 LR_3 LR_4 LR_8;
+ *	node [shape = circle];
+ *	LR_0 -> LR_2 [ label = "SS(B)" ];
+ *	LR_0 -> LR_1 [ label = "SS(S)" ];
+ *	LR_1 -> LR_3 [ label = "S($end)" ];
+ *	LR_2 -> LR_6 [ label = "SS(b)" ];
+ *	LR_2 -> LR_5 [ label = "SS(a)" ];
+ *	LR_2 -> LR_4 [ label = "S(A)" ];
+ *	LR_5 -> LR_7 [ label = "S(b)" ];
+ *	LR_5 -> LR_5 [ label = "S(a)" ];
+ *	LR_6 -> LR_6 [ label = "S(b)" ];
+ *	LR_6 -> LR_5 [ label = "S(a)" ];
+ *	LR_7 -> LR_8 [ label = "S(b)" ];
+ *	LR_7 -> LR_5 [ label = "S(a)" ];
+ *	LR_8 -> LR_6 [ label = "S(b)" ];
+ *	LR_8 -> LR_5 [ label = "S(a)" ];
+ * }
+ * \enddot
+ * 
+ */

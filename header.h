@@ -80,6 +80,11 @@ struct char_array
 	char * array;
 };
 
+/** \struct input_file
+ * \brief Model file data.
+ *
+ * Holds file name, directory, and enabled status of model files.
+ */
 struct input_file
 {
 	char * file;
@@ -128,8 +133,8 @@ struct xmachine_state
 	struct xmachine_state * next;	/**< Pointer to next state in list. */
 };
 
-/** \struct xmachine_state
- * \brief Holds state name, attributes and transistions.
+/** \struct xmachine_state_holder
+ * \brief Holds pointer to an agent state.
  */
 struct xmachine_state_holder
 {
@@ -182,6 +187,9 @@ struct rule_data
 
 typedef struct rule_data rule_data;
 
+/** \struct xmachine_ioput
+ * \brief Holds input and output data for agent functions.
+ */
 struct xmachine_ioput
 {
 	char * messagetype;
@@ -196,7 +204,7 @@ struct xmachine_ioput
 typedef struct xmachine_ioput xmachine_ioput;
 
 /** \struct xmachine_function
- * \brief Holds transistion name, note and code.
+ * \brief Holds function data.
  */
 struct xmachine_function
 {
@@ -240,6 +248,9 @@ struct xmachine_function
 	struct xmachine_function * next;	/**< Pointer to next function in list. */
 };
 
+/** \struct adj_function
+ * \brief Pointer to an agent function.
+ */
 struct adj_function
 {
 	struct xmachine_function * function;
@@ -264,6 +275,9 @@ struct env_func
 	struct env_func * next;	/**< Pointer to next environment function in list. */
 };
 
+/** \struct sync
+ * \brief Holds sync data for a message type.
+ */
 struct sync
 {
 	struct xmachine_message * message;
@@ -272,13 +286,9 @@ struct sync
 	struct rule_data * filter_rule;
 	struct variable * vars;			/**< Pointer to agent filter variable types. */
 
-	//struct xmachine_state_holder * states;	/**< The states holding agent that could use the filter. */
-
 	struct xmachine * agents;	/**< Agents that have inputting filter functions, states holding agents that could use the filter */
 	int filter_agent_count;
 
-	//struct function_pointer * depends;	/**< Functions that start sync depends on. */
-	//struct function_pointer * dependents;	/**< Functions with input after this sync. */
 	struct function_pointer * lastdepend;	/**< The last function start sync depends on. */
 	struct function_pointer * firstdependent;	/**< The first function with input in this sync. */
 
@@ -317,15 +327,8 @@ struct xmachine_message
 {
 	char * name;						/**< Pointer to message name. */
 	struct variable * vars;			/**< Pointer to message variables. */
-//	struct xmachine_ioput * filters;		/**< Pointer to functions with filters for this . */
-//	struct xmachine * agents;		/**< Agent and their variables associated with filters. */
-	//struct variable * agent_vars;		/**< Agent variables associated with filters. */
-//	struct xmachine_state * states;	/**< Agent states that could hold agents that use the filters. */
-	//struct xmachine_function * last_output; /**< Last function that outputs */
 	struct sync * syncs;				/**< List of syncs for this message board. */
 	int var_number;						/**< Number of variables in memory. */
-	//struct xmachine_function * first;			/**< First input function. */
-	//struct xmachine_function * last;			/**< Last output function. */
 	char * file;
 
 	struct xmachine_message * next;	/**< Pointer to next message in list.*/
@@ -393,6 +396,9 @@ struct model_datatype
 	struct model_datatype * next;		/**< Pointer next model datatype. */
 };
 
+/** \struct flame_communication
+ * \brief Holds agent communication data.
+ */
 struct flame_communication
 {
 	char * messagetype;

@@ -17,6 +17,8 @@ void make_and_run_test_model_02(void);
 void test_model_1(void);
 void test_complicated_model(void);
 void test_reading_and_writing_model_data(void);
+void test_truncated_empty_xml_tags(void);
+void test_code_standard(void);
 
 /* Define tests within this suite */
 CU_TestInfo test_array_1[] =
@@ -32,6 +34,13 @@ CU_TestInfo test_array_1[] =
 CU_TestInfo test_array_2[] =
 {
 	{"test reading and writing model data             ", test_reading_and_writing_model_data },
+    CU_TEST_INFO_NULL,
+};
+
+CU_TestInfo test_array_3[] =
+{
+	{"test code standard                              ", test_code_standard },
+	{"test truncated empty xml tags                   ", test_truncated_empty_xml_tags },
     CU_TEST_INFO_NULL,
 };
 
@@ -280,8 +289,22 @@ void test_complicated_model(void)
 	
 	rc = call_external("test1/main 1 test1/0.xml");
 	CU_ASSERT_EQUAL(rc, 0);
+}
+
+void test_truncated_empty_xml_tags(void)
+{
+	int rc;
 	
-	
+	rc = call_xparser(" test3/test_truncated_empty_xml_tags.xml");
+	CU_ASSERT_EQUAL(rc, 0);
+}
+
+void test_code_standard(void)
+{
+	int rc;
+	/* Test if splint is available */
+	rc = call_external("splint -weak -bufferoverflowhigh ../*.c");
+	CU_ASSERT_EQUAL(rc, 0);
 }
 
 void test_reading_and_writing_model_data(void)
@@ -403,8 +426,9 @@ int main(int argc, char ** argv)
 	/* Register test suite */
 	CU_SuiteInfo suites[] =
 	{
+			{"Test parsing", NULL, NULL, test_array_3},
 			{"test_model_1", init_test_model_1, clean_test_model_1, test_array_1},
-			{"test_model_2", init_test_model_2, clean_test_model_2, test_array_2},
+			{"Test reading and writing model data", init_test_model_2, clean_test_model_2, test_array_2},
 			CU_SUITE_INFO_NULL,
     };
 

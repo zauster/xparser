@@ -1737,7 +1737,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						else if (strcmp(buffer3->array, "$uc_name") == 0)
 						{
 							strcpy(data, current_envvar->name);
-							for(i = 0; i < strlen(data); i++) data[i] = (data[i] >= 'a' && data[i] <= 'z')?('A' + data[i] -'a'):data[i];
+							for(i = 0; i < (int)strlen(data); i++) data[i] = (data[i] >= 'a' && data[i] <= 'z')?('A' + data[i] -'a'):data[i];
 							fputs(data, file);
 						}
 						else if (strcmp(buffer3->array, "$default_value") == 0)
@@ -1988,7 +1988,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						else if (strcmp(buffer3->array, "$capsname") == 0)
 						{
 							strcpy(data, current_message->name);
-							for(i = 0; i < strlen(data); i++) data[i] = (data[i] >= 'a' && data[i] <= 'z')?('A' + data[i] -'a'):data[i];
+							for(i = 0; i < (int)strlen(data); i++) data[i] = (data[i] >= 'a' && data[i] <= 'z')?('A' + data[i] -'a'):data[i];
 							fputs(data, file);
 						}
 						else if (strcmp(buffer3->array, "$var_number") == 0)
@@ -2332,7 +2332,7 @@ void parseAgentHeaderTemplate(char * directory, model_data * modeldata)
 		while(current_variable)
 		{
 			strcpy(buffer, current_variable->name);
-			for(i = 0; i < strlen(buffer); i++) buffer[i] = (buffer[i] >= 'a' && buffer[i] <= 'z')?('A' + buffer[i] -'a'):buffer[i];
+			for(i = 0; i < (int)strlen(buffer); i++) buffer[i] = (buffer[i] >= 'a' && buffer[i] <= 'z')?('A' + buffer[i] -'a'):buffer[i];
 			fputs("/** \\def ", file);
 			fputs(buffer, file);
 			fputs("\n", file);

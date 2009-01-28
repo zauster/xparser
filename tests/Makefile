@@ -1,8 +1,8 @@
 # Makefile for run test xparser
 
 CC         = gcc
-CFLAGS     = -c -g -std=c99 -Wall -pedantic
-LDFLAGS    = -lCUnit
+CFLAGS     = -c -g -std=c99 -Wall -pedantic -posix
+LDFLAGS    = -lcunit
 SOURCES    = run_test.c
 OBJECTS    = $(SOURCES:.c=.o)
 EXECUTABLE = run_test

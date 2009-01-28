@@ -163,7 +163,7 @@ void handleVariableType(char_array * current_string, variable * current_variable
 
 	current_variable->typenotarray = copy_array_to_str(current_string);
 	/* Handle model data type arrays */
-	i = strlen(current_variable->type);
+	i = (int)strlen(current_variable->type);
 	if(i > 6)
 	{
 		if(current_variable->type[i-1] == 'y' &&
@@ -187,10 +187,10 @@ void handleVariableType(char_array * current_string, variable * current_variable
 
 void handleVariableName(char_array * current_string, variable * current_variable)
 {
-	current_variable->name = copy_array_to_str(current_string);
-
 	int j, i = 0;
 	char buffer[100];
+	
+	current_variable->name = copy_array_to_str(current_string);
 
 	/* Handle static arrays */
 	while(current_variable->name[i] != '\0')
@@ -293,17 +293,16 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	char_array * current_string;
 	char * temp_char = NULL;
 	char * temp_char2 = NULL;
+	/* variables in time_data */
+	char * time_name = NULL;
+	char * unit_name = NULL;
+	int period_int;
 
 	/* check var name for array */
 	/*char_list * charcheck;*/
 	modeldata->number_messages = 0;
 	modeldata->number_xmachines = 0;
 	modeldata->agents_include_array_variables = 0;
-
-	/* variables in time_data */
-	char * time_name = NULL;
-	char * unit_name = NULL;
-	int period_int;
 
 	/* Open config file to read-only */
 	if((file = fopen(inputfile->fullfilepath, "r"))==NULL)
@@ -1455,7 +1454,7 @@ void handleRuleValue(char ** p_value, variable ** p_variable, xmachine_function 
 	{
 		//printf("%s\n", *p_value);
 		j = 0;
-		for(i = 0; i < strlen(*p_value); i++)
+		for(i = 0; i < (int)strlen(*p_value); i++)
 		{
 			//printf("[%d] %c\n", i, (*p_value)[i]);
 			if(i > 0)
@@ -1567,6 +1566,10 @@ int checkmodel(model_data * modeldata)
 	int variable_count;
 	int found;
 	int state_number;
+	int newlayer = 0;
+	int totallayers = 0;
+	int m = 0;
+	int k;
 
 	/* Check model for:
 	 * agent/message variables are only known data types
@@ -1807,12 +1810,7 @@ int checkmodel(model_data * modeldata)
 			current_xmachine = current_xmachine->next;
 		}
 	}
-
-
-	int newlayer = 0;
-	int totallayers = 0;
-	int m = 0;
-	int k;
+	
 	/* If functions have old style depends tags create states */
 	if(modeldata->depends_style == 1)
 	{
