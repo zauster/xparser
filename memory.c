@@ -1604,12 +1604,10 @@ int displayagent_colour(agent_colour **p_agent_colours, char * name)
 
 void addmodel_colour(model_colour **p_model_colours,char *name, int colour)
 {
+	int flag=0;
 	model_colour *current,*temp;
 	current=*p_model_colours;
 	temp=*p_model_colours;
-//	int colour_old=0;//current->colour;
-	int flag=0;
-//	int counter=0;
 	
 	/*while(temp)
 	{

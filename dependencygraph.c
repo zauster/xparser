@@ -763,7 +763,6 @@ void output_process_order_graph(char * filename, char * filepath, model_data * m
 	/* open the file to write to */
 	file = fopen(buffer, "w");
 
-	//fputs("/* circo -Tps communication_graph.dot -o communication_graph.ps */\n", file);
 	fputs("digraph communication_graph {\n", file);
 	fputs("\trankdir=BT;\n", file);
 	fputs("\tsize=\"8,5;\"\n", file);
@@ -1127,7 +1126,7 @@ void output_stategraph_colour(char * filename, char * filepath, model_data * mod
 	int i;
 	int counter_colour=0;
 	int counter_colour_2=0;
-	int display_colour=0;
+	/*int display_colour=0;*/
 	int model_display_colour=0;
 	int length_colour_int=0;
 	xmachine * current_xmachine;
