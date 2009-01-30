@@ -40,5 +40,7 @@ docsclean:
 	make --directory=docs/user_manual/ clean
 	make --directory=docs/developer_manual/ clean
 
-clean: testclean docsclean
+clean:
 	$(RM) *.o xparser.exe xparser
+
+vclean: testclean docsclean clean
