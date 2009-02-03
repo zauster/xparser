@@ -465,7 +465,7 @@ int readAgentXML(char * location,
 	if((file = fopen(location, "r"))==NULL)
 	{
 		printf("Error: cannot open import xml file '%s'\n", location);
-		exit(0);
+		exit(1);
 	}
 	printf("Reading agent data from: %s\n", location);
 	/* Keep reading file until EOF */
@@ -752,7 +752,8 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 			if(strcmp(buffer, "/imports") == 0) FLAME_in_imports = 0;
 			if(strcmp(buffer, "import") == 0)
 			{
-				FLAME_location[0] = '\0';
+				/*FLAME_location[0] = '\0';*/
+				strcpy(FLAME_location, filelocation);
 				FLAME_format[0] = '\0';
 				FLAME_type[0] = '\0';
 
@@ -869,7 +870,7 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 			{
 				if(FLAME_in_import)
 				{
-					if(FLAME_in_location) strcpy(FLAME_location, buffer);
+					if(FLAME_in_location) strcat(FLAME_location, buffer);
 					if(FLAME_in_format) strcpy(FLAME_format, buffer);
 					if(FLAME_in_type) strcpy(FLAME_type, buffer);
 				}
