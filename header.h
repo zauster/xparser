@@ -225,6 +225,8 @@ struct xmachine_function
 	struct rule_data * condition_rule;	/**< The condition rule function name. */
 	char * condition_function;
 
+	struct rule_data * filter_rule; /**< Only for use of message sync  */
+	
 	char * current_state;
 	char * next_state;
 	struct xmachine_ioput * inputs;
@@ -571,6 +573,7 @@ void addstateholder(xmachine_state * state, xmachine_state_holder ** p_list);
 void freestateholder(xmachine_state_holder ** p_list);
 rule_data * add_rule_data(rule_data ** p_data);
 void free_rule_data(rule_data ** p_data);
+void copy_rule_data(rule_data * to, rule_data * from);
 void add_time_unit(char * name, char * unit_name, int period, time_data ** p_time_units);
 void free_time_units(time_data ** p_time_units);
 xmachine_ioput * addioput(xmachine_ioput ** p_ioput);

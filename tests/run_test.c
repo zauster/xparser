@@ -19,6 +19,7 @@ void test_complicated_model(void);
 void test_reading_and_writing_model_data(void);
 void test_truncated_empty_xml_tags(void);
 void test_code_standard(void);
+void test_compile_warnings(void);
 
 /* Define tests within this suite */
 CU_TestInfo test_array_1[] =
@@ -40,6 +41,7 @@ CU_TestInfo test_array_2[] =
 CU_TestInfo test_array_3[] =
 {
 	{"test code standard                              ", test_code_standard },
+/*	{"test compile warnings                           ", test_compile_warnings },*/
 	{"test truncated empty xml tags                   ", test_truncated_empty_xml_tags },
     CU_TEST_INFO_NULL,
 };
@@ -304,8 +306,24 @@ void test_code_standard(void)
 	int rc;
 	/* Test if splint is available */
 	rc = call_external("splint -weak -bufferoverflowhigh ../*.c");
-	CU_ASSERT_EQUAL(rc, 0);
+	
+	if(rc == 0) { CU_PASS(); }
+	else
+	{
+		printf("\n");
+		rc = system("splint -weak -bufferoverflowhigh ../*.c");
+		CU_FAIL();
+	}
 }
+
+/*void test_compile_warnings(void)
+{
+	int rc;
+	
+	rc = call_external("make vclean --directory=../");
+	rc = call_external("make --directory=../");
+	system("more stderr.out");
+}*/
 
 void test_reading_and_writing_model_data(void)
 {

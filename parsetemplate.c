@@ -741,8 +741,19 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					{
 						if(current_ioput->filter_rule != NULL)
 						{
-							if (current_ioput->filter_rule->has_agent_var == 0) write = 0;
+							if(current_ioput->filter_rule->has_agent_var == 0) write = 0;
 						}
+					}
+					else if(current_function != NULL)
+					{
+						if(current_function->filter_rule != NULL)
+						{
+							if(current_function->filter_rule->has_agent_var == 0) write = 0;
+						}
+					}
+					else if(current_xmachine != NULL)
+					{
+						if(current_xmachine->variables == NULL) write = 0;
 					}
 				}
 				else if (strcmp(buffer->array, "<?if has_message_var?>") == 0)
@@ -1539,7 +1550,11 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					}
 					else if (strcmp(lastloop, "foreach xagent") == 0)
 					{
-						if(current_xmachine != NULL) current_function = current_xmachine->functions;
+						if(current_xmachine != NULL)
+						{
+							current_function = current_xmachine->functions;
+							/*current_ioput = current_function->filter_rule;*/
+						}
 						else current_function = NULL;
 						if (current_function == NULL) write = 0;
 					}
@@ -1887,7 +1902,11 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					}
 					else if (strcmp("foreach state", lastloop) == 0)
 					{
-						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$agent_name") != 0 && strcmp(buffer3->array, "$agent_start") != 0 && pos <= (pos1 + 15))
+						while (strcmp(buffer3->array, "$name") != 0 &&
+								strcmp(buffer3->array, "$agent_name") != 0 &&
+								strcmp(buffer3->array, "$agent_start") != 0 &&
+								strcmp(buffer3->array, "$xagent_count") != 0 &&
+								pos <= (pos1 + 15))
 						{
 							add_char(buffer3, c);
 							pos++;
@@ -1900,6 +1919,11 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							fputs(current_state->agent_name, file);
 						else if (strcmp(buffer3->array, "$agent_start") == 0)
 							fputs(current_xmachine->start_state->name, file);
+						else if (strcmp(buffer3->array, "$xagent_count") == 0)
+						{
+							sprintf(data, "%i", xagent_count);
+							fputs(data, file);
+						}
 						else
 						{
 							fputs("$", file);
@@ -2133,6 +2157,9 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					{
 						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$note") != 0 && strcmp(buffer3->array, "$agent_name") != 0 &&
 						strcmp(buffer3->array, "$current_state") != 0 && strcmp(buffer3->array, "$next_state") != 0 && strcmp(buffer3->array, "$condition") != 0 &&
+						strcmp(buffer3->array, "$message_name") != 0 &&
+						strcmp(buffer3->array, "$layer") != 0 &&
+						strcmp(buffer3->array, "$filter_rule") != 0 &&
 						strcmp(buffer3->array, "$rule") != 0 && pos <= (pos1 + 15))
 						{
 							add_char(buffer3, c);
@@ -2158,6 +2185,21 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						else if (strcmp(buffer3->array, "$rule") == 0)
 						{
 							writeRule(current_function->condition_rule, file);
+						}
+						else if (strcmp(buffer3->array, "$message_name") == 0)
+							fputs(current_message->name, file);
+						else if (strcmp(buffer3->array, "$layer") == 0)
+						{
+							if(current_sync->inputting_functions == NULL) fputs("unknown", file);
+							else
+							{
+								sprintf(data, "%i", current_sync->inputting_functions->function->rank_in);
+								fputs(data, file);
+							}
+						}
+						else if (strcmp(buffer3->array, "$filter_rule") == 0)
+						{
+							writeRule(current_function->filter_rule, file);
 						}
 						else
 						{

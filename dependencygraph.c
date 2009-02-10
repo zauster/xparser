@@ -2090,6 +2090,10 @@ void calculate_communication_syncs(model_data * modeldata)
 								/* Add filter functions to sync agent */
 								current_function2 = addxfunction(&current_xmachine->functions);
 								current_function2->name = copystr(current_input->filter_function);
+								current_function2->agent_name = copystr(current_function->agent_name);
+								// Simon: add filter rule to function
+								add_rule_data(&current_function2->filter_rule);
+								copy_rule_data(current_function2->filter_rule, current_input->filter_rule);
 
 								/* Add possible states that hold the agents for the filter inputting function */
 								addxstate(current_function->current_state, current_function->agent_name, &current_xmachine->states);
@@ -2629,6 +2633,56 @@ void apply_sync_data_to_functions(model_data * modeldata)
 	}
 }
 
+void calculate_partition_data(model_data * modeldata)
+{
+	xmachine_message * current_message;
+	xmachine * current_xmachine;
+	xmachine_function * current_function;
+	xmachine_ioput * current_ioput;
+
+	current_message = * modeldata->p_xmessages;
+	while(current_message)
+	{
+		/* For each agent */
+		current_xmachine = * modeldata->p_xmachines;
+		while(current_xmachine)
+		{
+			/* For each function */
+			current_function = current_xmachine->functions;
+			while(current_function)
+			{
+				current_ioput = current_function->outputs;
+				while(current_ioput)
+				{
+					if( strcmp(current_message->name, current_ioput->messagetype) == 0 )
+					{
+						printf("Agent: %s outputs message: %s\n", current_xmachine->name, current_message->name);
+					}
+
+					current_ioput = current_ioput->next;
+				}
+				
+				current_ioput = current_function->inputs;
+				while(current_ioput)
+				{
+					if( strcmp(current_message->name, current_ioput->messagetype) == 0 )
+					{
+						printf("Agent: %s inputs message: %s\n", current_xmachine->name, current_message->name);
+					}
+
+					current_ioput = current_ioput->next;
+				}
+				
+				current_function = current_function->next;
+			}
+
+			current_xmachine = current_xmachine->next;
+		}
+		
+		current_message = current_message->next;
+	}
+}
+
 /** \fn void create_dependency_graph(char * filepath, model_data * modeldata)
  * \brief Calculate agent functions dependency graph and produce a dot graph description output.
  * \param filepath Pointer to the file path and name.
@@ -2678,6 +2732,9 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 	apply_sync_data_to_functions(modeldata);
 
 	calculate_filter_agent_states(modeldata);
+	
+	/* Calculate data for possible partitioning scheme */
+	/*calculate_partition_data(modeldata);*/
 
 	return 0;
 }

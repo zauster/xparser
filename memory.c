@@ -833,6 +833,19 @@ void free_rule_data(rule_data ** p_data)
 	*p_data = NULL;
 }
 
+void copy_rule_data(rule_data * to, rule_data * from)
+{
+	to->time_rule = from->time_rule;
+	to->not = from->not;
+	to->has_agent_var = from->has_agent_var;
+	to->has_message_var = from->has_message_var;
+	to->lhs = copystr(from->lhs);
+	to->rhs = copystr(from->rhs);
+	to->op  = copystr(from->op);
+	if(from->lhs_rule != NULL) copy_rule_data(to->lhs_rule, from->lhs_rule);
+	if(from->rhs_rule != NULL) copy_rule_data(to->rhs_rule, from->rhs_rule);
+}
+
 /** \fn xmachine_function * addxfunction(xmachine_function ** p_xfunctions)
  * \brief Allocate memory for a linked list of datatype function.
  * \param p_xfunctions Pointer Pointer to the functions list.
@@ -887,6 +900,7 @@ xmachine_function * addxfunction(xmachine_function ** p_xfunctions)
 	current->score = 0;
 	current->condition_rule = NULL;
 	current->condition_function = NULL;
+	current->filter_rule = NULL;
 
 	/* Return new element */
 	return current;
@@ -925,6 +939,7 @@ void freexfunctions(xmachine_function ** p_xfunctions)
 		free_adj_function(head->depends);
 		free_adj_function(head->recentdepends);
 		free_rule_data(&head->condition_rule);
+		free_rule_data(&head->filter_rule);
 		free(head);
 		head = temp;
 	}
