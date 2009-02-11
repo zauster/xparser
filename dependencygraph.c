@@ -2091,9 +2091,10 @@ void calculate_communication_syncs(model_data * modeldata)
 								current_function2 = addxfunction(&current_xmachine->functions);
 								current_function2->name = copystr(current_input->filter_function);
 								current_function2->agent_name = copystr(current_function->agent_name);
-								// Simon: add filter rule to function
 								add_rule_data(&current_function2->filter_rule);
 								copy_rule_data(current_function2->filter_rule, current_input->filter_rule);
+								current_function2->has_message_var = current_input->filter_rule->has_message_var;
+								current_function2->has_agent_var = current_input->filter_rule->has_agent_var;
 
 								/* Add possible states that hold the agents for the filter inputting function */
 								addxstate(current_function->current_state, current_function->agent_name, &current_xmachine->states);

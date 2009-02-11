@@ -160,8 +160,8 @@ int FLAME_sync_filter_$name(const void *m, const void *composite_params)
 		<?foreach xagentvar?>
 		/* Test code */
 		/*printf("\t$name=%$c_type", *($type*)ptr);
-		ptr += sizeof($type);<?end foreach?>
-		printf("\n");*/
+		ptr += sizeof($type);*/<?end foreach?>
+		/*printf("\n");*/
 		
 		/* For each function apply input filter.
 		 * If filter successful return success immediately  */
@@ -171,7 +171,6 @@ int FLAME_sync_filter_$name(const void *m, const void *composite_params)
 		
 		/* Advance traversal pointer */
 		ptr += sizeof(struct FLAME_param_$name_$message_name_$layer);
-		
 	}
 	<?end foreach?>
 

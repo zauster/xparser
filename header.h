@@ -226,6 +226,8 @@ struct xmachine_function
 	char * condition_function;
 
 	struct rule_data * filter_rule; /**< Only for use of message sync  */
+	int has_message_var; /**< Only for use of message sync  */
+	int has_agent_var; /**< Only for use of message sync  */
 	
 	char * current_state;
 	char * next_state;

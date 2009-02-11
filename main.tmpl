@@ -453,7 +453,7 @@ if(argc < 2)
 
 <?foreach start_sync?>
 // new
-<?if filter?>FLAME_build_filter_param_$filter_name();<?end if?>
+<?if filter?>if(FLAME_USE_FILTERS_IN_SYNC) FLAME_build_filter_param_$filter_name();<?end if?>
 //new
     rc = MB_SyncStart(b_$message_name);
     #ifdef ERRCHECK

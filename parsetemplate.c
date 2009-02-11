@@ -750,6 +750,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						{
 							if(current_function->filter_rule->has_agent_var == 0) write = 0;
 						}
+						else if(current_function->has_agent_var == 0) write = 0;
 					}
 					else if(current_xmachine != NULL)
 					{
@@ -768,6 +769,10 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						{
 							if (current_ioput->filter_rule->has_message_var == 0) write = 0;
 						}
+					}
+					else if(current_function != NULL)
+					{
+						 if(current_function->has_agent_var == 0) write = 0;
 					}
 				}
 				else if (strcmp(buffer->array, "<?end if?>") == 0)

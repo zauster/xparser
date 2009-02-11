@@ -901,6 +901,8 @@ xmachine_function * addxfunction(xmachine_function ** p_xfunctions)
 	current->condition_rule = NULL;
 	current->condition_function = NULL;
 	current->filter_rule = NULL;
+	current->has_message_var = 0;
+	current->has_agent_var = 0;
 
 	/* Return new element */
 	return current;
