@@ -2605,7 +2605,7 @@ void apply_sync_data_to_functions(model_data * modeldata)
 				current_ioput->message = current_message;*/
 				/* Need to add filters */
 				add_sync_pointer(&current_function->start_syncs, current_sync);
-				printf("Function: %s start_sync: %s\n", current_function->name, current_sync->name);
+				/*printf("Function: %s start_sync: %s\n", current_function->name, current_sync->name);*/
 
 				current_function_pointer = current_function_pointer->next;
 			}
@@ -2622,7 +2622,7 @@ void apply_sync_data_to_functions(model_data * modeldata)
 				current_ioput->messagetype = copystr(current_message->name);
 				current_ioput->message = current_message;*/
 				add_sync_pointer(&current_function->complete_syncs, current_sync);
-				printf("Function: %s complete_sync: %s\n", current_function->name, current_sync->name);
+				/*printf("Function: %s complete_sync: %s\n", current_function->name, current_sync->name);*/
 
 				current_function_pointer = current_function_pointer->next;
 			}
