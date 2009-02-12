@@ -24,7 +24,7 @@ LIBS    = <?if serial?>-lmboard_sd <?end if?><?if parallel?>-lmboard_pd <?end if
 FLAME   = main.c memory.c xml.c messageboards.c partitioning.c rules.c timing.c
 
 #FLAME auxilary files
-AUX 	= stategraph.dot Doxyfile
+AUX 	= stategraph.dot stategraph_colour.dot process_order_graph.dot Doxyfile
 
 # FLAME generated model files
 SOURCES = <?foreach functionfiles?> $filepath <?end foreach?>
