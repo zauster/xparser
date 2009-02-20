@@ -1562,6 +1562,7 @@ int checkmodel(model_data * modeldata)
 	xmachine_message * current_message;
 	xmachine_message * current_message2;
 	variable * allvar;
+	variable * envvar;
 	char buffer[1000];
 	int variable_count;
 	int found;
@@ -1688,7 +1689,7 @@ int checkmodel(model_data * modeldata)
 				current_variable = current_variable->next;
 			}
 
-				/* Error if a variable name is defined twice in same agent */
+			/* Error if a variable name is defined twice in same agent */
 			current_variable = current_xmachine->variables;
 			while(current_variable)
 			{
@@ -1762,41 +1763,32 @@ int checkmodel(model_data * modeldata)
 				if(strcmp(current_variable->name, "posz") == 0) strcpy(current_xmachine->zvar, "posz");
 				if(strcmp(current_variable->name, "range") == 0) strcpy(current_xmachine->rangevar, "range");
 				if(strcmp(current_variable->name, "radius") == 0) strcpy(current_xmachine->rangevar, "radius");
-
 				if(strcmp(current_variable->name, "id") == 0) strcpy(current_xmachine->idvar, "id");
 				if(strcmp(current_variable->name, "agent_id") == 0) strcpy(current_xmachine->idvar, "agent_id");
 
-				found = 0;
-				allvar = * modeldata->p_allvars;
-				while(allvar)
+				/* Agent variable names cannot be the same as environment variable names
+				 * as the preprocessor define macro will be broken */
+				envvar = * modeldata->p_envvars;
+				while(envvar)
 				{
-					/*copycharlist(&allvar->name, &chardata2[0]);*/
-					if(strcmp(current_variable->name, allvar->name) == 0)
+					if(strcmp(current_variable->name, envvar->name) == 0)
 					{
-						found = 1;
-
-						/* If same variable name but different type, this breaks get_ and set_ methods */
-						if(strcmp(current_variable->type, allvar->type) != 0)
-						{
-							fprintf(stderr, "ERROR: variable '%s' defined twice but with different types\n", current_variable->name);
-							return -1;
-						}
+						fprintf(stderr, "ERROR: variable '%s' in agent '%s' has same name as an environment variable\n", current_variable->name, current_xmachine->name);
+						return -1;
 					}
 
-					allvar = allvar->next;
+					envvar = envvar->next;
 				}
-				if(found == 0)
-				{
-					allvar = addvariable(modeldata->p_allvars);
-					allvar->name = copystr(current_variable->name);
-					allvar->type = copystr(current_variable->type);
-					allvar->arraylength = current_variable->arraylength;
-					allvar->ismodeldatatype = current_variable->ismodeldatatype;
-					allvar->datatype = current_variable->datatype;
-					allvar->typenotarray = copystr(current_variable->typenotarray);
-					strcpy(allvar->defaultvalue, current_variable->defaultvalue);
-					strcpy(allvar->c_type, current_variable->c_type);
-				}
+				
+				allvar = addvariable(modeldata->p_allvars);
+				allvar->name = copystr(current_variable->name);
+				allvar->type = copystr(current_variable->type);
+				allvar->arraylength = current_variable->arraylength;
+				allvar->ismodeldatatype = current_variable->ismodeldatatype;
+				allvar->datatype = current_variable->datatype;
+				allvar->typenotarray = copystr(current_variable->typenotarray);
+				strcpy(allvar->defaultvalue, current_variable->defaultvalue);
+				strcpy(allvar->c_type, current_variable->c_type);
 
 				variable_count++;
 
