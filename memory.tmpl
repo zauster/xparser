@@ -459,23 +459,23 @@ void freexmachines()
  * \brief Set $name memory variable for current X-machine.
  * \param $name New value for variable.
  */
-void set_$name($type <?if dynamic_array?>* <?end if?><?if static_array?>*<?end if?>$name<?if static_array?>[]<?end if?>)
+/*void set_$name($type <?if dynamic_array?>* <?end if?><?if static_array?>*<?end if?>$name<?if static_array?>[]<?end if?>)
 {
 <?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name) (*current_xmachine->xmachine_$name).$allvar_name = $allvar_name;
-<?end if?><?end foreach?>}
+<?end if?><?end foreach?>}*/
 <?end if?><?end if?>
 /** \fn $type get_$name()
  * \brief Get $name memory variable from current X-machine.
  * \return Value for variable.
  */
-$type <?if modeldatatype?>* <?end if?><?if not_modeldatatype?><?if array?>* <?end if?><?end if?>get_$name()
+/*$type <?if modeldatatype?>* <?end if?><?if not_modeldatatype?><?if array?>* <?end if?><?end if?>get_$name()
 {
 <?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name) return <?if modeldatatype?><?if not_static_array?>&<?end if?><?end if?><?if not_modeldatatype?><?if dynamic_array?>&<?end if?><?end if?>(*current_xmachine->xmachine_$name).$allvar_name;
 <?end if?><?end foreach?>
     // suppress compiler warning by returning dummy value /
     // this statement should rightfully NEVER be reached /
     return <?if not_array?><?if not_modeldatatype?>($type)0<?end if?><?end if?><?if modeldatatype?>NULL<?end if?><?if not_modeldatatype?><?if array?>NULL<?end if?><?end if?>;
-}
+}*/
 <?end foreach?>
 
 /** \fn double agent_get_range()
