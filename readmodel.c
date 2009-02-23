@@ -32,7 +32,7 @@ int checkRuleAgentVar(rule_data * current_rule_data)
 			if(strncmp(current_rule_data->rhs, "a.", 2) == 0) flag = 1;
 		}
 	}
-
+	
 	return flag;
 }
 
@@ -1562,7 +1562,6 @@ int checkmodel(model_data * modeldata)
 	xmachine_message * current_message;
 	xmachine_message * current_message2;
 	variable * allvar;
-	variable * envvar;
 	char buffer[1000];
 	int variable_count;
 	int found;
@@ -1689,7 +1688,7 @@ int checkmodel(model_data * modeldata)
 				current_variable = current_variable->next;
 			}
 
-			/* Error if a variable name is defined twice in same agent */
+				/* Error if a variable name is defined twice in same agent */
 			current_variable = current_xmachine->variables;
 			while(current_variable)
 			{
@@ -1763,23 +1762,10 @@ int checkmodel(model_data * modeldata)
 				if(strcmp(current_variable->name, "posz") == 0) strcpy(current_xmachine->zvar, "posz");
 				if(strcmp(current_variable->name, "range") == 0) strcpy(current_xmachine->rangevar, "range");
 				if(strcmp(current_variable->name, "radius") == 0) strcpy(current_xmachine->rangevar, "radius");
+
 				if(strcmp(current_variable->name, "id") == 0) strcpy(current_xmachine->idvar, "id");
 				if(strcmp(current_variable->name, "agent_id") == 0) strcpy(current_xmachine->idvar, "agent_id");
 
-				/* Agent variable names cannot be the same as environment variable names
-				 * as the preprocessor define macro will be broken */
-				envvar = * modeldata->p_envvars;
-				while(envvar)
-				{
-					if(strcmp(current_variable->name, envvar->name) == 0)
-					{
-						fprintf(stderr, "ERROR: variable '%s' in agent '%s' has same name as an environment variable\n", current_variable->name, current_xmachine->name);
-						return -1;
-					}
-
-					envvar = envvar->next;
-				}
-				
 				found = 0;
 				allvar = * modeldata->p_allvars;
 				while(allvar)
@@ -1789,13 +1775,12 @@ int checkmodel(model_data * modeldata)
 					{
 						found = 1;
 
-						/* get and set removed as legacy */
 						/* If same variable name but different type, this breaks get_ and set_ methods */
-						/*if(strcmp(current_variable->type, allvar->type) != 0)
+						if(strcmp(current_variable->type, allvar->type) != 0)
 						{
 							fprintf(stderr, "ERROR: variable '%s' defined twice but with different types\n", current_variable->name);
 							return -1;
-						}*/
+						}
 					}
 
 					allvar = allvar->next;
