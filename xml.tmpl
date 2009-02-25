@@ -628,7 +628,7 @@ int check_location_exists(char * location)
 
 	fclose(file);
 	/* Remove dummy file */
-
+	remove(buffer);
 
 	return 1;
 }

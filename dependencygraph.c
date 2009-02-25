@@ -292,7 +292,7 @@ void output_stategraph(char * filename, char * filepath, model_data * modeldata,
 			sprintf(buffer, "%d", i);
 			fputs(buffer, file);
 			fputs(" [ label = \"start ", file);
-			sprintf(buffer, "%d", current_sync->inputting_functions->function->rank_in);
+			sprintf(buffer, "%d", current_sync->lastdepend->function->rank_in);
 			fputs(buffer, file);
 			fputs("\" color=\"#00ff00\" shape = parallelogram];\n", file);
 
@@ -314,7 +314,7 @@ void output_stategraph(char * filename, char * filepath, model_data * modeldata,
 			sprintf(buffer, "%d", i);
 			fputs(buffer, file);
 			fputs(" [ label = \"end ", file);
-			sprintf(buffer, "%d", current_sync->outputting_functions->function->rank_in);
+			sprintf(buffer, "%d", current_sync->firstdependent->function->rank_in);
 			fputs(buffer, file);
 			fputs("\" color=\"#00ff00\" shape = parallelogram];\n", file);
 
@@ -1618,7 +1618,7 @@ int find_agent_start_states(model_data * modeldata)
 				}
 				else
 				{
-					fprintf(stderr, "ERROR: mutiple start states found in '%s' agent\n", current_xmachine->name);
+					fprintf(stderr, "ERROR: multiple start states found in '%s' agent\n", current_xmachine->name);
 					fprintf(stderr, "\tincludes %s and %s states\n", current_xmachine->start_state->name, current_state->name);
 					return -1;
 				}
@@ -1668,6 +1668,13 @@ int find_agent_start_states(model_data * modeldata)
 	return 0;
 }
 
+/** \fn void catalogue_agent_communications(model_data * modeldata)
+ * \brief Catalogues communication between every agent function.
+ * \param modeldata Data from the model.
+ * 
+ * For every function pair of inputs and outputs a flame communication is added.
+ * An adjacent function (outputting function) is added to the inputting function.
+ */
 void catalogue_agent_communications(model_data * modeldata)
 {
 	xmachine * current_xmachine;
@@ -1676,8 +1683,6 @@ void catalogue_agent_communications(model_data * modeldata)
 	xmachine_function * current_function2;
 	xmachine_ioput * current_input;
 	xmachine_ioput * current_output;
-	//xmachine_ioput * current_ioput;
-	//xmachine_message * current_message;
 
 	/* For each agent */
 	current_xmachine = * modeldata->p_xmachines;
@@ -1687,41 +1692,28 @@ void catalogue_agent_communications(model_data * modeldata)
 		current_function = current_xmachine->functions;
 		while(current_function)
 		{
+			/* For each input */
 			current_input = current_function->inputs;
 			while(current_input)
 			{
-				/*if(current_input->filter_function != NULL)
-				{
-
-					//printf("\t*** filter\n");
-
-					current_message = * modeldata->p_xmessages;
-					while(current_message)
-					{
-						if(strcmp(current_message->name, current_input->messagetype) == 0)
-						{
-							current_ioput = addioput(&current_message->filters);
-							current_ioput->messagetype = copystr(current_function->name);//current_ioput->messagetype;
-							current_ioput->filter_function = copystr(current_input->filter_function);
-						}
-
-						current_message = current_message->next;
-					}
-				}*/
-
+				/* For each agent */
 				current_xmachine2 = * modeldata->p_xmachines;
 				while(current_xmachine2)
 				{
+					/* For each function */
 					current_function2 = current_xmachine2->functions;
 					while(current_function2)
 					{
+						/* For each output */
 						current_output = current_function2->outputs;
 						while(current_output)
 						{
+							/* If the message types are equal */
 							if(strcmp(current_input->messagetype, current_output->messagetype) == 0)
 							{
+								/* Add the communication to the communication list */
 								add_flame_communication(current_input->messagetype, current_input->filter_rule, current_function, current_function2, modeldata->p_communications);
-
+								/* Add the outputting function as an adjacent function to the inputting function */
 								add_adj_function(current_function2, current_function, current_input->messagetype);
 							}
 
@@ -1744,6 +1736,10 @@ void catalogue_agent_communications(model_data * modeldata)
 	}
 }
 
+/** \fn void catalogue_agent_internal(model_data * modeldata)
+ * \brief Catalogues dependencies of functions within agents.
+ * \param modeldata Data from the model.
+ */
 void catalogue_agent_internal(model_data * modeldata)
 {
 	xmachine * current_xmachine;
@@ -1758,11 +1754,17 @@ void catalogue_agent_internal(model_data * modeldata)
 		current_function = current_xmachine->functions;
 		while(current_function)
 		{
+			/* For each function */
 			current_function2 = current_xmachine->functions;
 			while(current_function2)
 			{
+				/* If the first functions current state equals the second functions next state */
 				if(strcmp(current_function->current_state, current_function2->next_state) == 0)
 				{
+					/* Add the first function as a dependency of the second function
+					 * (with a type of being 'internal') because the second function
+					 * finishes in its next state which is the current state and start
+					 * of the first function */
 					add_adj_function(current_function2, current_function, "internal");
 				}
 
@@ -1776,6 +1778,13 @@ void catalogue_agent_internal(model_data * modeldata)
 	}
 }
 
+/** \fn int check_dependency_loops(model_data * modeldata)
+ * \brief Find loops within agent function dependencies.
+ * \param modeldata Data from the model.
+ * \return 0
+ * 
+ * Make sure that there are no cyclic loops of dependencies with agent functions
+ */
 int check_dependency_loops(model_data * modeldata)
 {
 	xmachine * current_xmachine;
@@ -1808,6 +1817,14 @@ int check_dependency_loops(model_data * modeldata)
 	return 0;
 }
 
+/** \fn void calculate_dependency_graph(model_data * modeldata)
+ * \brief Calculate function layers of dependencies.
+ * \param modeldata Data from the model.
+ * 
+ * Create layers of dependencies where the top layer of functions have no
+ * dependencies and each successive layer depends only on functions in the
+ * layer(s) above.
+ */
 void calculate_dependency_graph(model_data * modeldata)
 {
 	xmachine * current_xmachine;
@@ -1818,7 +1835,7 @@ void calculate_dependency_graph(model_data * modeldata)
 
 	/* Calculate layers of dgraph */
 	/* This is achieved by finding functions with no dependencies */
-	/* giving them a layer no, taking those functions away and do the operation again */
+	/* giving them a layer no, taking those functions away and doing the operation again */
 
 	current_layer = addlayer(modeldata->p_layers);
 	newlayer = 0;
@@ -1898,7 +1915,7 @@ void calculate_dependency_graph(model_data * modeldata)
 
 }
 
-void handle_rule_value_for_agent_variable(char * value, variable * var, xmachine * current_xmachine)
+int handle_rule_value_for_agent_variable(char * value, variable * var, xmachine * current_xmachine, int flag)
 {
 	variable * current_variable;
 
@@ -1907,22 +1924,41 @@ void handle_rule_value_for_agent_variable(char * value, variable * var, xmachine
 	/* If value is an agent varible */
 	if(strncmp(value, "a->", 3) == 0)
 	{
+		if(flag == 0) return 1;
 		current_variable = addvariable(&current_xmachine->variables);
 		current_variable->name = copystr(var->name);
 		current_variable->type = copystr(var->type);
 		strcpy(current_variable->c_type, var->c_type);
 	}
+	
+	return 0;
 }
 
-void handle_rule_for_agent_variable(rule_data * current_rule_data, xmachine * current_xmachine)
+int handle_rule_for_agent_variable(rule_data * current_rule_data, xmachine * current_xmachine, int flag)
 {
+	int rc;
+	
 	/* Handle values */
-	if(current_rule_data->lhs == NULL) handle_rule_for_agent_variable(current_rule_data->lhs_rule, current_xmachine);
-	else handle_rule_value_for_agent_variable(current_rule_data->lhs, current_rule_data->lhs_variable, current_xmachine);
+	if(current_rule_data->lhs == NULL) rc = handle_rule_for_agent_variable(current_rule_data->lhs_rule, current_xmachine, flag);
+	else rc = handle_rule_value_for_agent_variable(current_rule_data->lhs, current_rule_data->lhs_variable, current_xmachine, flag);
+	if(flag == 0 && rc == 1) return 1;
+	
+	if(current_rule_data->rhs == NULL) handle_rule_for_agent_variable(current_rule_data->rhs_rule, current_xmachine, flag);
+	else handle_rule_value_for_agent_variable(current_rule_data->rhs, current_rule_data->rhs_variable, current_xmachine, flag);
+	if(flag == 0 && rc == 1) return 1;
+	
+	return 0;
+}
 
-	if(current_rule_data->rhs == NULL) handle_rule_for_agent_variable(current_rule_data->rhs_rule, current_xmachine);
-	else handle_rule_value_for_agent_variable(current_rule_data->rhs, current_rule_data->rhs_variable, current_xmachine);
-
+int handle_rule_for_message_variable(rule_data * current_rule_data)
+{
+	if(current_rule_data->lhs == NULL) handle_rule_for_message_variable(current_rule_data->lhs_rule);
+	else if(strncmp(current_rule_data->lhs, "m->", 3) == 0) return 1;
+	
+	if(current_rule_data->rhs == NULL) handle_rule_for_message_variable(current_rule_data->rhs_rule);
+	else if(strncmp(current_rule_data->rhs, "m->", 3) == 0) return 1; 
+	
+	return 0;
 }
 
 void calculate_communication_syncs(model_data * modeldata)
@@ -2081,42 +2117,48 @@ void calculate_communication_syncs(model_data * modeldata)
 							/* If input message has a filter */
 							if(current_input->filter_rule != NULL)
 							{
-								/* Add agent and agent variables to the sync */
-								current_xmachine = addxmachine(&current_sync->agents, current_function->agent_name);
-								current_sync->filter_agent_count++;
-								/* Add agent filter variables to sync agent */
-								handle_rule_for_agent_variable(current_input->filter_rule, current_xmachine);
-
-								/* Add filter functions to sync agent */
-								current_function2 = addxfunction(&current_xmachine->functions);
-								current_function2->name = copystr(current_input->filter_function);
-								current_function2->agent_name = copystr(current_function->agent_name);
-								add_rule_data(&current_function2->filter_rule);
-								copy_rule_data(current_function2->filter_rule, current_input->filter_rule);
-								current_function2->has_message_var = current_input->filter_rule->has_message_var;
-								current_function2->has_agent_var = current_input->filter_rule->has_agent_var;
-
-								/* Add possible states that hold the agents for the filter inputting function */
-								addxstate(current_function->current_state, current_function->agent_name, &current_xmachine->states);
-
-								/* Find functions that can change the filter variables */
-								current_adj_function = current_function_pointer->function->dependson;
-								while(current_adj_function)
+								/* If agent variables exist */
+								if(handle_rule_for_agent_variable(current_input->filter_rule, current_xmachine, 0))
 								{
-									if(strcmp(current_function_pointer->function->agent_name, current_adj_function->function->agent_name) == 0)
+									/* Add agent and agent variables to the sync */
+									current_xmachine = addxmachine(&current_sync->agents, current_function->agent_name);
+									current_sync->filter_agent_count++;
+									/* Add agent filter variables to sync agent */
+									handle_rule_for_agent_variable(current_input->filter_rule, current_xmachine, 1);
+									/* If filter has message vars update sync flag */
+									if(handle_rule_for_message_variable(current_input->filter_rule)) current_sync->has_agent_and_message_vars = 1;
+	
+									/* Add filter functions to sync agent */
+									current_function2 = addxfunction(&current_xmachine->functions);
+									current_function2->name = copystr(current_input->filter_function);
+									current_function2->agent_name = copystr(current_function->agent_name);
+									(void) add_rule_data(&current_function2->filter_rule);
+									copy_rule_data(current_function2->filter_rule, current_input->filter_rule);
+									current_function2->has_message_var = current_input->filter_rule->has_message_var;
+									current_function2->has_agent_var = current_input->filter_rule->has_agent_var;
+	
+									/* Add possible states that hold the agents for the filter inputting function */
+									addxstate(current_function->current_state, current_function->agent_name, &current_xmachine->states);
+	
+									/* Find functions that can change the filter variables */
+									current_adj_function = current_function_pointer->function->dependson;
+									while(current_adj_function)
 									{
-										/* Add functions that can change the filter variables */
-										addfunction_pointer(&current_sync->filter_variable_changing_functions, current_adj_function->function);
-
-
-										/*if(current_sync->lastdepend->function->rank_in < current_adj_function->function->rank_in)
+										if(strcmp(current_function_pointer->function->agent_name, current_adj_function->function->agent_name) == 0)
 										{
-											//current_sync->start_layer = current_adj_function->function->rank_in;
-											current_sync->lastdepend->function = current_adj_function->function;
-										}*/
+											/* Add functions that can change the filter variables */
+											addfunction_pointer(&current_sync->filter_variable_changing_functions, current_adj_function->function);
+	
+	
+											/*if(current_sync->lastdepend->function->rank_in < current_adj_function->function->rank_in)
+											{
+												//current_sync->start_layer = current_adj_function->function->rank_in;
+												current_sync->lastdepend->function = current_adj_function->function;
+											}*/
+										}
+	
+										current_adj_function = current_adj_function->next;
 									}
-
-									current_adj_function = current_adj_function->next;
 								}
 							}
 						}
@@ -2153,7 +2195,7 @@ void calculate_communication_syncs(model_data * modeldata)
 
 					current_xmachine = current_xmachine->next;
 				}
-
+				
 				current_sync = current_sync->next;
 			}
 		}
@@ -2684,6 +2726,62 @@ void calculate_partition_data(model_data * modeldata)
 	}
 }
 
+void print_sync_data(model_data * modeldata)
+{
+	xmachine_message * current_message;
+	sync * current_sync;
+	/*xmachine * current_xmachine;
+	xmachine_function * current_function;*/
+	/*xmachine_ioput * current_ioput;
+	function_pointer * current_function_pointer;
+	xmachine_function * current_function;*/
+
+	printf("\n");
+	
+	current_message = * modeldata->p_xmessages;
+	while(current_message)
+	{
+		printf("%s\n", current_message->name);
+		
+		current_sync = current_message->syncs;
+		while(current_sync)
+		{
+			if(current_sync->has_agent_and_message_vars)
+			{
+			printf("\t%s\n", current_sync->name);
+			}
+			//printf("\thas_agent_and_message_vars == %d\n", current_sync->has_agent_and_message_vars);
+			
+			/*current_function_pointer = current_sync->inputting_functions;
+			while(current_function_pointer)
+			{
+				current_function = current_function_pointer->function;
+				printf("\t\t%s", current_function->name);
+				current_ioput = current_function->inputs;
+				while(current_ioput)
+				{
+					if( strcmp(current_ioput->messagetype, current_message->name) == 0 &&
+						current_ioput->filter_rule != NULL)
+					{
+						printf("\tfilter");
+					}
+					
+					current_ioput = current_ioput->next;
+				}
+				printf("\n");
+				
+				current_function_pointer = current_function_pointer->next;
+			}*/
+
+			current_sync = current_sync->next;
+		}
+		
+		current_message = current_message->next;
+	}
+	
+	printf("/n");
+}
+
 /** \fn void create_dependency_graph(char * filepath, model_data * modeldata)
  * \brief Calculate agent functions dependency graph and produce a dot graph description output.
  * \param filepath Pointer to the file path and name.
@@ -2736,6 +2834,7 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 	
 	/* Calculate data for possible partitioning scheme */
 	/*calculate_partition_data(modeldata);*/
+	/*print_sync_data(modeldata);*/
 
 	return 0;
 }

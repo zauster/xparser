@@ -292,6 +292,7 @@ struct sync
 
 	struct xmachine * agents;	/**< Agents that have inputting filter functions, states holding agents that could use the filter */
 	int filter_agent_count;
+	int has_agent_and_message_vars;
 
 	struct function_pointer * lastdepend;	/**< The last function start sync depends on. */
 	struct function_pointer * firstdependent;	/**< The first function with input in this sync. */

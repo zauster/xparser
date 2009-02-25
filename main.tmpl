@@ -347,7 +347,7 @@ if(argc < 2)
        exit(rc);
     }
     #endif
-    <?if filter?>
+    <?if sync_filter?>
     if(FLAME_USE_FILTERS_IN_SYNC) {
     if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_Function_Assign(b_$message_name, MB_NULL_FUNCTION, NULL, 0)\n");
     rc = MB_Function_Assign(b_$message_name, MB_NULL_FUNCTION, NULL, 0);
@@ -459,7 +459,7 @@ if(argc < 2)
 	if(FLAME_TEST_PRINT_START_AND_END_OF_MODEL_FUNCTIONS) printf("finish $name\n");
 <?foreach start_sync?>
 // new
-<?if filter?>if(FLAME_USE_FILTERS_IN_SYNC) FLAME_build_filter_param_$filter_name();<?end if?>
+<?if sync_filter?>if(FLAME_USE_FILTERS_IN_SYNC) FLAME_build_filter_param_$filter_name();<?end if?>
 //new
 	if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_SyncStart(b_$message_name)\n");
     rc = MB_SyncStart(b_$message_name);

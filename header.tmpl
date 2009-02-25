@@ -509,7 +509,7 @@ void generate_partitions(double cloud_data[6], int partitions, int partition_met
 /* memory.c */
 xmachine * add_xmachine(void);
 /* rules.c */
-<?foreach message?><?foreach sync?><?if filter?>int FLAME_build_filter_param_$name();
+<?foreach message?><?foreach sync?><?if sync_filter?>int FLAME_build_filter_param_$name();
 <?end if?><?end foreach?><?end foreach?>
 /* timing.c */
 double get_time(void);

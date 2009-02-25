@@ -96,6 +96,7 @@ sync * addsync(sync ** p_sync)
 	current->vars = NULL;
 	current->agents = NULL;
 	current->filter_agent_count = 0;
+	current->has_agent_and_message_vars = 0;
 	current->lastdepend = NULL;
 	current->firstdependent = NULL;
 	current->outputting_functions = NULL;

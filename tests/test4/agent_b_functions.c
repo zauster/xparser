@@ -6,6 +6,14 @@
  */
 int agent_b_1()
 {
+	return 0;
+}
+
+/** \fn agent_b_2()
+ * \brief A description of the function
+ */
+int agent_b_2()
+{
 	int message_count = 0;
 	
 	START_M_SUB_2_MESSAGE_LOOP

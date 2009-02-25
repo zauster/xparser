@@ -182,6 +182,7 @@
 <currentState>middle4</currentState>
 <nextState>end</nextState>
 <inputs>
+<input><messageName>m_sub_3</messageName></input>
 <input><messageName>m_sub_4</messageName>
 <filter>
   <lhs><value>m.int_single</value></lhs>
@@ -207,6 +208,21 @@
 <function><name>agent_b_1</name>
 <description></description>
 <currentState>start</currentState>
+<nextState>middle</nextState>
+<inputs>
+<input><messageName>m_sub_1</messageName>
+<filter>
+  <lhs><value>m.int_single</value></lhs>
+  <op>EQ</op>
+  <rhs><value>a.int_single</value></rhs>
+</filter>
+</input>
+</inputs>
+</function>
+
+<function><name>agent_b_2</name>
+<description></description>
+<currentState>middle</currentState>
 <nextState>end</nextState>
 <inputs>
 <input><messageName>m_sub_2</messageName>

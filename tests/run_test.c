@@ -20,6 +20,11 @@ void test_reading_and_writing_model_data(void);
 void test_truncated_empty_xml_tags(void);
 void test_code_standard(void);
 void test_compile_warnings(void);
+void test_4_parallel_1(void);
+void test_4_parallel_2(void);
+void test_4_parallel_3(void);
+void test_4_parallel_4(void);
+
 
 /* Define tests within this suite */
 CU_TestInfo test_array_1[] =
@@ -46,6 +51,14 @@ CU_TestInfo test_array_3[] =
     CU_TEST_INFO_NULL,
 };
 
+CU_TestInfo test_array_4[] =
+{
+	{"test parallel (n 1)                             ", test_4_parallel_1 },
+	{"test parallel (n 2)                             ", test_4_parallel_2 },
+	{"test parallel (n 3)                             ", test_4_parallel_3 },
+	{"test parallel (n 4)                             ", test_4_parallel_4 },
+    CU_TEST_INFO_NULL,
+};
 
 char * xparser_path;
 
@@ -336,14 +349,56 @@ void test_reading_and_writing_model_data(void)
 	CU_ASSERT_EQUAL(rc, 1);
 }
 
-int init_test_model(int index)
+void test_4_parallel(int n)
 {
 	FILE *out;
 	int rc;
+	int i;
+	char buffer[1000];
+	
+	sprintf(buffer, "mpiexec -n %d test4/main 1 test4/0.xml -r", n);
+	rc = call_external(buffer);
+	CU_ASSERT_EQUAL(rc, 0);
+	
+	if((out = fopen("stdout.out", "r"))==NULL)
+	{
+		CU_FAIL("cannot read stdout.out");
+	}
+	else
+	{
+		rc = 0;
+		while(fgets(buffer, 1000, out) != NULL)
+		{
+			if(strstr(buffer, "SUCCESS") != NULL) rc = 1;
+		}
+		if(rc == 1) { CU_PASS("result success"); }
+		else { CU_FAIL("result fail"); }
+
+		fclose(out);
+	}
+	
+	/* Remove node results files */
+	for(i = 0; i < n; i++)
+	{
+		sprintf(buffer, "test4/node%d-1.xml", i);
+		remove(buffer);
+	}
+}
+
+void test_4_parallel_1(void) { test_4_parallel(1); }
+void test_4_parallel_2(void) { test_4_parallel(2); }
+void test_4_parallel_3(void) { test_4_parallel(3); }
+void test_4_parallel_4(void) { test_4_parallel(4); }
+
+int init_test_model(int index, int parallel)
+{
+	FILE *out;
+	int rc, rc2;
 	char buffer[1000];
 	//printf("init_test_model_1\n");
 
 	sprintf(buffer, " test%d/test_model_%d.xml", index, index);
+	if(parallel == 1) strcat(buffer, " -p");
 	rc = call_xparser(buffer);
 	if(rc != 0)
 	{
@@ -365,7 +420,11 @@ int init_test_model(int index)
 			{
 				if(strstr(buffer, "error: mboard.h: No such file or directory") != NULL)
 				{
-					//CU_FAIL("mboard.h not found");
+					/* Try again but with Simon's default libmboard location */
+					sprintf(buffer, "make --directory=test%d/ LIBMBOARD_DIR=/Users/stc/workspace/libmboard/", index);
+					rc2 = call_external(buffer);
+					if(rc2 == 0) return 0;
+					
 					printf("\nSuite: test_model_%d mboard.h not found", index);
 					fclose(out);
 					return -1;
@@ -398,10 +457,13 @@ int clean_test_model(int index)
 	return 0;
 }
 
-int  init_test_model_1(void) { return init_test_model(1);  }
+int  init_test_model_1(void) { return init_test_model(1, 0);  }
 int clean_test_model_1(void) { return clean_test_model(1); }
-int  init_test_model_2(void) { return init_test_model(2);  }
+int  init_test_model_2(void) { return init_test_model(2, 0);  }
 int clean_test_model_2(void) { return clean_test_model(2); }
+int clean_test_model_3(void) { return clean_test_model(3); }
+int  init_test_model_4(void) { return init_test_model(4, 1);  }
+int clean_test_model_4(void) { return clean_test_model(4); }
 
 static int clean_quit(void)
 {
@@ -444,9 +506,10 @@ int main(int argc, char ** argv)
 	/* Register test suite */
 	CU_SuiteInfo suites[] =
 	{
-			{"Test parsing", NULL, NULL, test_array_3},
+			{"Test parsing", NULL, clean_test_model_3, test_array_3},
 			{"test_model_1", init_test_model_1, clean_test_model_1, test_array_1},
 			{"Test reading and writing model data", init_test_model_2, clean_test_model_2, test_array_2},
+			{"Test parallel syncs", init_test_model_4, clean_test_model_4, test_array_4},
 			CU_SUITE_INFO_NULL,
     };
 
