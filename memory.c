@@ -840,11 +840,19 @@ void copy_rule_data(rule_data * to, rule_data * from)
 	to->not = from->not;
 	to->has_agent_var = from->has_agent_var;
 	to->has_message_var = from->has_message_var;
-	to->lhs = copystr(from->lhs);
-	to->rhs = copystr(from->rhs);
+	if(from->lhs != NULL) to->lhs = copystr(from->lhs);
+	if(from->rhs != NULL) to->rhs = copystr(from->rhs);
 	to->op  = copystr(from->op);
-	if(from->lhs_rule != NULL) copy_rule_data(to->lhs_rule, from->lhs_rule);
-	if(from->rhs_rule != NULL) copy_rule_data(to->rhs_rule, from->rhs_rule);
+	if(from->lhs_rule != NULL)
+	{
+		(void) add_rule_data(&to->lhs_rule);
+		copy_rule_data(to->lhs_rule, from->lhs_rule);
+	}
+	if(from->rhs_rule != NULL)
+	{
+		(void) add_rule_data(&to->rhs_rule);
+		copy_rule_data(to->rhs_rule, from->rhs_rule);
+	}
 }
 
 /** \fn xmachine_function * addxfunction(xmachine_function ** p_xfunctions)
