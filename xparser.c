@@ -268,6 +268,7 @@ int main(int argc, char * argv[])
 	parseTemplate(filename, templatename, modeldata);
 	parseAgentHeaderTemplate(directory, modeldata);
 	/*parseUnittest(directory, modeldata);*/
+	/*parser0dtd(directory, modeldata);*/
 	
 	free_modeldata(modeldata);
 	

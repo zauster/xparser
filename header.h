@@ -181,6 +181,7 @@ struct rule_data
 	int not;
 	int has_agent_var;
 	int has_message_var;
+	struct rule_data * parent_rule;
 
 	struct rule_data * next;
 };
@@ -659,3 +660,4 @@ int create_dependency_graph(char * filepath, model_data * modeldata);
 void parseTemplate(char * filename, char * templatename, model_data * modeldata);
 void parseAgentHeaderTemplate(char * directory, model_data * modeldata);
 void parseUnittest(char * directory, model_data * modeldata);
+void parser0dtd(char * directory, model_data * modeldata);

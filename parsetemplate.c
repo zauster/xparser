@@ -2475,3 +2475,38 @@ void parseUnittest(char * directory, model_data * modeldata)
 	/* Close the files */
 	fclose(file);
 }
+
+void parser0dtd(char * directory, model_data * modeldata)
+{
+	FILE *file;
+	char filename[100];
+	/*xmachine * current_xmachine = * modeldata->p_xmachines;*/
+	
+	/* Open the output file */
+	strcpy(filename, directory);
+	strcat(filename, "0.dtd");
+	printf("writing file: %s\n", filename);
+	file = fopen(filename, "w");
+	
+	fputs("<!ELEMENT states (itno?,imports?,outputs?,environment?,xagents?)>\n", file);
+	fputs("<!ELEMENT imports (import*)>\n", file);
+	fputs("<!ELEMENT outputs (output*)>\n", file);
+	fputs("<!ELEMENT environment (ANY)>\n", file);
+	fputs("<!ELEMENT xagents (xagent*)>\n", file);
+	fputs("<!ELEMENT import (location,format,type)>\n", file);
+	fputs("<!ELEMENT output (type,name?,format,location,time)>\n", file);
+	/* Unfortunately xagent tags can hold all the different agent type variables */
+	fputs("<!ELEMENT xagent (name, ANY)>\n", file);
+	fputs("<!ELEMENT time (period, phase, duration?)>\n", file);
+	fputs("<!ELEMENT itno (#PCDATA)>\n", file);
+	fputs("<!ELEMENT location (#PCDATA)>\n", file);
+	fputs("<!ELEMENT format (#PCDATA)>\n", file);
+	fputs("<!ELEMENT type (#PCDATA)>\n", file);
+	fputs("<!ELEMENT name (#PCDATA)>\n", file);
+	fputs("<!ELEMENT period (#PCDATA)>\n", file);
+	fputs("<!ELEMENT phase (#PCDATA)>\n", file);
+	fputs("<!ELEMENT duration (#PCDATA)>\n", file);
+
+	/* Close the file */
+	fclose(file);
+}

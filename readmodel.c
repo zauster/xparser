@@ -776,13 +776,14 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				{
 					if(condition) { current_rule_data = add_rule_data(&current_function->condition_rule); }
 					if(filter) { current_rule_data = add_rule_data(&current_ioput->filter_rule); }
-					last_rule_data = NULL;
+					//last_rule_data = NULL;
 				}
 				else
 				{
 					last_rule_data = current_rule_data;
 					if(lhs_last) { current_rule_data = add_rule_data(&current_rule_data->lhs_rule); }
 					else { current_rule_data = add_rule_data(&current_rule_data->rhs_rule); }
+					current_rule_data->parent_rule = last_rule_data;
 				}
 
 				if(not == 1) current_rule_data->not = 1;
@@ -798,7 +799,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/rhs") == 0)
 			{
 				rhs = 0;
-				current_rule_data = last_rule_data;
+				current_rule_data = current_rule_data->parent_rule;
 			}
 			if(strcmp(current_string->array, "op") == 0) { op = 1; }
 			if(strcmp(current_string->array, "/op") == 0) { op = 0; }
@@ -1521,11 +1522,19 @@ void handleRule(rule_data * current_rule_data, xmachine_function * current_funct
 		else
 		{
 			/* Handle values */
-			if(current_rule_data->lhs == NULL) handleRule(current_rule_data->lhs_rule, current_function, current_xmachine, messagetype, modeldata);
-			else handleRuleValue(&current_rule_data->lhs, &current_rule_data->lhs_variable, current_function, current_xmachine, messagetype, modeldata);
+			if(current_rule_data->lhs != NULL) handleRuleValue(&current_rule_data->lhs, &current_rule_data->lhs_variable, current_function, current_xmachine, messagetype, modeldata);
+			else if(current_rule_data->lhs_rule != NULL) handleRule(current_rule_data->lhs_rule, current_function, current_xmachine, messagetype, modeldata);
+			else {
+				fprintf(stderr, "ERROR: The lhs of a rule is missing\n");
+				exit(0);
+			}
 
-			if(current_rule_data->rhs == NULL) handleRule(current_rule_data->rhs_rule, current_function, current_xmachine, messagetype, modeldata);
-			else handleRuleValue(&current_rule_data->rhs, &current_rule_data->rhs_variable, current_function, current_xmachine, messagetype, modeldata);
+			if(current_rule_data->rhs != NULL) handleRuleValue(&current_rule_data->rhs, &current_rule_data->rhs_variable, current_function, current_xmachine, messagetype, modeldata);
+			else if(current_rule_data->rhs_rule != NULL) handleRule(current_rule_data->rhs_rule, current_function, current_xmachine, messagetype, modeldata);
+			else {
+				fprintf(stderr, "ERROR: The rhs of a rule is missing\n");
+				exit(0);
+			}
 
 			/* Handle op */
 			if(strcmp(current_rule_data->op, "EQ") == 0) { strcpy(current_rule_data->op, "=="); }

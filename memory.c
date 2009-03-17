@@ -808,6 +808,7 @@ rule_data * add_rule_data(rule_data ** p_data)
 	current->not = 0;
 	current->has_agent_var = 0;
 	current->has_message_var = 0;
+	current->parent_rule = NULL;
 
 	/* Return new element */
 	return current;
