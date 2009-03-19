@@ -1943,8 +1943,8 @@ int handle_rule_for_agent_variable(rule_data * current_rule_data, xmachine * cur
 	else rc = handle_rule_value_for_agent_variable(current_rule_data->lhs, current_rule_data->lhs_variable, current_xmachine, flag);
 	if(flag == 0 && rc == 1) return 1;
 	
-	if(current_rule_data->rhs == NULL) handle_rule_for_agent_variable(current_rule_data->rhs_rule, current_xmachine, flag);
-	else handle_rule_value_for_agent_variable(current_rule_data->rhs, current_rule_data->rhs_variable, current_xmachine, flag);
+	if(current_rule_data->rhs == NULL) rc = handle_rule_for_agent_variable(current_rule_data->rhs_rule, current_xmachine, flag);
+	else rc = handle_rule_value_for_agent_variable(current_rule_data->rhs, current_rule_data->rhs_variable, current_xmachine, flag);
 	if(flag == 0 && rc == 1) return 1;
 	
 	return 0;
@@ -1952,10 +1952,10 @@ int handle_rule_for_agent_variable(rule_data * current_rule_data, xmachine * cur
 
 int handle_rule_for_message_variable(rule_data * current_rule_data)
 {
-	if(current_rule_data->lhs == NULL) handle_rule_for_message_variable(current_rule_data->lhs_rule);
+	if(current_rule_data->lhs == NULL) { if(handle_rule_for_message_variable(current_rule_data->lhs_rule) == 1) return 1; }
 	else if(strncmp(current_rule_data->lhs, "m->", 3) == 0) return 1;
 	
-	if(current_rule_data->rhs == NULL) handle_rule_for_message_variable(current_rule_data->rhs_rule);
+	if(current_rule_data->rhs == NULL) { if(handle_rule_for_message_variable(current_rule_data->rhs_rule) == 1) return 1; }
 	else if(strncmp(current_rule_data->rhs, "m->", 3) == 0) return 1; 
 	
 	return 0;
