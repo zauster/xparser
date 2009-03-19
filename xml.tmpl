@@ -485,16 +485,17 @@ int readAgentXML(char * location,
 			{
 				<?foreach xagent?><?if notfirst?>else <?end if?>if(strcmp(agentname, "$name") == 0)
 				{
+					posx = <?if use_xvar?>current_$name_agent->$xvar<?end if?><?if no_xvar?>0.0<?end if?>;
+					posy = <?if use_yvar?>current_$name_agent->$yvar<?end if?><?if no_yvar?>0.0<?end if?>;
+					posz = <?if use_zvar?>current_$name_agent->$zvar<?end if?><?if no_zvar?>0.0<?end if?>;
+
+					
 					/* If flag is zero just read the data. We'll partition later.
 					 * If flag is not zero we aleady have partition data so can read and distribute to the current node.*/
 					if( flag == 0 )
 					{
 						/* Next line should be commented out? */
 						add_$name_agent_internal(current_$name_agent, $name_$start_state_state);
-
-						posx = <?if use_xvar?>current_$name_agent->$xvar<?end if?><?if no_xvar?>0.0<?end if?>;
-						posy = <?if use_yvar?>current_$name_agent->$yvar<?end if?><?if no_yvar?>0.0<?end if?>;
-						posz = <?if use_zvar?>current_$name_agent->$zvar<?end if?><?if no_zvar?>0.0<?end if?>;
 
 						/* Update the cloud data */
 						if ( posx < cloud_data[0] ) cloud_data[0] = posx;
