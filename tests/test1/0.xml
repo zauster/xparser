@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE states SYSTEM "0.dtd">
 <states>
 <itno>0</itno>
 
@@ -36,7 +38,7 @@
  </output>
 </outputs>
 
-
+<xagents>
 <xagent>
 <name>agent_a</name>
 <int_single>1</int_single>
@@ -70,5 +72,6 @@
 <id>2</id>
 <type>0</type>
 </xagent>
+</xagents>
 
 </states>

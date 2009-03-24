@@ -2481,6 +2481,8 @@ void parser0dtd(char * directory, model_data * modeldata)
 	FILE *file;
 	char filename[100];
 	/*xmachine * current_xmachine = * modeldata->p_xmachines;*/
+	variable * current_envvar;
+	variable * allvar;
 	
 	/* Open the output file */
 	strcpy(filename, directory);
@@ -2491,12 +2493,18 @@ void parser0dtd(char * directory, model_data * modeldata)
 	fputs("<!ELEMENT states (itno?,imports?,outputs?,environment?,xagents?)>\n", file);
 	fputs("<!ELEMENT imports (import*)>\n", file);
 	fputs("<!ELEMENT outputs (output*)>\n", file);
-	fputs("<!ELEMENT environment (ANY)>\n", file);
+	fputs("<!ELEMENT environment (", file);
+	for(current_envvar = * modeldata->p_envvars; current_envvar != NULL; current_envvar = current_envvar->next)
+	{
+		fputs(current_envvar->name, file);
+		if(current_envvar->next != NULL) fputs(",", file);
+	}
+	fputs(")>\n", file);
 	fputs("<!ELEMENT xagents (xagent*)>\n", file);
-	fputs("<!ELEMENT import (location,format,type)>\n", file);
+	fputs("<!ELEMENT import (type,format,location)>\n", file);
 	fputs("<!ELEMENT output (type,name?,format,location,time)>\n", file);
 	/* Unfortunately xagent tags can hold all the different agent type variables */
-	fputs("<!ELEMENT xagent (name, ANY)>\n", file);
+	fputs("<!ELEMENT xagent ANY>\n", file);
 	fputs("<!ELEMENT time (period, phase, duration?)>\n", file);
 	fputs("<!ELEMENT itno (#PCDATA)>\n", file);
 	fputs("<!ELEMENT location (#PCDATA)>\n", file);
@@ -2506,7 +2514,23 @@ void parser0dtd(char * directory, model_data * modeldata)
 	fputs("<!ELEMENT period (#PCDATA)>\n", file);
 	fputs("<!ELEMENT phase (#PCDATA)>\n", file);
 	fputs("<!ELEMENT duration (#PCDATA)>\n", file);
-
+	/* For each agent variable */
+	for(allvar = * modeldata->p_allvars; allvar != NULL; allvar = allvar->next)
+	{
+		if(strcmp(allvar->name, "itno") != 0 ||
+			strcmp(allvar->name, "location") != 0 ||
+			strcmp(allvar->name, "format") != 0 ||
+			strcmp(allvar->name, "type") != 0 ||
+			strcmp(allvar->name, "name") != 0 ||
+			strcmp(allvar->name, "period") != 0 ||
+			strcmp(allvar->name, "phase") != 0 ||
+			strcmp(allvar->name, "duration") != 0)
+		{
+			fputs("<!ELEMENT ", file);
+			fputs(allvar->name, file);
+			fputs(" (#PCDATA)>\n", file);
+		}
+	}
 	/* Close the file */
 	fclose(file);
 }
