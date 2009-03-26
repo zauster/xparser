@@ -12,10 +12,10 @@ LIBMBOARD_INC = $(LIBMBOARD_DIR)/include
 LIBMBOARD_LIB = $(LIBMBOARD_DIR)/lib
 
 CC      = <?if serial?>gcc<?end if?><?if parallel?>mpicc<?end if?>
-CFLAGS  = -c -std=c99 -Wall -I$(LIBMBOARD_INC) ${DEFINES}
+CFLAGS  = -std=c99 -Wall -I$(LIBMBOARD_INC) ${DEFINES}
 
 CFLAGS += -D_DEBUG_MODE -g # uncomment this line for DEBUG runs
-#CFLAGS += -DNDEBUG -O3     # uncomment this line for PRODUCTION runs
+#CFLAGS += -O3     # uncomment this line for PRODUCTION runs
 
 LDFLAGS = -L$(LIBMBOARD_LIB)
 LIBS    = <?if serial?>-lmboard_sd <?end if?><?if parallel?>-lmboard_pd <?end if?> -lm
@@ -44,9 +44,9 @@ $(EXECUTABLE): $(OBJECTS)
 $(OBJECTS): $(DEPS)
 
 .c.o:
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 clean:
-	$(RM) *.o $(EXECUTABLE) $(EXECUTABLE).exe
+	$(RM) $(OBJECTS) $(EXECUTABLE) $(EXECUTABLE).exe
 vclean:
 	$(RM) main $(EXECUTABLE) $(EXECUTABLE).exe *.o  $(FLAME) $(HEADERS)  $(AUX) Makefile
