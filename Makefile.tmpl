@@ -49,4 +49,4 @@ $(OBJECTS): $(DEPS)
 clean:
 	$(RM) $(OBJECTS) $(EXECUTABLE) $(EXECUTABLE).exe
 vclean:
-	$(RM) main $(EXECUTABLE) $(EXECUTABLE).exe *.o  $(FLAME) $(HEADERS)  $(AUX) Makefile
+	$(RM) main $(EXECUTABLE) $(EXECUTABLE).exe $(OBJECTS)  $(FLAME) $(HEADERS)  $(AUX) Makefile
