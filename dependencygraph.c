@@ -1917,18 +1917,30 @@ void calculate_dependency_graph(model_data * modeldata)
 
 int handle_rule_value_for_agent_variable(char * value, variable * var, xmachine * current_xmachine, int flag)
 {
-	variable * current_variable;
+	variable * current_variable, * current_variable2;
+	int found_flag = 0;
 
 	//printf("\tvalue = %s\n", value);
 
-	/* If value is an agent varible */
+	/* If value is an agent variable */
 	if(strncmp(value, "a->", 3) == 0)
 	{
 		if(flag == 0) return 1;
-		current_variable = addvariable(&current_xmachine->variables);
-		current_variable->name = copystr(var->name);
-		current_variable->type = copystr(var->type);
-		strcpy(current_variable->c_type, var->c_type);
+		/* 22/04/09 Simon (bug from Shawn)
+		 * Check not adding duplicate var */
+		for(current_variable2 = current_xmachine->variables; current_variable2 != NULL;
+			current_variable2 = current_variable2->next)
+		{
+			if( strcmp(var->name, current_variable2->name) == 0 ) found_flag = 1;
+		}
+		
+		if(found_flag == 0)
+		{
+			current_variable = addvariable(&current_xmachine->variables);
+			current_variable->name = copystr(var->name);
+			current_variable->type = copystr(var->type);
+			strcpy(current_variable->c_type, var->c_type);
+		}
 	}
 	
 	return 0;
