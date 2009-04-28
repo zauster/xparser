@@ -822,6 +822,18 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					}
 					writetag[numtag] = write;
 				}
+				else if (strcmp(buffer->array, "<?if random?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if(write == 1) lastiftag = numtag;
+					numtag++;
+					if(current_ioput != NULL)
+					{
+						if(current_ioput->random == 0) write = 0;
+					}
+					
+					writetag[numtag] = write;
+				}
 				else if (strcmp(buffer->array, "<?end if?>") == 0)
 				{
 					/* Look at last tag */

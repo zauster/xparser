@@ -198,6 +198,7 @@ struct xmachine_ioput
 	struct rule_data * filter_rule;
 	struct xmachine_function * function;
 	struct xmachine_message * message;
+	int random;
 
 	struct xmachine_ioput * next;
 };

@@ -450,6 +450,7 @@ The comparison operator can be one of the following comparison functions:
 \item GEQ -- greater than or equal to
 \item LT -- less then
 \item GT -- greater than
+\item IN -- an integer (in lhs) is a member of an array of integers (in rhs)
 \end{itemize}
 
 or can be one of the following logic operators as well:
@@ -545,9 +546,14 @@ allows messages where the agent variable `id' is equal to the message variable
   <op>EQ</op>
   <rhs><value>m.worker_id</value></rhs>
  </filter>
+ <random>false<random>
 </input>
 \end{verbatim}
 \end{mylisting}
+
+The previous example also includes the use of a random tag, set to false, to show
+that the input does not need to be randomised, as randomising input messages can be
+computationally expensive. By default all message inputs are randomised.
 
 Using filters in the model description enables FLAME to make message
 communication more efficient by pre-sorting messages and using other techniques.

@@ -265,7 +265,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	int note, messages, message, code, cdata, environment, define, value, codefile;
 	int header, iteration_end_code, depends, datatype, desc, cur_state, next_state;
 	int input, output, messagetype, timetag, unit, period, lhs, op, rhs, condition;
-	int model, filter, phase, enabled, not, time;
+	int model, filter, phase, enabled, not, time, random;
 	int not_value;
 	/* Pointer to new structs */
 	xmachine_message * current_message;
@@ -370,6 +370,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	enabled = 0;
 	not = 0;
 	time = 0;
+	random = 0;
 
 	/*printf("%i> ", linenumber);*/
 
@@ -623,6 +624,8 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 
 				current_ioput = addioput(&current_function->inputs);
 				current_ioput->function = current_function;
+				/* Default random setting is true */
+				current_ioput->random = 1;
 			}
 			if(strcmp(current_string->array, "/input") == 0) { input = 0; }
 			if(strcmp(current_string->array, "output") == 0)
@@ -867,6 +870,8 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/value") == 0) { value = 0; }
 			if(strcmp(current_string->array, "enabled") == 0) { enabled = 1; }
 			if(strcmp(current_string->array, "/enabled") == 0) { enabled = 0; }
+			if(strcmp(current_string->array, "random") == 0) { random = 1; }
+			if(strcmp(current_string->array, "/random") == 0) { random = 0; }
 
 			/* End of tag and reset buffer */
 			intag = 0;
@@ -1226,6 +1231,13 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				if(input)
 				{
 					if(messagetype) current_ioput->messagetype = copy_array_to_str(current_string);
+					if(random)
+					{
+						temp_char = copy_array_to_str(current_string);
+						if(strcmp(temp_char, "true") == 0) current_ioput->random = 1;
+						if(strcmp(temp_char, "false") == 0) current_ioput->random = 0;
+						free(temp_char);
+					}
 					if(filter)
 					{
 						if(lhs && value) current_rule_data->lhs = copy_array_to_str(current_string);
@@ -2144,6 +2156,9 @@ int checkmodel(model_data * modeldata)
 					handleRule(current_ioput->filter_rule, current_function, current_xmachine, current_ioput->messagetype, modeldata);
 				}
 
+				printf("%s - %d\n", current_ioput->filter_function, current_ioput->random);
+				
+				
 				current_ioput = current_ioput->next;
 			}
 

@@ -413,7 +413,7 @@ if(argc < 2)
            exit(rc);
 		}
 		#endif
-		MB_Iterator_Randomise(i_$name);
+		<?if random?>MB_Iterator_Randomise(i_$name);<?end if?>
 		<?end foreach?>
 
 			i = $name();
