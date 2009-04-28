@@ -841,8 +841,16 @@ void copy_rule_data(rule_data * to, rule_data * from)
 	to->not = from->not;
 	to->has_agent_var = from->has_agent_var;
 	to->has_message_var = from->has_message_var;
-	if(from->lhs != NULL) to->lhs = copystr(from->lhs);
-	if(from->rhs != NULL) to->rhs = copystr(from->rhs);
+	if(from->lhs != NULL)
+	{
+		to->lhs = copystr(from->lhs);
+		to->lhs_variable = from->lhs_variable;
+	}
+	if(from->rhs != NULL)
+	{
+		to->rhs = copystr(from->rhs);
+		to->rhs_variable = from->rhs_variable;
+	}
 	to->op  = copystr(from->op);
 	if(from->lhs_rule != NULL)
 	{

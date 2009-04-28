@@ -1333,7 +1333,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	fclose(file);
 }
 
-void handleRuleValue(char ** p_value, variable ** p_variable, xmachine_function * current_function, xmachine * current_xmachine, char * messagetype, model_data * modeldata)
+void handleRuleValue(char ** p_value, variable ** p_variable, rule_data * current_rule_data, xmachine_function * current_function, xmachine * current_xmachine, char * messagetype, model_data * modeldata)
 {
 	variable * current_variable;
 	xmachine_message * current_message;
@@ -1344,14 +1344,14 @@ void handleRuleValue(char ** p_value, variable ** p_variable, xmachine_function 
 	/* If starts with 'a.' change to 'a->' and check rest is a valid agent memory variable */
 	if(strncmp(*p_value, "a.", 2) == 0)
 	{
-		/* check valid agent memory valiable */
+		/* check valid agent memory variable */
 		found = 0;
 		strcpy(buffer, *p_value+2);
 		current_variable = current_xmachine->variables;
 		while(current_variable)
 		{
 			if(strcmp(buffer, current_variable->name) == 0)
-			{
+			{	
 				found = 1;
 				*p_variable = current_variable;
 			}
@@ -1517,19 +1517,19 @@ void handleRule(rule_data * current_rule_data, xmachine_function * current_funct
 				exit(0);
 			}
 
-			handleRuleValue(&current_rule_data->rhs, &current_rule_data->rhs_variable, current_function, current_xmachine, messagetype, modeldata);
+			handleRuleValue(&current_rule_data->rhs, &current_rule_data->rhs_variable, current_rule_data, current_function, current_xmachine, messagetype, modeldata);
 		}
 		else
 		{
 			/* Handle values */
-			if(current_rule_data->lhs != NULL) handleRuleValue(&current_rule_data->lhs, &current_rule_data->lhs_variable, current_function, current_xmachine, messagetype, modeldata);
+			if(current_rule_data->lhs != NULL) handleRuleValue(&current_rule_data->lhs, &current_rule_data->lhs_variable, current_rule_data, current_function, current_xmachine, messagetype, modeldata);
 			else if(current_rule_data->lhs_rule != NULL) handleRule(current_rule_data->lhs_rule, current_function, current_xmachine, messagetype, modeldata);
 			else {
 				fprintf(stderr, "ERROR: The lhs of a rule is missing\n");
 				exit(0);
 			}
 
-			if(current_rule_data->rhs != NULL) handleRuleValue(&current_rule_data->rhs, &current_rule_data->rhs_variable, current_function, current_xmachine, messagetype, modeldata);
+			if(current_rule_data->rhs != NULL) handleRuleValue(&current_rule_data->rhs, &current_rule_data->rhs_variable, current_rule_data, current_function, current_xmachine, messagetype, modeldata);
 			else if(current_rule_data->rhs_rule != NULL) handleRule(current_rule_data->rhs_rule, current_function, current_xmachine, messagetype, modeldata);
 			else {
 				fprintf(stderr, "ERROR: The rhs of a rule is missing\n");
@@ -1545,12 +1545,35 @@ void handleRule(rule_data * current_rule_data, xmachine_function * current_funct
 			else if(strcmp(current_rule_data->op, "GT") == 0) { strcpy(current_rule_data->op, ">"); }
 			else if(strcmp(current_rule_data->op, "AND") == 0) { strcpy(current_rule_data->op, "&&"); }
 			else if(strcmp(current_rule_data->op, "OR") == 0) { strcpy(current_rule_data->op, "||"); }
+			else if(strcmp(current_rule_data->op, "IN") == 0) { }
 			else
 			{
-				fprintf(stderr, "ERROR: '%s' operator not one of EQ/NEQ/LEQ/GEQ/LT/GT/AND/OR\n", current_rule_data->op);
+				fprintf(stderr, "ERROR: '%s' operator not one of EQ/NEQ/LEQ/GEQ/LT/GT/AND/OR/IN\n", current_rule_data->op);
 				fprintf(stderr, "       in function '%s' %s->%s in agent '%s'\n", current_function->name, current_function->current_state, current_function->next_state, current_xmachine->name);
 				fprintf(stderr, "       in file: '%s'\n", current_function->file);
 				exit(0);
+			}
+			
+			/* If op is 'IN' */
+			if(strcmp(current_rule_data->op, "IN") == 0)
+			{
+				/* LHS is not a single integer */
+				if(current_rule_data->lhs_variable->arraylength != 0 || strcmp(current_rule_data->lhs_variable->type, "int") != 0)
+				{
+					fprintf(stderr, "ERROR: lhs value '%s' in filter rule using op 'IN' is not a single integer\n", current_rule_data->lhs_variable->name);
+					fprintf(stderr, "       in function '%s' %s->%s in agent '%s'\n", current_function->name, current_function->current_state, current_function->next_state, current_xmachine->name);
+					fprintf(stderr, "       in file: '%s'\n", current_function->file);
+					exit(0);
+				}
+				
+				/* RHS is not a list of integers */
+				if(current_rule_data->rhs_variable->arraylength == 0 || strcmp(current_rule_data->lhs_variable->type, "int") != 0)
+				{
+					fprintf(stderr, "ERROR: rhs value '%s' in filter rule using op 'IN' is not an array of integers\n", current_rule_data->lhs_variable->name);
+					fprintf(stderr, "       in function '%s' %s->%s in agent '%s'\n", current_function->name, current_function->current_state, current_function->next_state, current_xmachine->name);
+					fprintf(stderr, "       in file: '%s'\n", current_function->file);
+					exit(0);
+				}
 			}
 		}
 	}
@@ -2101,8 +2124,6 @@ int checkmodel(model_data * modeldata)
 								current_ioput->messagetype, current_function->name, current_xmachine->name, current_function->file);
 					return -1;
 				}
-
-
 
 				/* If input message has a filter */
 				if(current_ioput->filter_rule != NULL)

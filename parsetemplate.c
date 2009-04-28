@@ -2,6 +2,8 @@
 
 void writeRule(rule_data * current_rule_data, FILE *file)
 {
+	char data[100];
+	
 	if(current_rule_data->time_rule == 1)
 	{
 		if(current_rule_data->not == 1) fputs("!", file);
@@ -16,13 +18,42 @@ void writeRule(rule_data * current_rule_data, FILE *file)
 	{
 		if(current_rule_data->not == 1) fputs("!", file);
 		fputs("(", file);
-		if(current_rule_data->lhs == NULL) writeRule(current_rule_data->lhs_rule, file);
-		else fputs(current_rule_data->lhs, file);
-		fputs(" ", file);
-		fputs(current_rule_data->op, file);
-		fputs(" ", file);
-		if(current_rule_data->rhs == NULL) writeRule(current_rule_data->rhs_rule, file);
-		else fputs(current_rule_data->rhs, file);
+		/* If rule operator is 'IN' i.e. integer value within an integer list */
+		if(strcmp(current_rule_data->op, "IN") == 0)
+		{
+			fputs("FLAME_integer_in_array(", file);
+			fputs(current_rule_data->lhs, file);
+			fputs(", ", file);
+			fputs(current_rule_data->rhs, file);
+			if(current_rule_data->rhs_variable->arraylength == -1)
+			{
+				fputs(".array", file);
+			}
+			fputs(", ", file);
+			/* If array is dynamic */
+			if(current_rule_data->rhs_variable->arraylength == -1)
+			{
+				fputs(current_rule_data->rhs, file);
+				fputs(".size", file);
+			}
+			/* If array is static */
+			if(current_rule_data->rhs_variable->arraylength > 0)
+			{
+				sprintf(data, "%i", current_rule_data->rhs_variable->arraylength);
+				fputs(data, file);
+			}
+			fputs(")", file);
+		}
+		else
+		{
+			if(current_rule_data->lhs == NULL) writeRule(current_rule_data->lhs_rule, file);
+			else fputs(current_rule_data->lhs, file);
+			fputs(" ", file);
+			fputs(current_rule_data->op, file);
+			fputs(" ", file);
+			if(current_rule_data->rhs == NULL) writeRule(current_rule_data->rhs_rule, file);
+			else fputs(current_rule_data->rhs, file);
+		}
 		fputs(")", file);
 	}
 }
