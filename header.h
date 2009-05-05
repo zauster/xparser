@@ -173,6 +173,9 @@ struct rule_data
 	char * lhs;
 	char * op;
 	char * rhs;
+	char * lhs_print;
+	char * op_print;
+	char * rhs_print;
 	struct variable * lhs_variable; /* Pointer to the lhs variable */
 	struct variable * rhs_variable; /* Pointer to the rhs variable */
 	struct rule_data * lhs_rule; /* If rule==NULL then use lhs,op,rhs data */
@@ -198,7 +201,8 @@ struct xmachine_ioput
 	struct rule_data * filter_rule;
 	struct xmachine_function * function;
 	struct xmachine_message * message;
-	int random;
+	int random;					/**< Flag for randomisation, 0 for false, 1 for true. */
+	char * sort_function;		/**< The sort function name if defined. */
 
 	struct xmachine_ioput * next;
 };

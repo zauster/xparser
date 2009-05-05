@@ -189,6 +189,7 @@ xmachine_ioput * addioput(xmachine_ioput ** p_ioput)
 	current->filter_rule = NULL;
 	current->function = NULL;
 	current->message = NULL;
+	current->sort_function = NULL;
 
 	/* Return new element */
 	return current;
@@ -205,6 +206,7 @@ void free_ioput(xmachine_ioput ** p_ioput)
 		free(head->filter_function);
 		free_rule_data(&head->filter_rule);
 		free(head->messagetype);
+		free(head->sort_function);
 		free(head);
 		head = temp;
 	}
@@ -799,6 +801,9 @@ rule_data * add_rule_data(rule_data ** p_data)
 	current->lhs = NULL;
 	current->rhs = NULL;
 	current->op = NULL;
+	current->lhs_print = NULL;
+	current->rhs_print = NULL;
+	current->op_print = NULL;
 	current->lhs_variable = NULL;
 	current->lhs_variable = NULL;
 	current->lhs_rule = NULL;
@@ -826,6 +831,9 @@ void free_rule_data(rule_data ** p_data)
 		free(head->lhs);
 		free(head->rhs);
 		free(head->op);
+		free(head->lhs_print);
+		free(head->rhs_print);
+		free(head->op_print);
 		free_rule_data(&head->lhs_rule);
 		free_rule_data(&head->rhs_rule);
 		free(head);
@@ -844,11 +852,13 @@ void copy_rule_data(rule_data * to, rule_data * from)
 	if(from->lhs != NULL)
 	{
 		to->lhs = copystr(from->lhs);
+		to->lhs_print = copystr(from->lhs_print);
 		to->lhs_variable = from->lhs_variable;
 	}
 	if(from->rhs != NULL)
 	{
 		to->rhs = copystr(from->rhs);
+		to->rhs_print = copystr(from->rhs_print);
 		to->rhs_variable = from->rhs_variable;
 	}
 	to->op  = copystr(from->op);

@@ -99,18 +99,18 @@ void printRule(rule_data * current_rule_data, FILE *file)
 		else
 		{
 			/* Handle values */
-			if(current_rule_data->lhs != NULL) fputs(current_rule_data->lhs, file);
+			if(current_rule_data->lhs != NULL) fputs(current_rule_data->lhs_print, file);
 			else printRule(current_rule_data->lhs_rule, file);
 
 			if(current_rule_data->op != NULL)
 			{
 				fputs(" ", file);
-				fputs(current_rule_data->op, file);
+				fputs(current_rule_data->op_print, file);
 				if(strcmp(current_rule_data->op, "&&") == 0 || strcmp(current_rule_data->op, "||") == 0) fputs("\\n", file);
 				else fputs(" ", file);
 			}
 
-			if(current_rule_data->rhs != NULL) fputs(current_rule_data->rhs, file);
+			if(current_rule_data->rhs != NULL) fputs(current_rule_data->rhs_print, file);
 			else printRule(current_rule_data->rhs_rule, file);
 		}
 
@@ -345,6 +345,14 @@ void output_stategraph(char * filename, char * filepath, model_data * modeldata,
 					if(strcmp(current_ioput->messagetype, current_message->name) == 0)
 					{
 						printRule(current_ioput->filter_rule, file);
+					}
+					/* Print if random */
+					if(current_ioput->random == 1) fputs("\\nrandom", file);
+					/* Print if sort */
+					if(current_ioput->sort_function != NULL)
+					{
+						fputs("\\nsort: ", file);
+						fputs(current_ioput->sort_function, file);
 					}
 
 					current_ioput = current_ioput->next;

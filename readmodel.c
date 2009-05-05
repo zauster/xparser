@@ -265,7 +265,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	int note, messages, message, code, cdata, environment, define, value, codefile;
 	int header, iteration_end_code, depends, datatype, desc, cur_state, next_state;
 	int input, output, messagetype, timetag, unit, period, lhs, op, rhs, condition;
-	int model, filter, phase, enabled, not, time, random;
+	int model, filter, phase, enabled, not, time, random, sort;
 	int not_value;
 	/* Pointer to new structs */
 	xmachine_message * current_message;
@@ -371,6 +371,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	not = 0;
 	time = 0;
 	random = 0;
+	sort = 0;
 
 	/*printf("%i> ", linenumber);*/
 
@@ -872,6 +873,8 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/enabled") == 0) { enabled = 0; }
 			if(strcmp(current_string->array, "random") == 0) { random = 1; }
 			if(strcmp(current_string->array, "/random") == 0) { random = 0; }
+			if(strcmp(current_string->array, "sort") == 0) { sort = 1; }
+			if(strcmp(current_string->array, "/sort") == 0) { sort = 0; }
 
 			/* End of tag and reset buffer */
 			intag = 0;
@@ -1238,11 +1241,24 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 						if(strcmp(temp_char, "false") == 0) current_ioput->random = 0;
 						free(temp_char);
 					}
+					if(sort) current_ioput->sort_function = copy_array_to_str(current_string);
 					if(filter)
 					{
-						if(lhs && value) current_rule_data->lhs = copy_array_to_str(current_string);
-						else if(op) current_rule_data->op = copy_array_to_str(current_string);
-						else if(rhs && value) current_rule_data->rhs = copy_array_to_str(current_string);
+						if(lhs && value)
+						{
+							current_rule_data->lhs = copy_array_to_str(current_string);
+							current_rule_data->lhs_print = copy_array_to_str(current_string);
+						}
+						else if(op)
+						{
+							current_rule_data->op = copy_array_to_str(current_string);
+							current_rule_data->op_print = copy_array_to_str(current_string);
+						}
+						else if(rhs && value)
+						{
+							current_rule_data->rhs = copy_array_to_str(current_string);
+							current_rule_data->rhs_print = copy_array_to_str(current_string);
+						}
 						//else current_ioput->filter_function = copy_array_to_str(current_string);
 					}
 				}
@@ -1252,9 +1268,21 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				}
 				if(condition)
 				{
-					if(lhs && value) current_rule_data->lhs = copy_array_to_str(current_string);
-					else if(op) current_rule_data->op = copy_array_to_str(current_string);
-					else if(rhs && value) current_rule_data->rhs = copy_array_to_str(current_string);
+					if(lhs && value)
+					{
+						current_rule_data->lhs = copy_array_to_str(current_string);
+						current_rule_data->lhs_print = copy_array_to_str(current_string);
+					}
+					else if(op)
+					{
+						current_rule_data->op = copy_array_to_str(current_string);
+						current_rule_data->op_print = copy_array_to_str(current_string);
+					}
+					else if(rhs && value)
+					{
+						current_rule_data->rhs = copy_array_to_str(current_string);
+						current_rule_data->rhs_print = copy_array_to_str(current_string);
+					}
 					//else current_function->condition_function = copy_array_to_str(current_string);
 					if(period) current_rule_data->lhs = copy_array_to_str(current_string);
 					if(phase) current_rule_data->rhs = copy_array_to_str(current_string);
@@ -2136,7 +2164,7 @@ int checkmodel(model_data * modeldata)
 								current_ioput->messagetype, current_function->name, current_xmachine->name, current_function->file);
 					return -1;
 				}
-
+				
 				/* If input message has a filter */
 				if(current_ioput->filter_rule != NULL)
 				{
@@ -2156,8 +2184,13 @@ int checkmodel(model_data * modeldata)
 					handleRule(current_ioput->filter_rule, current_function, current_xmachine, current_ioput->messagetype, modeldata);
 				}
 
-				printf("%s - %d\n", current_ioput->filter_function, current_ioput->random);
+				/*printf("%s - %d\n", current_ioput->filter_function, current_ioput->random);*/
+				/*if(current_ioput->sort_function != NULL) printf("*** %s - %s\n", 
+										current_ioput->messagetype, current_ioput->sort_function);*/
 				
+				/* If sort function is defined then turn off randomisation
+				 * because random function called on the sorted iterator */
+				if(current_ioput->sort_function != NULL) current_ioput->random = 0;
 				
 				current_ioput = current_ioput->next;
 			}

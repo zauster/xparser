@@ -746,6 +746,33 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					}
 					writetag[numtag] = write;
 				}
+				else if (strcmp(buffer->array, "<?if sort?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+
+					if(current_ioput != NULL)
+					{
+						if (current_ioput->sort_function == NULL) write = 0;
+					}
+					else write = 0;
+					writetag[numtag] = write;
+				}
+				else if (strcmp(buffer->array, "<?if no_sort?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+
+					if(current_ioput != NULL)
+					{
+						if (current_ioput->sort_function != NULL) write = 0;
+					}
+					writetag[numtag] = write;
+				}
 				else if (strcmp(buffer->array, "<?if sync_filter?>") == 0)
 				{
 					strcpy(&chartag[numtag][0], "if");
@@ -2042,7 +2069,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							strcmp("foreach function_output", lastloop) == 0)
 					{
 						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$agent_name") != 0 &&
-								strcmp(buffer3->array, "$filter") != 0 && strcmp(buffer3->array, "$rule") != 0 && pos <= (pos1 + 15))
+								strcmp(buffer3->array, "$filter") != 0 && strcmp(buffer3->array, "$rule") != 0 &&
+								strcmp(buffer3->array, "$sort") != 0 &&pos <= (pos1 + 15))
 						{
 							add_char(buffer3, c);
 							pos++;
@@ -2055,6 +2083,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							fputs(current_function->agent_name, file);
 						else if (strcmp(buffer3->array, "$filter") == 0)
 							fputs(current_ioput->filter_function, file);
+						else if (strcmp(buffer3->array, "$sort") == 0)
+							fputs(current_ioput->sort_function, file);
 						else if (strcmp(buffer3->array, "$rule") == 0)
 							writeRule(current_ioput->filter_rule, file);
 						else

@@ -372,7 +372,7 @@ if(argc < 2)
 		temp_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
 		current_xmachine_$agent_name = current_xmachine_$agent_name_holder->agent;
 		current_xmachine_$agent_name_next_state = $agent_name_$next_state_state;
-		/* For backwards compatability set current_xmachine */
+		/* For backwards compatibility set current_xmachine */
 		<?foreach xagent?>current_xmachine->xmachine_$name = NULL;
 		<?end foreach?>current_xmachine->xmachine_$agent_name = current_xmachine_$agent_name;
 
@@ -380,8 +380,8 @@ if(argc < 2)
 		{<?end if?>
 
 		<?foreach function_input?>
-		<?if filter?>rc = MB_Iterator_CreateFiltered(b_$name, &i_$name, &$filter, current_xmachine_$agent_name);<?end if?>
-		<?if no_filter?>rc = MB_Iterator_Create(b_$name, &i_$name);<?end if?>
+		<?if filter?><?if no_sort?>rc = MB_Iterator_CreateFiltered(b_$name, &i_$name, &$filter, current_xmachine_$agent_name);<?end if?><?if sort?>MB_Iterator_CreateFilteredSorted(b_$name, &i_$name, &$filter, current_xmachine_$agent_name, &$sort);<?end if?><?end if?>
+		<?if no_filter?><?if no_sort?>rc = MB_Iterator_Create(b_$name, &i_$name);<?end if?><?if sort?>MB_Iterator_CreateSorted(b_$name, &i_$name, &$sort);<?end if?><?end if?>
 		#ifdef ERRCHECK
 		if (rc != MB_SUCCESS)
 		{

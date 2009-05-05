@@ -228,10 +228,6 @@ typedef struct xmachine_memory_$name_state xmachine_memory_$name_state;<?end for
  */
 typedef struct m_$name m_$name;
 <?end foreach?>
-<?foreach xagent?><?foreach function?>
-int $name(void);<?if condition?>
-int $condition(xmachine_memory_$agent_name *a);<?end if?><?foreach function_input?><?if filter?>
-int $filter(const void *msg, const void *params);<?end if?><?end foreach?><?end foreach?><?end foreach?>
 
 /** \struct location
  * \brief Holds location for calculating space partitioning .
@@ -514,3 +510,8 @@ int FLAME_integer_in_array(int a, int * b, int size);
 <?end if?><?end foreach?><?end foreach?>
 /* timing.c */
 double get_time(void);
+<?foreach xagent?><?foreach function?>
+int $name(void);<?if condition?>
+int $condition(xmachine_memory_$agent_name *a);<?end if?><?foreach function_input?><?if filter?>
+int $filter(const void *msg, const void *params);<?end if?><?if sort?>
+int $sort();<?end if?><?end foreach?><?end foreach?><?end foreach?>
