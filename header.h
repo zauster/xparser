@@ -118,6 +118,7 @@ struct variable
 	char * file;			/**< File from where element read. */
 	struct xmachine_message * message;	/**< Pointer to message containing this variable, NULL if not. */
 	struct xmachine * agent;			/**< Pointer to agent containing this variable, NULL if not. */
+	int constant;			/**< Flag for constant value. */
 
 	struct variable * next;		/**< Pointer to next variable in list. */
 };

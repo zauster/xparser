@@ -265,7 +265,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	int note, messages, message, code, cdata, environment, define, value, codefile;
 	int header, iteration_end_code, depends, datatype, desc, cur_state, next_state;
 	int input, output, messagetype, timetag, unit, period, lhs, op, rhs, condition;
-	int model, filter, phase, enabled, not, time, random, sort;
+	int model, filter, phase, enabled, not, time, random, sort, constant;
 	int not_value;
 	/* Pointer to new structs */
 	xmachine_message * current_message;
@@ -372,6 +372,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	time = 0;
 	random = 0;
 	sort = 0;
+	constant = 0;
 
 	/*printf("%i> ", linenumber);*/
 
@@ -875,6 +876,8 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/random") == 0) { random = 0; }
 			if(strcmp(current_string->array, "sort") == 0) { sort = 1; }
 			if(strcmp(current_string->array, "/sort") == 0) { sort = 0; }
+			if(strcmp(current_string->array, "constant") == 0) { constant = 1; }
+			if(strcmp(current_string->array, "/constant") == 0) { constant = 0; }
 
 			/* End of tag and reset buffer */
 			intag = 0;
@@ -1149,6 +1152,13 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			{
 				if(type) { handleVariableType(current_string, current_variable, modeldata); }
 				if(name) { handleVariableName(current_string, current_variable); }
+				if(constant)
+				{
+					temp_char = copy_array_to_str(current_string);
+					if(strcmp(temp_char, "true") == 0) current_variable->constant = 1;
+					if(strcmp(temp_char, "false") == 0) current_variable->constant = 0;
+					free(temp_char);
+				}
 			}
 			else if(message && name)
 			{
@@ -1352,7 +1362,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			}
 		}
 		/* If in data read char into buffer */
-		else if(model || enabled || codefile || ((iteration_end_code && code) || codefile || name || type || desc || (memory && (var && (type || name)))) ||
+		else if(model || enabled || codefile || ((iteration_end_code && code) || codefile || name || type || desc || (memory && (var && (type || name || constant)))) ||
 					(message && (name || (var && (type || name))))
 					|| (state && (name || attribute || (transition && (func || dest))))
 						|| (function && (not || name || note || code || depends || type || cur_state || next_state || input || output || messagetype || value || period || phase))

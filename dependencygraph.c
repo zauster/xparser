@@ -1933,7 +1933,14 @@ int handle_rule_value_for_agent_variable(char * value, variable * var, xmachine 
 	/* If value is an agent variable */
 	if(strncmp(value, "a->", 3) == 0)
 	{
+		/* Only check for agent vars */
 		if(flag == 0) return 1;
+		/* Only check for non-constant agent vars */
+		if(flag == 2)
+		{
+			if(var->constant == 0) return 1;
+			else return 0;
+		}
 		/* 22/04/09 Simon (bug from Shawn)
 		 * Check not adding duplicate var */
 		for(current_variable2 = current_xmachine->variables; current_variable2 != NULL;
@@ -1961,11 +1968,11 @@ int handle_rule_for_agent_variable(rule_data * current_rule_data, xmachine * cur
 	/* Handle values */
 	if(current_rule_data->lhs == NULL) rc = handle_rule_for_agent_variable(current_rule_data->lhs_rule, current_xmachine, flag);
 	else rc = handle_rule_value_for_agent_variable(current_rule_data->lhs, current_rule_data->lhs_variable, current_xmachine, flag);
-	if(flag == 0 && rc == 1) return 1;
+	if((flag == 0 || flag == 2) && rc == 1) return 1;
 	
 	if(current_rule_data->rhs == NULL) rc = handle_rule_for_agent_variable(current_rule_data->rhs_rule, current_xmachine, flag);
 	else rc = handle_rule_value_for_agent_variable(current_rule_data->rhs, current_rule_data->rhs_variable, current_xmachine, flag);
-	if(flag == 0 && rc == 1) return 1;
+	if((flag == 0 || flag == 2) && rc == 1) return 1;
 	
 	return 0;
 }
@@ -2161,23 +2168,26 @@ void calculate_communication_syncs(model_data * modeldata)
 									addxstate(current_function->current_state, current_function->agent_name, &current_xmachine->states);
 	
 									/* Find functions that can change the filter variables */
-									current_adj_function = current_function_pointer->function->dependson;
-									while(current_adj_function)
+									/* If filter variables are constant no functions can change them */
+									if(handle_rule_for_agent_variable(current_input->filter_rule, current_xmachine, 2))
 									{
-										if(strcmp(current_function_pointer->function->agent_name, current_adj_function->function->agent_name) == 0)
+										current_adj_function = current_function_pointer->function->dependson;
+										while(current_adj_function)
 										{
-											/* Add functions that can change the filter variables */
-											addfunction_pointer(&current_sync->filter_variable_changing_functions, current_adj_function->function);
-	
-	
-											/*if(current_sync->lastdepend->function->rank_in < current_adj_function->function->rank_in)
+											if(strcmp(current_function_pointer->function->agent_name, current_adj_function->function->agent_name) == 0)
 											{
-												//current_sync->start_layer = current_adj_function->function->rank_in;
-												current_sync->lastdepend->function = current_adj_function->function;
-											}*/
+												/* Add functions that can change the filter variables */
+												addfunction_pointer(&current_sync->filter_variable_changing_functions, current_adj_function->function);
+		
+												/*if(current_sync->lastdepend->function->rank_in < current_adj_function->function->rank_in)
+												{
+													//current_sync->start_layer = current_adj_function->function->rank_in;
+													current_sync->lastdepend->function = current_adj_function->function;
+												}*/
+											}
+		
+											current_adj_function = current_adj_function->next;
 										}
-	
-										current_adj_function = current_adj_function->next;
 									}
 								}
 							}

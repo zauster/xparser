@@ -299,6 +299,7 @@ variable * addvariable(variable ** p_vars)
 	current->typenotarray = NULL;
 	current->message = NULL;
 	current->agent = NULL;
+	current->constant = 0;
 
 	/* Return new element */
 	return current;
