@@ -204,7 +204,7 @@ struct xmachine_ioput
 	struct xmachine_message * message;
 	int random;					/**< Flag for randomisation, 0 for false, 1 for true. */
 	char * sort_function;		/**< The sort function name if defined. */
-	char * sort_variable;		/**< The sort message variable. */
+	char * sort_key;			/**< The sort message variable. */
 	char * sort_order;			/**< The sort order, ascend/descend. */
 
 	struct xmachine_ioput * next;

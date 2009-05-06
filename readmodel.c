@@ -265,7 +265,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	int note, messages, message, code, cdata, environment, define, value, codefile;
 	int header, iteration_end_code, depends, datatype, desc, cur_state, next_state;
 	int input, output, messagetype, timetag, unit, period, lhs, op, rhs, condition;
-	int model, filter, phase, enabled, not, time, random, sort, constant, order;
+	int model, filter, phase, enabled, not, time, random, sort, constant, order, key;
 	int not_value;
 	/* Pointer to new structs */
 	xmachine_message * current_message;
@@ -374,6 +374,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	sort = 0;
 	constant = 0;
 	order = 0;
+	key = 0;
 
 	/*printf("%i> ", linenumber);*/
 
@@ -551,9 +552,9 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					current_variable = addvariable(&current_xmachine->variables);
 					current_variable->agent = current_xmachine;
 				}
-				else if(sort != 1) current_variable = addvariable(p_variable);
+				else current_variable = addvariable(p_variable);
 
-				if(sort != 1) current_variable->file = copystr(inputfile->fullfilepath);
+				current_variable->file = copystr(inputfile->fullfilepath);
 			}
 			if(strcmp(current_string->array, "/var") == 0 || strcmp(current_string->array, "/variable") == 0) { var = 0; }
 			if(strcmp(current_string->array, "type") == 0) { type = 1; }/*charlist = NULL; }*/
@@ -881,6 +882,8 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/constant") == 0) { constant = 0; }
 			if(strcmp(current_string->array, "order") == 0) { order = 1; }
 			if(strcmp(current_string->array, "/order") == 0) { order = 0; }
+			if(strcmp(current_string->array, "key") == 0) { key = 1; }
+			if(strcmp(current_string->array, "/key") == 0) { key = 0; }
 
 			/* End of tag and reset buffer */
 			intag = 0;
@@ -1151,7 +1154,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				}
 				if(header) current_envfunc->header = 1;
 			}
-			else if(var && !function)
+			else if(var)
 			{
 				if(type) { handleVariableType(current_string, current_variable, modeldata); }
 				if(name) { handleVariableName(current_string, current_variable); }
@@ -1256,7 +1259,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					}
 					if(sort)
 					{
-						if(var) current_ioput->sort_variable = copy_array_to_str(current_string);
+						if(key) current_ioput->sort_key = copy_array_to_str(current_string);
 						if(order) current_ioput->sort_order = copy_array_to_str(current_string);
 						
 						/*current_ioput->sort_function = copy_array_to_str(current_string);*/
@@ -2208,9 +2211,9 @@ int checkmodel(model_data * modeldata)
 										current_ioput->messagetype, current_ioput->sort_function);*/
 				
 				/* If sort variable defined */
-				if(current_ioput->sort_variable != NULL || current_ioput->sort_order != NULL)
+				if(current_ioput->sort_key != NULL || current_ioput->sort_order != NULL)
 				{
-					if(current_ioput->sort_variable == NULL)
+					if(current_ioput->sort_key == NULL)
 					{
 						fprintf(stderr, "ERROR: sort of message type '%s' in function '%s' in agent '%s' in file '%s' doesn't have a sort variable\n",
 								current_ioput->messagetype, current_function->name, current_xmachine->name, current_function->file);
@@ -2228,12 +2231,12 @@ int checkmodel(model_data * modeldata)
 					for(current_variable = current_ioput->message->vars;
 					current_variable != NULL; current_variable = current_variable->next)
 					{
-						if(strcmp(current_variable->name, current_ioput->sort_variable) == 0) found = 1;
+						if(strcmp(current_variable->name, current_ioput->sort_key) == 0) found = 1;
 					}
 					if(found == 0)
 					{
 						fprintf(stderr, "ERROR: sort of message type '%s' in function '%s' in agent '%s' in file '%s' doesn't have a valid sort variable '%s'\n",
-								current_ioput->messagetype, current_function->name, current_xmachine->name, current_function->file, current_ioput->sort_variable);
+								current_ioput->messagetype, current_function->name, current_xmachine->name, current_function->file, current_ioput->sort_key);
 						return -1;
 					}
 					
