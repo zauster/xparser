@@ -190,6 +190,8 @@ xmachine_ioput * addioput(xmachine_ioput ** p_ioput)
 	current->function = NULL;
 	current->message = NULL;
 	current->sort_function = NULL;
+	current->sort_variable = NULL;
+	current->sort_order = NULL;
 
 	/* Return new element */
 	return current;
@@ -207,6 +209,8 @@ void free_ioput(xmachine_ioput ** p_ioput)
 		free_rule_data(&head->filter_rule);
 		free(head->messagetype);
 		free(head->sort_function);
+		free(head->sort_variable);
+		free(head->sort_order);
 		free(head);
 		head = temp;
 	}
