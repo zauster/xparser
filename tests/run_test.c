@@ -24,7 +24,7 @@ void test_4_parallel_1(void);
 void test_4_parallel_2(void);
 void test_4_parallel_3(void);
 void test_4_parallel_4(void);
-
+void test_input(void);
 
 /* Define tests within this suite */
 CU_TestInfo test_array_1[] =
@@ -57,6 +57,12 @@ CU_TestInfo test_array_4[] =
 	{"test parallel (n 2)                             ", test_4_parallel_2 },
 	{"test parallel (n 3)                             ", test_4_parallel_3 },
 	{"test parallel (n 4)                             ", test_4_parallel_4 },
+    CU_TEST_INFO_NULL,
+};
+
+CU_TestInfo test_array_5[] =
+{
+	{"test input filter/sort/random                   ", test_input },
     CU_TEST_INFO_NULL,
 };
 
@@ -349,6 +355,33 @@ void test_reading_and_writing_model_data(void)
 	CU_ASSERT_EQUAL(rc, 1);
 }
 
+void test_input(void)
+{
+	int rc;
+	FILE *out;
+	char buffer[1000];
+	
+	rc = call_external("test5/main 1 test5/0.xml");
+	CU_ASSERT_EQUAL(rc, 0);
+	
+	if((out = fopen("stdout.out", "r"))==NULL)
+	{
+		CU_FAIL("cannot read stdout.out");
+	}
+	else
+	{
+		rc = 0;
+		while(fgets(buffer, 1000, out) != NULL)
+		{
+			if(strstr(buffer, "FAILURE") != NULL) rc = 1;
+		}
+		if(rc == 0) { CU_PASS("result success"); }
+		else { CU_FAIL("result fail"); }
+
+		fclose(out);
+	}
+}
+
 void test_4_parallel(int n)
 {
 	FILE *out;
@@ -464,6 +497,8 @@ int clean_test_model_2(void) { return clean_test_model(2); }
 int clean_test_model_3(void) { return clean_test_model(3); }
 int  init_test_model_4(void) { return init_test_model(4, 1);  }
 int clean_test_model_4(void) { return clean_test_model(4); }
+int  init_test_model_5(void) { return init_test_model(5, 0);  }
+int clean_test_model_5(void) { return clean_test_model(5); }
 
 static int clean_quit(void)
 {
@@ -507,8 +542,9 @@ int main(int argc, char ** argv)
 	CU_SuiteInfo suites[] =
 	{
 			{"Test parsing", NULL, clean_test_model_3, test_array_3},
-			{"test_model_1", init_test_model_1, clean_test_model_1, test_array_1},
+			{"Test_model_1", init_test_model_1, clean_test_model_1, test_array_1},
 			{"Test reading and writing model data", init_test_model_2, clean_test_model_2, test_array_2},
+			{"Test input filters, sort, random", init_test_model_5, clean_test_model_5, test_array_5},
 			{"Test parallel syncs", init_test_model_4, clean_test_model_4, test_array_4},
 			CU_SUITE_INFO_NULL,
     };
