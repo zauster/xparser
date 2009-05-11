@@ -2248,6 +2248,19 @@ int checkmodel(model_data * modeldata)
 								current_ioput->messagetype, current_function->name, current_xmachine->name, current_function->file, current_ioput->sort_order);
 						return -1;
 					}
+					
+					/* Create and copy sort_function name */
+					strcpy(buffer, "FLAME_sort_");
+					strcat(buffer, current_xmachine->name);
+					strcat(buffer, "_");
+					strcat(buffer, current_function->name);
+					strcat(buffer, "_");
+					strcat(buffer, current_function->current_state);
+					strcat(buffer, "_");
+					strcat(buffer, current_function->next_state);
+					strcat(buffer, "_");
+					strcat(buffer, current_ioput->messagetype);
+					current_ioput->sort_function = copystr(buffer);
 				}
 				
 				/* If sort function is defined then turn off randomisation

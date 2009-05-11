@@ -861,6 +861,44 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					
 					writetag[numtag] = write;
 				}
+				else if (strcmp(buffer->array, "<?if notrandom?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if(write == 1) lastiftag = numtag;
+					numtag++;
+					if(current_ioput != NULL)
+					{
+						if(current_ioput->random == 1) write = 0;
+					}
+					
+					writetag[numtag] = write;
+				}
+				else if (strcmp(buffer->array, "<?if ascend?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if(write == 1) lastiftag = numtag;
+					numtag++;
+					if(current_ioput != NULL)
+					{
+						if(current_ioput->sort_order != NULL)
+						if(strcmp(current_ioput->sort_order, "ascend") != 0) write = 0;
+					}
+					
+					writetag[numtag] = write;
+				}
+				else if (strcmp(buffer->array, "<?if descend?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if(write == 1) lastiftag = numtag;
+					numtag++;
+					if(current_ioput != NULL)
+					{
+						if(current_ioput->sort_order != NULL)
+						if(strcmp(current_ioput->sort_order, "descend") != 0) write = 0;
+					}
+					
+					writetag[numtag] = write;
+				}
 				else if (strcmp(buffer->array, "<?end if?>") == 0)
 				{
 					/* Look at last tag */

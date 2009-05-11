@@ -326,3 +326,14 @@ int FLAME_build_filter_param_$name()
 	return 0;
 }
 <?end if?><?end foreach?><?end foreach?>
+<?foreach xagent?><?foreach function?><?foreach function_input?><?if sort?>int $sort(const void *x, const void *y)
+{
+	if( ((m_$name *)x)->id2 <?if ascend?><<?end if?><?if descend?>><?end if?> ((m_$name *)y)->id2 ) return -1;
+	else if( ((m_$name *)x)->id2 <?if ascend?>><?end if?><?if descend?><<?end if?> ((m_$name *)y)->id2 ) return 1;
+	else <?if random?>
+	{
+		if(rand()/((double)RAND_MAX + 1) <= 0.5) return -1;
+		else return 1;
+	}<?end if?><?if notrandom?>return 0;<?end if?>
+}
+<?end if?><?end foreach?><?end foreach?><?end foreach?>
