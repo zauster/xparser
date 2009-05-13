@@ -220,7 +220,8 @@ if(argc < 2)
 		i++;
 	}
 
-    /* If use has already pre-partitioned initial data */
+<?if parallel?>
+    /* If user has already pre-partitioned initial data */
     if (is_prepartitioned == 1) {
         /* Each process adds its own node */
         add_node(node_number, 0.0,0.0, 0.0,0.0, 0.0,0.0);
@@ -228,6 +229,7 @@ if(argc < 2)
         readprepartitionedinitialstates(inputpath, outputpath, p_iteration_number);
     }
     else {
+<?end if?>
 	    /* Read initial data into p_xmachine <?if parallel?>on the master node<?end if?> */
 <?if parallel?>
     if (node_number == 0)
@@ -263,8 +265,8 @@ if(argc < 2)
      * to do the partitioning for us.
      */
     readinitialstates(inputpath, outputpath, p_iteration_number, cloud_data, partition_method, 1);
-<?end if?>
     }
+<?end if?>
 <?if serial?>
 		/*i = 0;
 		current_node = *p_node_info;

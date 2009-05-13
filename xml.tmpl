@@ -634,6 +634,7 @@ int check_location_exists(char * location)
 	return 1;
 }
 
+<?if parallel?>
 /** \fn void readprepartitionedinitialstates(char * filename, int * itno, xmachine ** agent_list)
  * \brief Read prepartitioned initial X-machine memory starting values from a set of files. The root for
  * these files is filename and the actual filenames are formed as filename<node_id>-0.xml. NOTE that
@@ -942,6 +943,7 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 
 
 }
+<?end if?>
 /** \fn void readinitialstates(char * filename, int * itno, xmachine ** agent_list, double cloud_data[6], int flag)
  * \brief Read initial X-machine memory starting values from a file.
  * \param filename The path to the file.
