@@ -460,6 +460,7 @@ int read_$name_static_array(char * buffer, int buffer_size, int * j, $name * tem
 void write_$name(FILE *file, $name * temp_datatype);
 void write_$name_static_array(FILE *file, $name * temp_datatype, int size);
 void write_$name_dynamic_array(FILE *file, $name_array * temp_datatype);<?end foreach?>
+void readprepartitionedinitialstates(char * filename, char * filelocation, int * itno);
 void readinitialstates(char * filename, char * filelocation, int * itno, double cloud_data[6],
 					   int partition_method, int flag);
 void saveiterationdata(int iteration_number);

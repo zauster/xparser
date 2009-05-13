@@ -46,6 +46,8 @@ int main(int argc, char * argv[])
 	int array_of_block_lengths[2] = {1, 6};
 	MPI_Aint array_of_displacements[2];
 	MPI_Datatype array_of_types[2] = {MPI_INT, MPI_DOUBLE};
+	/* Variable to indicate if initial data is pre-partitioned. 0 = no, 1 = yes */
+	int is_prepartitioned = 0;
 <?end if?>
 
 	/* Output frequency is 1 as default */
@@ -150,6 +152,17 @@ if(argc < 2)
 	}
 	strcpy(outputpath, inputpath);
 	outputpath[lastd+1] = '\0';
+<?if parallel?>
+    /* Need to check input path for .xml on the end. If so we read one input file if not */
+    /* it's the root for pre-partitioned input files */
+    if ( (i > 3) && (inputpath[i-1] == 'l') && (inputpath[i-2] == 'm') && (inputpath[i-3] == 'x') &&
+         (inputpath[i-4] == '.') ) {
+        is_prepartitioned = 0;
+    }
+    else {
+        is_prepartitioned = 1;
+    }
+<?end if?>
 /*<?if parallel?>	if(node_number == 0) <?end if?>printf("Ouput dir: %s\n", outputpath);*/
 
 <?if serial?>
@@ -204,7 +217,15 @@ if(argc < 2)
 		i++;
 	}
 
-	/* Read initial data into p_xmachine <?if parallel?>on the master node<?end if?> */
+    /* If use has already pre-partitioned initial data */
+    if (is_prepartitioned == 1) {
+        /* Each process adds its own node */
+        add_node(node_number, 0.0,0.0, 0.0,0.0, 0.0,0.0);
+        /* Now we can read the data */
+        readprepartitionedinitialstates(inputpath, outputpath, p_iteration_number);
+    }
+    else {
+	    /* Read initial data into p_xmachine <?if parallel?>on the master node<?end if?> */
 <?if parallel?>
     if (node_number == 0)
     {
@@ -240,7 +261,7 @@ if(argc < 2)
      */
     readinitialstates(inputpath, outputpath, p_iteration_number, cloud_data, partition_method, 1);
 <?end if?>
-
+    }
 <?if serial?>
 		/*i = 0;
 		current_node = *p_node_info;
