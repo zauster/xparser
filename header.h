@@ -124,12 +124,14 @@ struct variable
 };
 
 /** \struct xmachine_state
- * \brief Holds state name, attributes and transistions.
+ * \brief Holds state name, attributes and transitions.
  */
 struct xmachine_state
 {
 	char * name;		/**< Pointer to state name. */
 	char * agent_name;	/**< Pointer to agent name that holds this state. */
+	struct function_pointer * incoming_functions; /**< List of incoming functions. */
+	struct function_pointer * outgoing_functions; /**< List of outgoing functions. */
 
 	struct xmachine_state * next;	/**< Pointer to next state in list. */
 };
@@ -381,6 +383,7 @@ struct layer
 	struct function_pointer * functions;	/**< Pointer to list of functions. */
 	struct sync * start_syncs;				/**< List of start syncs. */
 	struct sync * complete_syncs;				/**< List of complete syncs. */
+	struct xmachine_state_holder * branching_states; /**< List of branching states whose agents have entered and can be checked. */
 
 	struct layer * next;					/**< Pointer next X-machine in list. */
 };
@@ -391,6 +394,7 @@ struct layer
 struct function_pointer
 {
 	struct xmachine_function * function;	/**< Pointer to list of functions. */
+	int found;						/**< Flag to help with state branching functions. */
 
 	struct function_pointer * next;		/**< Pointer next X-machine in list. */
 };
@@ -493,6 +497,7 @@ struct model_data
 	struct time_data ** p_time_units;
 	int depends_style;
 	input_file ** p_files;
+	int debug_mode;
 };
 
 /* explicit define datatypes so dont need to use struct anymore */

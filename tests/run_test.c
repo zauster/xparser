@@ -25,6 +25,7 @@ void test_4_parallel_2(void);
 void test_4_parallel_3(void);
 void test_4_parallel_4(void);
 void test_input(void);
+void test_debug(void);
 
 /* Define tests within this suite */
 CU_TestInfo test_array_1[] =
@@ -63,6 +64,12 @@ CU_TestInfo test_array_4[] =
 CU_TestInfo test_array_5[] =
 {
 	{"test input filter/sort/random                   ", test_input },
+    CU_TEST_INFO_NULL,
+};
+
+CU_TestInfo test_array_6[] =
+{
+	{"test debug mode                                 ", test_debug },
     CU_TEST_INFO_NULL,
 };
 
@@ -382,6 +389,53 @@ void test_input(void)
 	}
 }
 
+void test_debug(void)
+{
+	int rc;
+	FILE *out;
+	char buffer[1000];
+	
+	rc = call_external("test6/main 1 test6/0.xml");
+	CU_ASSERT_EQUAL(rc, 0);
+	
+	if((out = fopen("stdout.out", "r"))==NULL)
+	{
+		CU_FAIL("cannot read stdout.out");
+	}
+	else
+	{
+		rc = 0;
+		while(fgets(buffer, 1000, out) != NULL)
+		{
+			if(strstr(buffer, "Debug mode enabled") != NULL) rc = 1;
+		}
+		if(rc == 0) CU_FAIL("Debug mode enabled text not found");
+
+		fclose(out);
+	}
+	
+	if((out = fopen("stderr.out", "r"))==NULL)
+	{
+		CU_FAIL("cannot read stderr.out");
+	}
+	else
+	{
+		rc = 0;
+		fgets(buffer, 1000, out);
+		if(strstr(buffer, "ERROR: A function condition test has failed for agent type 'agent_a' leaving state 'start'") == NULL) rc = 1;
+		fgets(buffer, 1000, out);
+		if(strstr(buffer, "reason: there was more than one possible outgoing transition function") == NULL) rc = 1;
+		fgets(buffer, 1000, out);
+		if(strstr(buffer, "ERROR: A function condition test has failed for agent type 'agent_a' leaving state 'middle2'") == NULL) rc = 1;
+		fgets(buffer, 1000, out);
+		if(strstr(buffer, "reason: there was no possible outgoing transition function") == NULL) rc = 1;
+		if(rc == 0) { CU_PASS("result success"); }
+		else { CU_FAIL("result fail"); }
+
+		fclose(out);
+	}
+}
+
 void test_4_parallel(int n)
 {
 	FILE *out;
@@ -423,7 +477,7 @@ void test_4_parallel_2(void) { test_4_parallel(2); }
 void test_4_parallel_3(void) { test_4_parallel(3); }
 void test_4_parallel_4(void) { test_4_parallel(4); }
 
-int init_test_model(int index, int parallel)
+int init_test_model(int index, int option)
 {
 	FILE *out;
 	int rc, rc2;
@@ -431,7 +485,8 @@ int init_test_model(int index, int parallel)
 	//printf("init_test_model_1\n");
 
 	sprintf(buffer, " test%d/test_model_%d.xml", index, index);
-	if(parallel == 1) strcat(buffer, " -p");
+	if(option == 1) strcat(buffer, " -p");
+	if(option == 2) strcat(buffer, " -d");
 	rc = call_xparser(buffer);
 	if(rc != 0)
 	{
@@ -499,6 +554,8 @@ int  init_test_model_4(void) { return init_test_model(4, 1);  }
 int clean_test_model_4(void) { return clean_test_model(4); }
 int  init_test_model_5(void) { return init_test_model(5, 0);  }
 int clean_test_model_5(void) { return clean_test_model(5); }
+int  init_test_model_6(void) { return init_test_model(6, 2);  }
+int clean_test_model_6(void) { return clean_test_model(6); }
 
 static int clean_quit(void)
 {
@@ -545,6 +602,7 @@ int main(int argc, char ** argv)
 			{"Test_model_1", init_test_model_1, clean_test_model_1, test_array_1},
 			{"Test reading and writing model data", init_test_model_2, clean_test_model_2, test_array_2},
 			{"Test input filters, sort, random", init_test_model_5, clean_test_model_5, test_array_5},
+			{"Test debug mode", init_test_model_6, clean_test_model_6, test_array_6},
 			{"Test parallel syncs", init_test_model_4, clean_test_model_4, test_array_4},
 			CU_SUITE_INFO_NULL,
     };

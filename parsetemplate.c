@@ -899,6 +899,14 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					
 					writetag[numtag] = write;
 				}
+				else if (strcmp(buffer->array, "<?if debug?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if(write == 1) lastiftag = numtag;
+					numtag++;
+					if (modeldata->debug_mode == 0) write = 0;
+					writetag[numtag] = write;
+				}
 				else if (strcmp(buffer->array, "<?end if?>") == 0)
 				{
 					/* Look at last tag */
@@ -1323,6 +1331,25 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							var_count++;
 						}
 					}
+					else if (strcmp("foreach branching_state", &chartag[numtag][0]) == 0)
+					{
+						if (current_end_state != NULL)
+						{
+							current_end_state = current_end_state->next;
+						}
+						if (current_end_state == NULL)
+						{
+							exitforeach = 1;
+						}
+						else
+						{
+							current_state = current_end_state->state;
+							
+							pos = looppos[numtag];
+							numtag++;
+							var_count++;
+						}
+					}
 					/* If different then exit */
 					if (exitforeach)
 					{
@@ -1693,6 +1720,15 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						if (current_function_pointer == NULL) write = 0;
 						else current_function = current_function_pointer->function;
 					}
+					else if (strcmp(lastloop, "foreach branching_state") == 0)
+					{
+						//printf("layer: %d -> %p\n", current_layer->number, (void *)current_layer->functions);
+						if(current_end_state != NULL)
+						current_function_pointer = current_end_state->state->outgoing_functions;
+						else current_function_pointer = NULL;
+						if (current_function_pointer == NULL) write = 0;
+						else current_function = current_function_pointer->function;
+					}
 					else if (strcmp(lastloop, "foreach xagent") == 0)
 					{
 						if(current_xmachine != NULL)
@@ -1796,6 +1832,25 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 
 					current_end_state = current_xmachine->end_states;
 					if (current_end_state == NULL) write = 0;
+					writetag[numtag] = write;
+				}
+				else if (strcmp(buffer->array, "<?foreach branching_state?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tforeach branching_state\tpos: %d\n", numtag, pos);
+					strcpy(&chartag[numtag][0], "foreach branching_state");
+					strcpy(lastloop, "foreach branching_state");
+					looppos[numtag] = pos;
+					numtag++;
+					var_count = 0;
+					/*lastwrite = write;*/
+					/*loopwrite[loopwritepos] = write;
+					loopwritepos++;*/
+
+					current_end_state = current_layer->branching_states;
+					if (current_end_state == NULL) write = 0;
+					else current_state = current_end_state->state;
+						
 					writetag[numtag] = write;
 				}
 				else
@@ -2052,7 +2107,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							pos = pos1;
 						}
 					}
-					else if (strcmp("foreach state", lastloop) == 0)
+					else if (strcmp("foreach state", lastloop) == 0 ||
+							strcmp("foreach branching_state", lastloop) == 0)
 					{
 						while (strcmp(buffer3->array, "$name") != 0 &&
 								strcmp(buffer3->array, "$agent_name") != 0 &&

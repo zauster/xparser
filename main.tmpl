@@ -32,6 +32,8 @@ int main(int argc, char * argv[])
 <?end foreach?>
 	/* Particle cloud data */
 	double cloud_data[6];
+<?if debug?>	/* Count to debug function branches */
+	int FLAME_debug_count;<?end if?>
 
 /* For partition method. Makes geometric (-g flag) the default but may be overridden with -r for round-robin */
 	int partition_method=1;
@@ -112,6 +114,7 @@ int main(int argc, char * argv[])
 		printf("MPI FLAME Application: $model_name \n");
 	}
 <?end if?>
+<?if debug?>	printf("Debug mode enabled \n");<?end if?>
 
 
 
@@ -341,7 +344,27 @@ if(argc < 2)
 		fflush(stdout);
 		<?if parallel?>}<?end if?>
 		/* START OF ITERATION */
-<?foreach layer?><?foreach function?><?foreach complete_sync?>
+<?foreach layer?><?if debug?><?foreach branching_state?>	/* DEBUG: States with branching functions */
+		current_xmachine_$agent_name_holder = $agent_name_$name_state->agents;
+		while(current_xmachine_$agent_name_holder)
+		{
+			FLAME_debug_count = 0;
+	<?foreach function?>		/* Function: $name */
+			<?if condition?>if($condition(current_xmachine_$agent_name_holder->agent))
+			{ FLAME_debug_count++; }<?end if?>
+	<?end foreach?>		/*printf("FLAME_debug_count = %d\n", FLAME_debug_count);*/
+			if(FLAME_debug_count != 1)
+			{
+				fprintf(stderr, "ERROR: A function condition test has failed for agent type '$agent_name' leaving state '$name'\n");
+				if(FLAME_debug_count > 1)
+					fprintf(stderr, "\t reason: there was more than one possible outgoing transition function\n");
+				if(FLAME_debug_count == 0)
+					fprintf(stderr, "\t reason: there was no possible outgoing transition function\n");
+			}
+			
+			current_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
+		}
+	<?end foreach?><?end if?><?foreach function?><?foreach complete_sync?>
 	if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_SyncComplete(b_$message_name)\n");
 	rc = MB_SyncComplete(b_$message_name);
 	if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finsh MB_SyncComplete(b_$message_name)\n");

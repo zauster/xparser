@@ -18,8 +18,8 @@ int agent_a_send()
 {
 	//int i;
 	
-	add_int(&INT_DYN_ARRAY, INT_SINGLE);
-	add_int(&INT_DYN_ARRAY, INT_SINGLE+1);
+	add_int(&INT_DYN_ARRAY, 0);
+	add_int(&INT_DYN_ARRAY, 1);
 	
 	//for(i = 0; i < INT_DYN_ARRAY.size; i ++) printf("%d> int_dyn_array[%d] = %d\n",
 	//		INT_SINGLE, i, INT_DYN_ARRAY.array[i]);
@@ -140,7 +140,7 @@ int agent_a_filter()
 	
 	START_M_SUB_1_MESSAGE_LOOP
 		//printf("m_sub_1 id: %d\n", m_sub_1_message->id);
-		if(m_sub_1_message->id == 1 || m_sub_1_message->id == 2) i++;
+		if(m_sub_1_message->id == 0 || m_sub_1_message->id == 1) i++;
 	FINISH_M_SUB_1_MESSAGE_LOOP
 	
 	if(i == 2) printf("SUCCESS\n");
@@ -154,6 +154,25 @@ int agent_a_filter()
 	FINISH_M_SUB_2_MESSAGE_LOOP
 	
 	if(i == 0) printf("SUCCESS\n");
+	else printf("FAILURE\n");
+	
+	return 0;
+}
+
+int agent_a_filter_sort()
+{
+	int i = 0;
+	int j = 0;
+	
+	printf("---- filter_sort ----\n");
+	
+	START_M_SUB_1_MESSAGE_LOOP
+			//printf("m_sub_1 id2: %d\n", m_sub_1_message->id2);
+			if(m_sub_1_message->id == 0 || m_sub_1_message->id == 1) i++;
+			if(m_sub_1_message->id2 == j) j++;
+	FINISH_M_SUB_1_MESSAGE_LOOP
+	
+	if(i == 2 && j == 2) printf("SUCCESS\n");
 	else printf("FAILURE\n");
 	
 	return 0;

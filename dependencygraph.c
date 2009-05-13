@@ -1825,6 +1825,134 @@ int check_dependency_loops(model_data * modeldata)
 	return 0;
 }
 
+/* List for each state their incoming transition and outgoing transitions */
+void catalogue_states_edges(model_data * modeldata)
+{
+	xmachine_state * current_state;
+	xmachine * current_xmachine;
+	xmachine_function * current_function;
+	//function_pointer * current_function_pointer;
+	
+	/* For each agent */
+	current_xmachine = * modeldata->p_xmachines;
+	while(current_xmachine)
+	{
+		/* For each state */
+		current_state = current_xmachine->states;
+		while(current_state)
+		{
+			/* For each function */
+			current_function = current_xmachine->functions;
+			while(current_function)
+			{
+				if(strcmp(current_function->current_state, current_state->name) == 0)
+				{
+					addfunction_pointer(&current_state->outgoing_functions, current_function);
+				}
+				if(strcmp(current_function->next_state, current_state->name) == 0)
+				{
+					addfunction_pointer(&current_state->incoming_functions, current_function);
+				}
+				
+				current_function = current_function->next;
+			}
+			
+			/* Print results */
+			/*printf("State: %s\nincoming:\n", current_state->name);
+			for(current_function_pointer = current_state->incoming_functions; current_function_pointer != NULL; current_function_pointer = current_function_pointer->next)
+			{
+				printf("\t%s\n", current_function_pointer->function->name);
+			}
+			printf("outgoing:\n");
+			for(current_function_pointer = current_state->outgoing_functions; current_function_pointer != NULL; current_function_pointer = current_function_pointer->next)
+			{
+				printf("\t%s\n", current_function_pointer->function->name);
+			}*/
+			
+			current_state = current_state->next;
+		}
+		
+		current_xmachine = current_xmachine->next;
+	}
+}
+
+void find_states_with_branches(xmachine_state_holder ** states, model_data * modeldata)
+{
+	xmachine_state_holder * current_state_holder;
+	xmachine_state * current_state;
+	xmachine * current_xmachine;
+	xmachine_function * current_function;
+	xmachine_function * current_function2;
+	//function_pointer * current_function_pointer;
+	int found;
+	
+	/* For each agent */
+	current_xmachine = * modeldata->p_xmachines;
+	while(current_xmachine)
+	{
+		/* For each function */
+		current_function = current_xmachine->functions;
+		while(current_function)
+		{
+			current_function2 = current_xmachine->functions;
+			while(current_function2)
+			{
+				if(strcmp(current_function->name, current_function2->name) != 0 &&
+						strcmp(current_function->current_state, current_function2->current_state) == 0)
+				{
+					current_state = current_xmachine->states;
+					while(current_state)
+					{
+						if(strcmp(current_state->name, current_function->current_state) == 0)
+						{
+							found = 0;
+							current_state_holder = *states;
+							while(current_state_holder)
+							{
+								if(current_state == current_state_holder->state)
+								{
+									found = 1;
+								}
+								
+								current_state_holder = current_state_holder->next;
+							}
+							if(found == 0)
+							{
+								addstateholder(current_state, states);
+							}
+						}
+							
+						current_state = current_state->next;
+					}
+					current_function2 = NULL;
+				}
+				else current_function2 = current_function2->next;
+			}
+			
+			current_function = current_function->next;
+		}
+		
+		current_xmachine = current_xmachine->next;
+	}
+	
+	/*current_state_holder = *states;
+	while(current_state_holder)
+	{
+		printf("**** %s - %s\n",
+				current_state_holder->state->agent_name,
+				current_state_holder->state->name);
+		current_function_pointer = current_state_holder->state->branching_functions;
+		while(current_function_pointer)
+		{
+			printf("\t%s\n", current_function_pointer->function->name);
+			
+			current_function_pointer = current_function_pointer->next;
+		}
+		
+		current_state_holder = current_state_holder->next;
+	}*/
+}
+
 /** \fn void calculate_dependency_graph(model_data * modeldata)
  * \brief Calculate function layers of dependencies.
  * \param modeldata Data from the model.
@@ -1835,12 +1963,19 @@ int check_dependency_loops(model_data * modeldata)
  */
 void calculate_dependency_graph(model_data * modeldata)
 {
+	xmachine_state_holder * states = NULL;
 	xmachine * current_xmachine;
 	xmachine_function * current_function;
 	adj_function * current_adj_function;
+	xmachine_state_holder * current_state_holder;
+	xmachine_state_holder * current_state_holder2;
+	function_pointer * current_function_pointer;
 	layer * current_layer;
 	int k, m, newlayer;
 
+	/* Calculate states with out going branches */
+	find_states_with_branches(&states, modeldata);
+	
 	/* Calculate layers of dgraph */
 	/* This is achieved by finding functions with no dependencies */
 	/* giving them a layer no, taking those functions away and doing the operation again */
@@ -1881,6 +2016,25 @@ void calculate_dependency_graph(model_data * modeldata)
 						current_function->rank_in = newlayer;
 
 						addfunction_pointer(&current_layer->functions, current_function);
+						
+						/* Find function in state branch functions and flag as found */
+						current_state_holder = states;
+						while(current_state_holder)
+						{
+							current_function_pointer = current_state_holder->state->incoming_functions;
+							while(current_function_pointer)
+							{
+								if(current_function == current_function_pointer->function)
+								{
+									//printf("** found %s\n", current_function_pointer->function->name);
+									current_function_pointer->found = 1;
+								}
+								
+								current_function_pointer = current_function_pointer->next;
+							}
+							
+							current_state_holder = current_state_holder->next;
+						}
 					}
 				}
 
@@ -1891,6 +2045,7 @@ void calculate_dependency_graph(model_data * modeldata)
 		}
 		/* Increment layer */
 		newlayer++;
+		
 		/* If all the functions have layers then stop */
 		/* Set flag to all functions have a layer */
 		k = 0;
@@ -1913,14 +2068,85 @@ void calculate_dependency_graph(model_data * modeldata)
 		if(k == 0) m = 1;
 		else
 		{
+			/* If a state with branch functions has no incoming functions
+			 * then add to the top layer and not the following one */
+			current_state_holder = states;
+			while(current_state_holder)
+			{
+				if(current_state_holder->state->incoming_functions == NULL)
+				{
+					//printf("state found\n");
+					/* remove from states and add to layer states */
+					addstateholder(current_state_holder->state, &current_layer->branching_states);
+					
+					if(states == current_state_holder)
+					{
+						states = current_state_holder->next;
+						free(current_state_holder);
+						current_state_holder = states;
+					}
+					else
+					{
+						current_state_holder2->next = current_state_holder->next;
+						free(current_state_holder);
+						current_state_holder = current_state_holder2->next;
+					}
+				}
+				else
+				{
+					current_state_holder2 = current_state_holder;
+					current_state_holder = current_state_holder->next;
+				}
+			}
+			
 			current_layer = addlayer(modeldata->p_layers);
+			
+			/* If all states have branch functions have been found... */
+			current_state_holder = states;
+			while(current_state_holder)
+			{
+				k = 0;
+				current_function_pointer = current_state_holder->state->incoming_functions;
+				while(current_function_pointer)
+				{
+					if(current_function_pointer->found == 0) k = 1;
+					
+					current_function_pointer = current_function_pointer->next;
+				}
+				
+				if(k == 0)
+				{
+					//printf("state found\n");
+					/* remove from states and add to layer states */
+					addstateholder(current_state_holder->state, &current_layer->branching_states);
+					
+					if(states == current_state_holder)
+					{
+						states = current_state_holder->next;
+						free(current_state_holder);
+						current_state_holder = states;
+					}
+					else
+					{
+						current_state_holder2->next = current_state_holder->next;
+						free(current_state_holder);
+						current_state_holder = current_state_holder2->next;
+					}
+				}
+				else
+				{
+					current_state_holder2 = current_state_holder;
+					current_state_holder = current_state_holder->next;
+				}
+			}
 		}
 	}
 	/* Make the layer value equal to the number of layers */
 	newlayer--;
 
 	modeldata->layer_total = newlayer;
-
+	
+	freestateholder(&states);
 }
 
 int handle_rule_value_for_agent_variable(char * value, variable * var, xmachine * current_xmachine, int flag)
@@ -2836,6 +3062,7 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 	if(rc != 0) return -1;
 	printf("Finished dependency loop check\n");
 
+	catalogue_states_edges(modeldata);
 	calculate_dependency_graph(modeldata);
 
 	calculate_communication_syncs(modeldata);

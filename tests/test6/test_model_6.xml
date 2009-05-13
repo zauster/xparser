@@ -2,9 +2,9 @@
 <!DOCTYPE xmodel SYSTEM "http://eurace.cs.bilgi.edu.tr/XMML.dtd">
 <xmodel version="2">
 
-<name>test_model_5</name>
+<name>test_model_6</name>
 <version>01</version>
-<description>Test random and sort and IN</description>
+<description>Test debug mode</description>
 <models>
 </models>
 
@@ -86,98 +86,70 @@
 
 <functions>
 
-<function><name>agent_a_send</name>
+<function><name>agent_a_1_option_1</name>
 <description></description>
 <currentState>start</currentState>
 <nextState>middle1</nextState>
-<outputs>
-<output><messageName>m_sub_1</messageName></output>
-<output><messageName>m_sub_2</messageName></output>
-</outputs>
+<condition>
+<lhs><value>a.int_single</value></lhs>
+<op>EQ</op>
+<rhs><value>1</value></rhs>
+</condition>
 </function>
 
-<function><name>agent_a_not_random</name>
+<function><name>agent_a_1_option_2</name>
+<description></description>
+<currentState>start</currentState>
+<nextState>middle1</nextState>
+<condition>
+<lhs><value>a.int_single</value></lhs>
+<op>EQ</op>
+<rhs><value>1</value></rhs>
+</condition>
+</function>
+
+<function><name>agent_a_2_option_1</name>
 <description></description>
 <currentState>middle1</currentState>
 <nextState>middle2</nextState>
-<inputs>
-<input><messageName>m_sub_1</messageName>
-<random>false</random>
-</input>
-</inputs>
+<condition>
+<lhs><value>a.int_single</value></lhs>
+<op>EQ</op>
+<rhs><value>1</value></rhs>
+</condition>
 </function>
 
-<function><name>agent_a_random</name>
+<function><name>agent_a_2_option_2</name>
+<description></description>
+<currentState>middle1</currentState>
+<nextState>middle2</nextState>
+<condition>
+<lhs><value>a.int_single</value></lhs>
+<op>EQ</op>
+<rhs><value>2</value></rhs>
+</condition>
+</function>
+
+<function><name>agent_a_3_option_1</name>
 <description></description>
 <currentState>middle2</currentState>
-<nextState>middle3</nextState>
-<inputs>
-<input><messageName>m_sub_1</messageName>
-<random>true</random>
-</input>
-</inputs>
-</function>
-
-<function><name>agent_a_not_random_sort</name>
-<description></description>
-<currentState>middle3</currentState>
-<nextState>middle4</nextState>
-<inputs>
-<input><messageName>m_sub_1</messageName>
-<random>false</random>
-<sort><key>id2</key><order>ascend</order></sort>
-</input>
-</inputs>
-</function>
-
-<function><name>agent_a_random_sort</name>
-<description></description>
-<currentState>middle4</currentState>
-<nextState>middle5</nextState>
-<inputs>
-<input><messageName>m_sub_1</messageName>
-<random>true</random>
-<sort><key>id2</key><order>descend</order></sort>
-</input>
-</inputs>
-</function>
-
-<function><name>agent_a_filter</name>
-<description></description>
-<currentState>middle5</currentState>
-<nextState>middle6</nextState>
-<inputs>
-<input><messageName>m_sub_1</messageName>
-<filter>
-  <lhs><value>m.id</value></lhs>
-  <op>IN</op>
-  <rhs><value>a.int_dyn_array</value></rhs>
-</filter>
-</input>
-<input><messageName>m_sub_2</messageName>
-<filter>
-  <lhs><value>m.id</value></lhs>
-  <op>EQ</op>
-  <rhs><value>a.int_single</value></rhs>
-</filter>
-</input>
-</inputs>
-</function>
-
-<function><name>agent_a_filter_sort</name>
-<description></description>
-<currentState>middle6</currentState>
 <nextState>end</nextState>
-<inputs>
-<input><messageName>m_sub_1</messageName>
-<filter>
-  <lhs><value>m.id</value></lhs>
-  <op>IN</op>
-  <rhs><value>a.int_dyn_array</value></rhs>
-</filter>
-<sort><key>id2</key><order>ascend</order></sort>
-</input>
-</inputs>
+<condition>
+<lhs><value>a.int_single</value></lhs>
+<op>EQ</op>
+<rhs><value>2</value></rhs>
+</condition>
+</function>
+
+<function><name>agent_a_3_option_2</name>
+<description></description>
+<currentState>middle2</currentState>
+<nextState>end</nextState>
+<condition>
+<lhs><value>a.int_single</value></lhs>
+<op>EQ</op>
+<rhs><value>2</value></rhs>
+</condition>
 </function>
 
 </functions>
@@ -187,25 +159,6 @@
 </agents>
 
 <messages>
-
-<message>
-<name>m_sub_1</name>
-<description></description>
-<variables>
-<variable><type>int</type><name>id</name><description></description></variable>
-<variable><type>int</type><name>id2</name><description></description></variable>
-</variables>
-</message>
-
-<message>
-<name>m_sub_2</name>
-<description></description>
-<variables>
-<variable><type>int</type><name>id</name><description></description></variable>
-<variable><type>int</type><name>id2</name><description></description></variable>
-</variables>
-</message>
-
 </messages>
 
 </xmodel>

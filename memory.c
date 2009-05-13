@@ -534,6 +534,8 @@ void addxstate(char * name, char * agent_name, xmachine_state ** p_xstates)
 		/* Make current->next point to NULL */
 		current->name = copystr(name);
 		current->agent_name = copystr(agent_name);
+		current->incoming_functions = NULL;
+		current->outgoing_functions = NULL;
 	}
 }
 
@@ -552,6 +554,8 @@ void freexstates(xmachine_state ** p_xstates)
 		/* Free the cell memory */
 		free(head->name);
 		free(head->agent_name);
+		freefunction_pointers(&head->incoming_functions);
+		freefunction_pointers(&head->outgoing_functions);
 		free(head);
 		head = temp;
 	}
@@ -1100,6 +1104,7 @@ layer * addlayer(layer ** p_layer)
 
 	current->start_syncs = NULL;
 	current->complete_syncs = NULL;
+	current->branching_states = NULL;
 
 	/* Return new element */
 	return current;
@@ -1121,6 +1126,7 @@ void freelayers(layer ** p_layers)
 		freefunction_pointers(&head->functions);
 		freesync(&head->start_syncs);
 		freesync(&head->complete_syncs);
+		freestateholder(&head->branching_states);
 		free(head);
 		head = temp;
 	}
@@ -1145,6 +1151,7 @@ void addfunction_pointer(function_pointer ** p_function_pointers, xmachine_funct
 	}
 	/* Make current->next point to NULL */
 	current->function = function;
+	current->found = 0;
 	current->next = *p_function_pointers;
 	*p_function_pointers = current;
 }
@@ -1157,6 +1164,7 @@ void freefunction_pointers(function_pointer ** p_function_pointers)
 {
 	function_pointer * temp, * head;
 	head = *p_function_pointers;
+	
 	/* Loop until new elements of cells left */
 	while(head)
 	{

@@ -39,9 +39,8 @@ void unittest_$name_$current_state_$next_state()
 
 void free_messages()
 {
-	int rc;
-
-	<?foreach message?>
+	<?foreach message?><?if first?>int rc;
+	<?end if?>
 	    rc = MB_Clear(b_$name);
 	    #ifdef ERRCHECK
 	    if (rc != MB_SUCCESS)
@@ -69,20 +68,13 @@ void free_messages()
 	<?end foreach?>
 }
 
-
-
 /** \fn void initialise_pointers()
  * \brief Initialises pointers to xmachine, message, and node lists.
  */
 void initialise_pointers()
 {
-	int rc;
-    //temp_xmachine = NULL;
-	//p_xmachine = &temp_xmachine;
-<?foreach xagent?><?foreach state?>	//temp_xmachine_$agent_name_$name = NULL;
-	$agent_name_$name_state = init_$agent_name_state();//&temp_xmachine_$agent_name_$name;
-<?end foreach?><?end foreach?>
-<?foreach message?>
+<?foreach message?><?if first?>int rc;
+<?end if?>
 	/* Initialise message sync composite params as NULL */
 	FLAME_m_$name_composite_params = NULL;
 
@@ -110,7 +102,9 @@ void initialise_pointers()
        	   exit(rc);
 	    }
 	    #endif
-	<?end foreach?>
+	<?end foreach?><?foreach xagent?><?foreach state?>
+	$agent_name_$name_state = init_$agent_name_state();
+<?end foreach?><?end foreach?>
 	temp_node_info = NULL;
 	p_node_info = &temp_node_info;
 }
