@@ -1425,3 +1425,8 @@ int idle()
 	return FLAME_environment_variable_$name;
 }
 <?end foreach?>
+<?foreach xagent?><?foreach xagentvar?><?if constant?>$type FLAME_get_$agent_name_variable_$name()
+{
+	return current_xmachine_$agent_name->$name;
+}
+<?end if?><?end foreach?><?end foreach?>

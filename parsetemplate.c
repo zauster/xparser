@@ -907,6 +907,14 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (modeldata->debug_mode == 0) write = 0;
 					writetag[numtag] = write;
 				}
+				else if (strcmp(buffer->array, "<?if constant?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if(write == 1) lastiftag = numtag;
+					numtag++;
+					if (current_variable->constant == 0) write = 0;
+					writetag[numtag] = write;
+				}
 				else if (strcmp(buffer->array, "<?end if?>") == 0)
 				{
 					/* Look at last tag */
@@ -2586,21 +2594,44 @@ void parseAgentHeaderTemplate(char * directory, model_data * modeldata)
 		{
 			strcpy(buffer, current_variable->name);
 			for(i = 0; i < (int)strlen(buffer); i++) buffer[i] = (buffer[i] >= 'a' && buffer[i] <= 'z')?('A' + buffer[i] -'a'):buffer[i];
-			fputs("/** \\def ", file);
-			fputs(buffer, file);
-			fputs("\n", file);
-			fputs(" * \\brief Direct access to ", file);
-			fputs(current_variable->name, file);
-			fputs(" of ", file);
-			fputs(current_xmachine->name, file);
-			fputs(" agent memory variable. */\n", file);
-			fputs("#define ", file);
-			fputs(buffer, file);
-			fputs(" (current_xmachine_", file);
-			fputs(current_xmachine->name, file);
-			fputs("->", file);
-			fputs(current_variable->name, file);
-			fputs(")\n", file);
+			
+			/* If variable is defined as a constant */
+			if(current_variable->constant == 1)
+			{
+				fputs("/** \\def ", file);
+				fputs(buffer, file);
+				fputs("\n", file);
+				fputs(" * \\brief Provides access to ", file);
+				fputs(current_variable->name, file);
+				fputs(" of ", file);
+				fputs(current_xmachine->name, file);
+				fputs(" agent memory variable via a function. */\n", file);
+				fputs("#define ", file);
+				fputs(buffer, file);
+				fputs(" (FLAME_get_", file);
+				fputs(current_xmachine->name, file);
+				fputs("_variable_", file);
+				fputs(current_variable->name, file);
+				fputs("())\n", file);
+			}
+			else
+			{
+				fputs("/** \\def ", file);
+				fputs(buffer, file);
+				fputs("\n", file);
+				fputs(" * \\brief Direct access to ", file);
+				fputs(current_variable->name, file);
+				fputs(" of ", file);
+				fputs(current_xmachine->name, file);
+				fputs(" agent memory variable. */\n", file);
+				fputs("#define ", file);
+				fputs(buffer, file);
+				fputs(" (current_xmachine_", file);
+				fputs(current_xmachine->name, file);
+				fputs("->", file);
+				fputs(current_variable->name, file);
+				fputs(")\n", file);
+			}
 
 			current_variable = current_variable->next;
 		}

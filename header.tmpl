@@ -440,8 +440,6 @@ void remove_char(char_array * array, int index);
 char * copy_array_to_str(char_array * array);
 void print_char_array(char_array * array);
 int idle();
-<?foreach envvar?>$type FLAME_get_environment_variable_$name();
-<?end foreach?>
 /* xml.c */
 int read_int_static_array(char * buffer, int buffer_size, int * j, int * int_static_array, int size);
 int read_float_static_array(char * buffer, int buffer_size, int * j, float * float_static_array, int size);
@@ -507,6 +505,10 @@ void generate_partitions(double cloud_data[6], int partitions, int partition_met
 <?end foreach?>
 /* memory.c */
 xmachine * add_xmachine(void);
+<?foreach envvar?>$type FLAME_get_environment_variable_$name();
+<?end foreach?>
+<?foreach xagent?><?foreach xagentvar?><?if constant?>$type FLAME_get_$agent_name_variable_$name();
+<?end if?><?end foreach?><?end foreach?>
 /* rules.c */
 int FLAME_integer_in_array(int a, int * b, int size);
 <?foreach message?><?foreach sync?><?if sync_filter?>int FLAME_build_filter_param_$name();
