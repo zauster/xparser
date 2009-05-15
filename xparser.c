@@ -88,7 +88,7 @@ int main(int argc, char * argv[])
 	modeldata->code_type = 0;
 	/* 0=dgraph.dot 1=stategraph.dot */
 	modeldata->depends_style = 0;
-	modeldata->debug_mode = 0;
+	modeldata->debug_mode = 1;
 
 	inputfile[1]='\0';
 	
@@ -140,7 +140,7 @@ int main(int argc, char * argv[])
 				  break;
 			case 'p': modeldata->code_type = 1;
 				  break;
-			case 'd' : modeldata->debug_mode = 1;
+			case 'f' : modeldata->debug_mode = 0;
 				  break;
 			default:  printf("xparser: Error - unknown option %s\n",argv[1]);
 				free_modeldata(modeldata);

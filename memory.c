@@ -192,6 +192,7 @@ xmachine_ioput * addioput(xmachine_ioput ** p_ioput)
 	current->sort_function = NULL;
 	current->sort_key = NULL;
 	current->sort_order = NULL;
+	current->non_constant_vars = 1;
 
 	/* Return new element */
 	return current;

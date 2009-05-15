@@ -2415,6 +2415,11 @@ void calculate_communication_syncs(model_data * modeldata)
 											current_adj_function = current_adj_function->next;
 										}
 									}
+									else
+									{
+										current_input->non_constant_vars = 0;
+										/*printf("*** constant vars %s\n", current_input->filter_function);*/
+									}
 								}
 							}
 						}

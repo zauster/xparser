@@ -486,7 +486,7 @@ int init_test_model(int index, int option)
 
 	sprintf(buffer, " test%d/test_model_%d.xml", index, index);
 	if(option == 1) strcat(buffer, " -p");
-	if(option == 2) strcat(buffer, " -d");
+	if(option == 2) strcat(buffer, " -f");
 	rc = call_xparser(buffer);
 	if(rc != 0)
 	{
@@ -554,7 +554,7 @@ int  init_test_model_4(void) { return init_test_model(4, 1);  }
 int clean_test_model_4(void) { return clean_test_model(4); }
 int  init_test_model_5(void) { return init_test_model(5, 0);  }
 int clean_test_model_5(void) { return clean_test_model(5); }
-int  init_test_model_6(void) { return init_test_model(6, 2);  }
+int  init_test_model_6(void) { return init_test_model(6, 0);  }
 int clean_test_model_6(void) { return clean_test_model(6); }
 
 static int clean_quit(void)

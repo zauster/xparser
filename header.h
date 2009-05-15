@@ -208,6 +208,7 @@ struct xmachine_ioput
 	char * sort_function;		/**< The sort function name if defined. */
 	char * sort_key;			/**< The sort message variable. */
 	char * sort_order;			/**< The sort order, ascend/descend. */
+	int non_constant_vars;		/**< Flag if filter includes non-constant vars. */
 
 	struct xmachine_ioput * next;
 };
