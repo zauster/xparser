@@ -14,11 +14,11 @@ LIBMBOARD_LIB = $(LIBMBOARD_DIR)/lib
 CC      = <?if serial?>gcc<?end if?><?if parallel?>mpicc<?end if?>
 CFLAGS  = -std=c99 -Wall -I$(LIBMBOARD_INC) ${DEFINES}
 
-CFLAGS += -D_DEBUG_MODE -g # uncomment this line for DEBUG runs
-#CFLAGS += -O3     # uncomment this line for PRODUCTION runs
+<?if debug?>CFLAGS += -D_DEBUG_MODE -g<?end if?>
+<?if final?>CFLAGS += -O3<?end if?>
 
 LDFLAGS = -L$(LIBMBOARD_LIB)
-LIBS    = <?if serial?>-lmboard_sd <?end if?><?if parallel?>-lmboard_pd <?end if?> -lm
+LIBS    = <?if serial?>-lmboard_s<?if debug?>d<?end if?> <?end if?><?if parallel?>-lmboard_p<?if debug?>d<?end if?> <?end if?> -lm
 
 #FLAME source files
 FLAME   = main.c memory.c xml.c messageboards.c partitioning.c rules.c timing.c

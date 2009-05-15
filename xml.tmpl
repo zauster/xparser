@@ -449,7 +449,7 @@ int readAgentXML(char * location,
 	<?end foreach?>
 	<?foreach allvar?>int in_$name = 0;
 	<?end foreach?>
-	<?foreach xagent?>xmachine_memory_$name * current_$name_agent;
+	<?foreach xagent?>xmachine_memory_$name * current_$name_agent = NULL;
 	<?end foreach?>
 	/* Things for round-robin partitioning */
 	int geometric = 1;
@@ -965,11 +965,11 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 	char FLAME_location[1000];
 	char FLAME_format[1000];
 	char FLAME_type[1000];
-	FLAME_output * current_FLAME_output;
+	FLAME_output * current_FLAME_output = NULL;
 
 	/* Things for round-robin partitioning */
-	int agent_count;
-	int number_partitions;
+	int agent_count = 0;
+	int number_partitions = 0;
 	int geometric=1;
 	int other=2;
 	<?if parallel?>int node_number;<?end if?>

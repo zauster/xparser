@@ -907,6 +907,14 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (modeldata->debug_mode == 0) write = 0;
 					writetag[numtag] = write;
 				}
+				else if (strcmp(buffer->array, "<?if final?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if(write == 1) lastiftag = numtag;
+					numtag++;
+					if (modeldata->debug_mode == 1) write = 0;
+					writetag[numtag] = write;
+				}
 				else if (strcmp(buffer->array, "<?if constant?>") == 0)
 				{
 					strcpy(&chartag[numtag][0], "if");
