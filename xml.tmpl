@@ -1496,12 +1496,12 @@ void write_$name_agent(FILE *file, xmachine_memory_$name * current)
 }
 <?end foreach?>
 
-void FLAME_write_xml(char * location, int iteration_number, int output_type)
+void FLAME_write_xml(char * location, int iteration_number, int * output_types, int output_type_size)
 {
 	/* Pointer to file */
 	FILE *file;
 	char data[1000];
-
+	
 	<?if serial?>	sprintf(data, "%s%i.xml", location, iteration_number);<?end if?>
 	<?if parallel?>	sprintf(data, "%snode%i-%i.xml", location, node_number, iteration_number);<?end if?>
 	if((file = fopen(data, "w"))==NULL)
@@ -1510,11 +1510,9 @@ void FLAME_write_xml(char * location, int iteration_number, int output_type)
 		exit(0);
 	}
 	
-	/*printf("xml file written: '%s' it=%d type=%d\n", data, iteration_number, output_type);*/
-	
 	<?if parallel?>	if(node_number == 0){<?end if?>
 	fputs("<states>\n", file);
-	if(output_type == 0)
+	if(FLAME_integer_in_array(0, output_types, output_type_size))
 	{
 		fputs("<itno>", file);
 		sprintf(data, "%i", iteration_number);
@@ -1529,7 +1527,7 @@ void FLAME_write_xml(char * location, int iteration_number, int output_type)
 	}
 	<?if parallel?>	}<?end if?>
 	<?foreach xagent?>
-	if(output_type == 0 || output_type == $xagentcountplusone)
+	if(FLAME_integer_in_array(0, output_types, output_type_size) || FLAME_integer_in_array($xagentcountplusone, output_types, output_type_size))
 	{
 		<?foreach endstate?>
 		current_xmachine_$agent_name_holder = $agent_name_$name_state->agents;
@@ -1556,37 +1554,59 @@ void saveiterationdata(int iteration_number)
 {
 	FLAME_output * current_FLAME_output;
 	FLAME_output * current_FLAME_output2;
-	int flag;
-	char * snapshot_location = NULL;
+	int output_types[100];
+	int output_type_size = 0;
 
-	/* First check snapshot */
+	/* For each output */
 	for(current_FLAME_output = FLAME_outputs; current_FLAME_output != NULL; current_FLAME_output = current_FLAME_output->next)
 	{
+		/* If period/phase equates to current iteration */
 		if(iteration_number%current_FLAME_output->period == current_FLAME_output->phase)
 		{
-			if(current_FLAME_output->type == 0)
+			/* If output has already been handled */
+			if(current_FLAME_output->flag == 0)
 			{
-				snapshot_location = current_FLAME_output->location;
-				FLAME_write_xml(current_FLAME_output->location, iteration_number, current_FLAME_output->type);
-			}
-			<?foreach xagent?>if(current_FLAME_output->type == $xagentcountplusone)
-			{
-				/* If there has been a snapshot and location same as agent location then ignore */
-				flag = 1;
-				for(current_FLAME_output2 = FLAME_outputs; current_FLAME_output2 != NULL; current_FLAME_output2 = current_FLAME_output2->next)
+				/* Check snapshot */
+				if(current_FLAME_output->type == 0)
 				{
-					if(current_FLAME_output2->type == 0 && strcmp(current_FLAME_output->location, current_FLAME_output2->location) == 0)
+					//snapshot_location = current_FLAME_output->location;
+					output_types[0] = 0;
+					FLAME_write_xml(current_FLAME_output->location, iteration_number, output_types, 1);
+					/* Set flag to 1 and every output to same location */
+					current_FLAME_output->flag = 1;
+					for(current_FLAME_output2 = FLAME_outputs; current_FLAME_output2 != NULL; current_FLAME_output2 = current_FLAME_output2->next)
 					{
-						if(iteration_number%current_FLAME_output2->period == current_FLAME_output2->phase) flag = 0;
+						if(strcmp(current_FLAME_output->location, current_FLAME_output2->location) == 0)
+						{
+							current_FLAME_output2->flag = 1;
+						}
 					}
 				}
-				
-				if(flag==1)
+				<?foreach xagent?>if(current_FLAME_output->type == $xagentcountplusone)
 				{
-					FLAME_write_xml(current_FLAME_output->location, iteration_number, current_FLAME_output->type);
-				}
+					/* Reinitialise agent size */
+					output_type_size = 0;
+					output_types[0] = $xagentcountplusone;
+					
+					current_FLAME_output->flag = 1;
+					for(current_FLAME_output2 = FLAME_outputs; current_FLAME_output2 != NULL; current_FLAME_output2 = current_FLAME_output2->next)
+					{
+						if(current_FLAME_output2->flag == 0 && strcmp(current_FLAME_output->location, current_FLAME_output2->location) == 0)
+						{
+							output_types[++output_type_size] = current_FLAME_output2->type;
+							
+							current_FLAME_output2->flag = 1;
+						}
+					}
+					
+					FLAME_write_xml(current_FLAME_output->location, iteration_number, output_types, output_type_size);
+				}<?end foreach?>
 			}
-			<?end foreach?>
 		}
+	}
+	/* Set flags back to 0 */
+	for(current_FLAME_output = FLAME_outputs; current_FLAME_output != NULL; current_FLAME_output = current_FLAME_output->next)
+	{
+		current_FLAME_output->flag = 0;
 	}
 }
