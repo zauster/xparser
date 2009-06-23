@@ -411,6 +411,7 @@ struct model_datatype
 	int has_single_vars;			/**< Flag if the datatype holds single variables. */
 	int has_dynamic_arrays;			/**< Flag if the datatype holds dynamic arrays. */
 	int has_arrays;					/**< Flag if the datatype holds arrays. */
+	int has_arrays_or_adts;			/**< Flag if the datatype holds arrays or adts. */
 	
 	struct model_datatype * next;		/**< Pointer next model datatype. */
 };

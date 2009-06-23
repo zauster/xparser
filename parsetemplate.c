@@ -192,6 +192,18 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						write = 0;
 					writetag[numtag] = write;
 				}
+				else if (strcmp(buffer->array, "<?if has_arrays_or_adts?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if(current_datatype != NULL)
+					{
+						if (current_datatype->has_arrays_or_adts == 0) write = 0;
+					}
+					writetag[numtag] = write;
+				}
 				else if (strcmp(buffer->array, "<?if has_arrays?>") == 0)
 				{
 					strcpy(&chartag[numtag][0], "if");
@@ -350,6 +362,34 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (indatatypevar)
 						if (current_datatypevariable->ismodeldatatype == 1)
 							write = 0;
+					writetag[numtag] = write;
+				}
+				else if (strcmp(buffer->array, "<?if float?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tif float\n", numtag);
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if (strcmp(lastloop, "foreach datatypevar") == 0)
+					{
+						if (indatatypevar)
+							if (strcmp(current_datatypevariable->type, "float") != 0 && strcmp(current_datatypevariable->type, "char_array") != 0)
+								write = 0;
+					}
+					else
+					{
+						if (inenvvar)
+							if (strcmp(current_envvar->type, "float") != 0 && strcmp(current_envvar->type, "char_array") != 0)
+								write = 0;
+						if (inallvar)
+							if (strcmp(allvar->type, "float") != 0 && strcmp(allvar->type, "float_array") != 0)
+								write = 0;
+						if ((inxagentvar || inmessagevar) && current_variable != NULL)
+							if (strcmp(current_variable->type, "float") != 0 && strcmp(current_variable->type, "float_array") != 0)
+								write = 0;
+					}
 					writetag[numtag] = write;
 				}
 				else if (strcmp(buffer->array, "<?if char?>") == 0)
@@ -704,6 +744,19 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if(current_datatype != NULL)
 					{
 						if (current_datatype->has_dynamic_arrays == 1) write = 0;
+					}
+					writetag[numtag] = write;
+				}
+				else if (strcmp(buffer->array, "<?if not_idle?>") == 0)
+				{
+					strcpy(&chartag[numtag][0], "if");
+					if (write == 1)
+						lastiftag = numtag;
+					numtag++;
+					if(current_function != NULL)
+					{
+						//if (current_function->condition_function == NULL) write = 0;
+						if( strcmp(current_function->name, "idle") == 0) write = 0;
 					}
 					writetag[numtag] = write;
 				}

@@ -235,28 +235,28 @@ void freelocations(location ** p_location)
 	*p_location = NULL;
 }
 
-void init_int_static_array(int * array, int size)
+void init_int_static_array(/*@out@*/ int * array, int size)
 {
 	int i;
 
 	for(i = 0; i < size; i++) array[i] = 0;
 }
 
-void init_float_static_array(float * array, int size)
+void init_float_static_array(/*@out@*/ float * array, int size)
 {
 	int i;
 
 	for(i = 0; i < size; i++) array[i] = 0.0;
 }
 
-void init_double_static_array(double* array, int size)
+void init_double_static_array(/*@out@*/ double* array, int size)
 {
 	int i;
 
 	for(i = 0; i < size; i++) array[i] = 0.0;
 }
 
-void init_char_static_array(char * array, int size)
+void init_char_static_array(/*@out@*/ char * array, int size)
 {
 	int i;
 
@@ -265,7 +265,7 @@ void init_char_static_array(char * array, int size)
 
 <?foreach datatype?>
 
-void init_$name($name * temp)
+void init_$name(/*@out@*/ $name * temp)
 {
 <?foreach datatypevar?><?if modeldatatype?><?if not_array?>	init_$type(&(*temp).$name);
 <?end if?><?end if?><?if static_array?>	init_$type_static_array((*temp).$name, $arraylength);
@@ -274,7 +274,7 @@ void init_$name($name * temp)
 <?end if?><?end if?><?end foreach?>
 }
 
-void init_$name_static_array($name * array, int size)
+void init_$name_static_array(/*@out@*/ $name * array, int size)
 {
 	int i;
 
@@ -1377,7 +1377,7 @@ void copy_$name_array($name_array * from, $name_array * to)
 * \param array Pointer to the dynamic $name array.
 * \param new_int The $name to add
 */
-void add_$name($name_array * array<?foreach datatypevar?>, $type <?if modeldatatype?><?if not_array?>* <?end if?><?end if?><?if array?>* <?end if?>$name<?end foreach?>)
+void add_$name($name_array * array<?foreach datatypevar?>, <?if modeldatatype?><?if not_array?>/*@out@*/<?end if?><?end if?><?if array?>/*@out@*/<?end if?> $type <?if modeldatatype?><?if not_array?>* <?end if?><?end if?><?if array?>* <?end if?>$name<?end foreach?>)
 {
 	if((*array).size == (*array).total_size)
 	{

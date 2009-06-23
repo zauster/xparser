@@ -593,6 +593,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				current_datatype->has_single_vars = 0;
 				current_datatype->has_dynamic_arrays = 0;
 				current_datatype->has_arrays = 0;
+				current_datatype->has_arrays_or_adts = 0;
 				/* Check if datatype has single variables and dynamic arrays */
 				current_variable = current_datatype->vars;
 				while(current_variable)
@@ -603,7 +604,12 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 						strcmp(current_variable->type, "char") == 0) &&
 						current_variable->arraylength == 0) current_datatype->has_single_vars = 1;
 
-					if(current_variable->arraylength != 0) current_datatype->has_arrays = 1;
+					if(current_variable->ismodeldatatype == 1) current_datatype->has_arrays_or_adts = 1;
+					if(current_variable->arraylength != 0)
+					{
+						current_datatype->has_arrays = 1;
+						current_datatype->has_arrays_or_adts = 1;
+					}
 					if(current_variable->arraylength == -1) current_datatype->has_dynamic_arrays = 1;
 					if(current_variable->ismodeldatatype == 1 && current_variable->datatype->has_dynamic_arrays == 1) current_datatype->has_dynamic_arrays = 1;
 

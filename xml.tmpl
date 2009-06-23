@@ -8,7 +8,7 @@
 /** \fn void read_int_static_array(char * buffer, int * j, int ** int_static_array)
  * \brief Reads integer static array.
  */
-int read_int_static_array(char * buffer, int buffer_size, int * j, int * int_static_array, int size)
+int read_int_static_array(char * buffer, int /*@unused@*/ buffer_size, int * j, int * int_static_array, int /*@unused@*/ size)
 {
 	int arraycount = 0;
 	int array_k;
@@ -32,7 +32,7 @@ int read_int_static_array(char * buffer, int buffer_size, int * j, int * int_sta
 			array_k++;
 			(*j)++;
 		}
-		arraydata[array_k] = 0;
+		arraydata[array_k] = '\0';
 		int_static_array[arraycount] = atoi(arraydata);
 		arraycount++;
 		if(buffer[(*j)] != '}') (*j)++;
@@ -45,7 +45,7 @@ int read_int_static_array(char * buffer, int buffer_size, int * j, int * int_sta
 /** \fn void read_float_static_array(char * buffer, int * (*j), int ** float_static_array)
  * \brief Reads float static array.
  */
-int read_float_static_array(char * buffer, int buffer_size, int * j, float * float_static_array, int size)
+int read_float_static_array(char * buffer, int /*@unused@*/ buffer_size, int * j, float * float_static_array, int /*@unused@*/ size)
 {
 	int arraycount = 0;
 	int array_k;
@@ -69,8 +69,8 @@ int read_float_static_array(char * buffer, int buffer_size, int * j, float * flo
 			array_k++;
 			(*j)++;
 		}
-		arraydata[array_k] = 0;
-		float_static_array[arraycount] = atof(arraydata);
+		arraydata[array_k] = '\0';
+		float_static_array[arraycount] = (float)atof(arraydata);
 		arraycount++;
 		if(buffer[(*j)] != '}') (*j)++;
 	}
@@ -82,7 +82,7 @@ int read_float_static_array(char * buffer, int buffer_size, int * j, float * flo
 /** \fn void read_double_static_array(char * buffer, int * (*j), int ** double_static_array)
  * \brief Reads double static array.
  */
-int read_double_static_array(char * buffer, int buffer_size, int * j, double * double_static_array, int size)
+int read_double_static_array(char * buffer, int /*@unused@*/ buffer_size, int * j, double * double_static_array, int /*@unused@*/ size)
 {
 	int arraycount = 0;
 	int array_k;
@@ -106,7 +106,7 @@ int read_double_static_array(char * buffer, int buffer_size, int * j, double * d
 			array_k++;
 			(*j)++;
 		}
-		arraydata[array_k] = 0;
+		arraydata[array_k] = '\0';
 		double_static_array[arraycount] = atof(arraydata);		
 		arraycount++;
 		if(buffer[(*j)] != '}') (*j)++;
@@ -119,7 +119,7 @@ int read_double_static_array(char * buffer, int buffer_size, int * j, double * d
 /** \fn void read_char_static_array(char * buffer, int * (*j), int ** char_static_array)
  * \brief Reads char static array.
  */
-int read_char_static_array(char * buffer, int buffer_size, int * j, char * char_static_array, int size)
+int read_char_static_array(char * buffer, int /*@unused@*/ buffer_size, int * j, char * char_static_array, int size)
 {
 	int arraycount;
 	
@@ -141,7 +141,7 @@ int read_char_static_array(char * buffer, int buffer_size, int * j, char * char_
 /** \fn void read_int_dynamic_array(char * buffer, int * (*j), int ** int_dynamic_array)
  * \brief Reads integer dynamic array.
  */
-int read_int_dynamic_array(char * buffer, int buffer_size, int * j, int_array * int_dynamic_array)
+int read_int_dynamic_array(char * buffer, int /*@unused@*/ buffer_size, int * j, int_array * int_dynamic_array)
 {
 	int arraycount = 0;
 	int array_k;
@@ -165,7 +165,7 @@ int read_int_dynamic_array(char * buffer, int buffer_size, int * j, int_array * 
 			array_k++;
 			(*j)++;
 		}
-		arraydata[array_k] = 0;
+		arraydata[array_k] = '\0';
 		add_int(int_dynamic_array, atoi(arraydata));
 		arraycount++;
 		if(buffer[(*j)] != '}') (*j)++;
@@ -178,7 +178,7 @@ int read_int_dynamic_array(char * buffer, int buffer_size, int * j, int_array * 
 /** \fn void read_float_dynamic_array(char * buffer, int * (*j), int ** float_dynamic_array)
  * \brief Reads float dynamic array.
  */
-int read_float_dynamic_array(char * buffer, int buffer_size, int * j, float_array * float_dynamic_array)
+int read_float_dynamic_array(char * buffer, int /*@unused@*/ buffer_size, int * j, float_array * float_dynamic_array)
 {
 	int arraycount = 0;
 	int array_k;
@@ -202,8 +202,8 @@ int read_float_dynamic_array(char * buffer, int buffer_size, int * j, float_arra
 			array_k++;
 			(*j)++;
 		}
-		arraydata[array_k] = 0;
-		add_float(float_dynamic_array, atof(arraydata));
+		arraydata[array_k] = '\0';
+		add_float(float_dynamic_array, (float)atof(arraydata));
 		arraycount++;
 		if(buffer[(*j)] != '}') (*j)++;
 	}
@@ -215,7 +215,7 @@ int read_float_dynamic_array(char * buffer, int buffer_size, int * j, float_arra
 /** \fn void read_double_dynamic_array(char * buffer, int * (*j), int ** double_dynamic_array)
  * \brief Reads double dynamic array.
  */
-int read_double_dynamic_array(char * buffer, int buffer_size, int * j, double_array * double_dynamic_array)
+int read_double_dynamic_array(char * buffer, int /*@unused@*/ buffer_size, int * j, double_array * double_dynamic_array)
 {
 	int arraycount = 0;
 	int array_k;
@@ -239,7 +239,7 @@ int read_double_dynamic_array(char * buffer, int buffer_size, int * j, double_ar
 			array_k++;
 			(*j)++;
 		}
-		arraydata[array_k] = 0;
+		arraydata[array_k] = '\0';
 		add_double(double_dynamic_array, atof(arraydata));
 		arraycount++;
 		if(buffer[(*j)] != '}') (*j)++;
@@ -252,7 +252,7 @@ int read_double_dynamic_array(char * buffer, int buffer_size, int * j, double_ar
 /** \fn void read_char_dynamic_array(char * buffer, int * (*j), int ** char_dynamic_array)
  * \brief Reads char dynamic array.
  */
-int read_char_dynamic_array(char * buffer, int buffer_size, int * j, char_array * char_dynamic_array)
+int read_char_dynamic_array(char * buffer, int /*@unused@*/ buffer_size, int * j, char_array * char_dynamic_array)
 {
 	if(*j > buffer_size) return -1;
 	
@@ -274,11 +274,11 @@ int read_char_dynamic_array(char * buffer, int buffer_size, int * j, char_array 
 <?foreach datatype?>/** \fn void read_$name(char * buffer, int * j, $name * temp_datatype)
  * \brief Reads $name datatype.
  */
-int read_$name(char * buffer, int buffer_size, int * j, $name * temp_datatype)
+int read_$name(char * buffer, int /*@unused@*/ buffer_size, int * j, $name * temp_datatype)
 {
 	<?if single_vars?>int array_k;
 	char arraydata[10000];<?end if?>
-	<?if has_arrays?>int rc;<?end if?>
+	<?if has_arrays_or_adts?>int rc;<?end if?>
 	
 	while(buffer[(*j)] != '{')
 	{
@@ -289,7 +289,8 @@ int read_$name(char * buffer, int buffer_size, int * j, $name * temp_datatype)
 	(*j)++;
 
 <?foreach datatypevar?><?if modeldatatype?>	while(buffer[*j] != '{') (*j)++;
-<?if not_array?>	read_$type(buffer, buffer_size, j, &(*temp_datatype).$name);<?end if?><?if array?><?if static_array?>
+<?if not_array?>	rc = read_$type(buffer, buffer_size, j, &(*temp_datatype).$name);
+	if(rc != 0) return -1;<?end if?><?if array?><?if static_array?>
 	rc = read_$type_static_array(buffer, buffer_size, j, (*temp_datatype).$name, $arraylength);<?end if?><?if dynamic_array?>
 	rc = read_$notarraytype_dynamic_array(buffer, buffer_size, j, &(*temp_datatype).$name);<?end if?>
 	if(rc != 0) return -1;
@@ -305,7 +306,7 @@ int read_$name(char * buffer, int buffer_size, int * j, $name * temp_datatype)
 		rc = read_$notarraytype_dynamic_array(buffer, buffer_size, j, &(*temp_datatype).$name);<?end if?>
 		if(rc != 0) { printf("Error: reading variable '$name' of type '$type'\n"); return -1; }<?end if?>
 	}
-	<?if not_array?>arraydata[array_k] = 0;
+	<?if not_array?>arraydata[array_k] = '\0';
 	(*temp_datatype).$name = <?if not_char?>ato$c_type<?end if?>(arraydata<?if char?>[array_k-1]<?end if?>);<?end if?><?end if?>
 	(*j)++;
 <?end foreach?>
@@ -316,10 +317,18 @@ int read_$name_dynamic_array(char * buffer, int buffer_size, int * j, $name_arra
 {
 	int arraycount = 0;
 	int rc;
-	<?foreach datatypevar?>
-	<?if not_array?><?if modeldatatype?>$type $name; init_$type(&$name);<?end if?><?end if?>
-	<?if array?><?if static_array?>	$type $name[$arraylength]; init_$type_static_array($name, $arraylength);
-	<?end if?><?if dynamic_array?>$type $name; init_$type(&$name);<?end if?><?end if?><?end foreach?>
+	<?foreach datatypevar?><?if not_array?><?if modeldatatype?>$type $name;
+# ifndef S_SPLINT_S
+	init_$type(&$name);
+# endif<?end if?><?end if?>
+	<?if array?><?if static_array?>$type $name[$arraylength];
+# ifndef S_SPLINT_S
+	init_$type_static_array($name, $arraylength);
+# endif<?end if?>
+	<?if dynamic_array?>$type $name;
+# ifndef S_SPLINT_S
+	init_$type(&$name);
+# endif<?end if?><?end if?><?end foreach?>
 
 	while(buffer[(*j)] != '{')
 	{
@@ -409,9 +418,9 @@ int readEnvironmentXML(char * location)
 		else if(c == '<')
 		{
 			buffer[index] = '\0';
-			if(in_environment)
+			if(in_environment == 1)
 			{
-				<?foreach envvar?>if(in_$name) { FLAME_environment_variable_$name = <?if not_char?>ato$c_type<?end if?>(buffer<?if char?>[0]<?end if?>); }
+				<?foreach envvar?>if(in_$name == 1) { FLAME_environment_variable_$name = <?if float?>(float)<?end if?><?if not_char?>ato$c_type<?end if?>(buffer<?if char?>[0]<?end if?>); }
 				<?end foreach?>
 			}
 			index = 0;
@@ -424,13 +433,13 @@ int readEnvironmentXML(char * location)
 		}
 	}
 	/* Close file */
-	fclose(file);
+	(void)fclose(file);
 
 	return 0;
 }
 
 int readAgentXML(char * location,
-				double cloud_data[6],
+				double cloud_data[],
 				int partition_method,
 				int flag,
 				int number_partitions,
@@ -441,8 +450,8 @@ int readAgentXML(char * location,
 	char buffer[100000];
 	char agentname[10000];
 	int index = 0;
-	int j = 0; /* Index for reading arrays */
-	int rc;
+	/*@unused@*/ int j = 0; /* Index for reading arrays */
+	/*@unused@*/ int rc;
 	int FLAME_in_xagent = 0;
 	int FLAME_in_name = 0;
 	<?foreach xagent?>int in_$name_agent = 0;
@@ -465,7 +474,7 @@ int readAgentXML(char * location,
 	if((file = fopen(location, "r"))==NULL)
 	{
 		printf("Error: cannot open import xml file '%s'\n", location);
-		exit(1);
+		exit(0);
 	}
 	printf("Reading agent data from: %s\n", location);
 	/* Keep reading file until EOF */
@@ -482,13 +491,14 @@ int readAgentXML(char * location,
 				agentname[0] = '\0';
 			}
 			if(strcmp(buffer, "/xagent") == 0)
-			{
+			{	
 				<?foreach xagent?><?if notfirst?>else <?end if?>if(strcmp(agentname, "$name") == 0)
 				{
+					if(current_$name_agent == NULL) { printf("Memory error reading $name agent\n"); exit(0); }
+					
 					posx = <?if use_xvar?>current_$name_agent->$xvar<?end if?><?if no_xvar?>0.0<?end if?>;
 					posy = <?if use_yvar?>current_$name_agent->$yvar<?end if?><?if no_yvar?>0.0<?end if?>;
 					posz = <?if use_zvar?>current_$name_agent->$zvar<?end if?><?if no_zvar?>0.0<?end if?>;
-
 					
 					/* If flag is zero just read the data. We'll partition later.
 					 * If flag is not zero we aleady have partition data so can read and distribute to the current node.*/
@@ -562,9 +572,9 @@ int readAgentXML(char * location,
 		else if(c == '<')
 		{
 			buffer[index] = '\0';
-			if(FLAME_in_xagent)
+			if(FLAME_in_xagent == 1)
 			{
-				if(FLAME_in_name)
+				if(FLAME_in_name == 1)
 				{
 					strcpy(agentname, buffer);
 
@@ -605,7 +615,7 @@ int readAgentXML(char * location,
 		}
 	}
 	/* Close file */
-	fclose(file);
+	(void)fclose(file);
 
 	return 0;
 }
@@ -627,7 +637,7 @@ int check_location_exists(char * location)
 
 	if((file = fopen(buffer, "w")) == NULL) return 0;
 
-	fclose(file);
+	(void)fclose(file);
 	/* Remove dummy file */
 	remove(buffer);
 
@@ -655,7 +665,7 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 	char FLAME_type[1000];
 	FLAME_output * current_FLAME_output;
 	/* Temporary node and head of associated agent list to allow adding agents */
-	node_information temp_node;
+	/*@unused@*/ node_information temp_node;
 	/* Variables for checking tags */
 	int reading = 1;
 	int i = 0;
@@ -764,7 +774,7 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 			if(strcmp(buffer, "/outputs") == 0) FLAME_in_outputs = 0;
 			if(strcmp(buffer, "output") == 0)
 			{
-				if(FLAME_in_outputs)
+				if(FLAME_in_outputs == 1)
 				{
 					current_FLAME_output = add_FLAME_output(&FLAME_outputs);
 	
@@ -773,7 +783,7 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 			}
 			if(strcmp(buffer, "/output") == 0)
 			{
-				if(FLAME_in_outputs)
+				if(FLAME_in_outputs == 1)
 				{
 					if(current_FLAME_output->type == -1)
 					{
@@ -838,20 +848,20 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 			in_tag = 1;
 
 			if(in_itno) *itno = atoi(buffer);
-			if(FLAME_in_imports)
+			if(FLAME_in_imports == 1)
 			{
-				if(FLAME_in_import)
+				if(FLAME_in_import == 1)
 				{
-					if(FLAME_in_location) strcat(FLAME_location, buffer);
-					if(FLAME_in_format) strcpy(FLAME_format, buffer);
-					if(FLAME_in_type) strcpy(FLAME_type, buffer);
+					if(FLAME_in_location == 1) strcat(FLAME_location, buffer);
+					if(FLAME_in_format == 1) strcpy(FLAME_format, buffer);
+					if(FLAME_in_type == 1) strcpy(FLAME_type, buffer);
 				}
 			}
-			if(FLAME_in_outputs)
+			if(FLAME_in_outputs == 1)
 			{
-				if(FLAME_in_output)
+				if(FLAME_in_output == 1)
 				{
-					if(FLAME_in_type)
+					if(FLAME_in_type == 1)
 					{
 						if(strcmp("snapshot", buffer) == 0) current_FLAME_output->type = 0;
 						else if(strcmp("agent", buffer) != 0)
@@ -860,7 +870,7 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 							exit(0);
 						}
 					}
-					if(FLAME_in_name)
+					if(FLAME_in_name == 1)
 					{
 						<?foreach xagent?>if(strcmp("$name", buffer) == 0) current_FLAME_output->type = $xagentcountplusone;
 						else <?end foreach?>
@@ -869,7 +879,7 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 							exit(0);
 						}
 					}
-					if(FLAME_in_format)
+					if(FLAME_in_format == 1)
 					{
 						if(strcmp("xml", buffer) == 0) current_FLAME_output->format = 0;
 						else
@@ -878,16 +888,16 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 							exit(0);
 						}
 					}
-					if(FLAME_in_location)
+					if(FLAME_in_location == 1)
 					{
 						current_FLAME_output->location = (char *)malloc( (strlen(filelocation) + strlen(buffer) + 1) * sizeof(char));
 						strcpy(current_FLAME_output->location, filelocation);
 						strcat(current_FLAME_output->location, buffer);
 					}
-					if(FLAME_in_time)
+					if(FLAME_in_time == 1)
 					{
-						if(FLAME_in_period) current_FLAME_output->period = atoi(buffer);
-						if(FLAME_in_phase)  current_FLAME_output->phase = atoi(buffer);
+						if(FLAME_in_period == 1) current_FLAME_output->period = atoi(buffer);
+						if(FLAME_in_phase == 1)  current_FLAME_output->phase = atoi(buffer);
 					}
 				}
 			}
@@ -909,7 +919,7 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 	}
 
 	/* Close the file */
-	fclose(file);
+	(void)fclose(file);
 	
     /* Also try and read environment and agents from 0.xml */
 	readEnvironmentXML(filename);
@@ -954,7 +964,7 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
  * \param partition_method Identifies partitioning method: 1 = geometric, 2 = round-robin
  * \param flag Flag for whether to check space partitions.
  */
-void readinitialstates(char * filename, char * filelocation, int * itno, double cloud_data[6],
+void readinitialstates(char * filename, char * filelocation, int * itno, double cloud_data[],
 					   int partition_method, int flag)
 {
 	/* Pointer to file */
@@ -975,9 +985,14 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 	<?if parallel?>int node_number;<?end if?>
 
 	/* Cloud data array initialisation */
-	cloud_data[0] = SPINF; cloud_data[1] = -SPINF;
-	cloud_data[2] = SPINF; cloud_data[3] = -SPINF;
-	cloud_data[4] = SPINF; cloud_data[5] = -SPINF;
+	# ifndef S_SPLINT_S
+	cloud_data[0] = SPINF;
+	cloud_data[1] = -SPINF;
+	cloud_data[2] = SPINF;
+	cloud_data[3] = -SPINF;
+	cloud_data[4] = SPINF;
+	cloud_data[5] = -SPINF;
+	# endif
 
 	/* Temporary node and head of associated agent list to allow adding agents */
 	node_information temp_node;
@@ -1103,7 +1118,7 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 			if(strcmp(buffer, "/outputs") == 0) FLAME_in_outputs = 0;
 			if(strcmp(buffer, "output") == 0)
 			{
-				if(FLAME_in_outputs)
+				if(FLAME_in_outputs == 1)
 				{
 					current_FLAME_output = add_FLAME_output(&FLAME_outputs);
 	
@@ -1112,7 +1127,7 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 			}
 			if(strcmp(buffer, "/output") == 0)
 			{
-				if(FLAME_in_outputs)
+				if(FLAME_in_outputs == 1)
 				{
 					if(current_FLAME_output->type == -1)
 					{
@@ -1177,20 +1192,20 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 			in_tag = 1;
 
 			if(in_itno) *itno = atoi(buffer);
-			if(FLAME_in_imports)
+			if(FLAME_in_imports == 1)
 			{
-				if(FLAME_in_import)
+				if(FLAME_in_import == 1)
 				{
-					if(FLAME_in_location) strcat(FLAME_location, buffer);
-					if(FLAME_in_format) strcpy(FLAME_format, buffer);
-					if(FLAME_in_type) strcpy(FLAME_type, buffer);
+					if(FLAME_in_location == 1) strcat(FLAME_location, buffer);
+					if(FLAME_in_format == 1) strcpy(FLAME_format, buffer);
+					if(FLAME_in_type == 1) strcpy(FLAME_type, buffer);
 				}
 			}
-			if(FLAME_in_outputs)
+			if(FLAME_in_outputs == 1)
 			{
-				if(FLAME_in_output)
+				if(FLAME_in_output == 1)
 				{
-					if(FLAME_in_type)
+					if(FLAME_in_type == 1)
 					{
 						if(strcmp("snapshot", buffer) == 0) current_FLAME_output->type = 0;
 						else if(strcmp("agent", buffer) != 0)
@@ -1199,7 +1214,7 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 							exit(0);
 						}
 					}
-					if(FLAME_in_name)
+					if(FLAME_in_name == 1)
 					{
 						<?foreach xagent?>if(strcmp("$name", buffer) == 0) current_FLAME_output->type = $xagentcountplusone;
 						else <?end foreach?>
@@ -1208,7 +1223,7 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 							exit(0);
 						}
 					}
-					if(FLAME_in_format)
+					if(FLAME_in_format == 1)
 					{
 						if(strcmp("xml", buffer) == 0) current_FLAME_output->format = 0;
 						else
@@ -1217,16 +1232,16 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 							exit(0);
 						}
 					}
-					if(FLAME_in_location)
+					if(FLAME_in_location == 1)
 					{
 						current_FLAME_output->location = (char *)malloc( (strlen(filelocation) + strlen(buffer) + 1) * sizeof(char));
 						strcpy(current_FLAME_output->location, filelocation);
 						strcat(current_FLAME_output->location, buffer);
 					}
-					if(FLAME_in_time)
+					if(FLAME_in_time == 1)
 					{
-						if(FLAME_in_period) current_FLAME_output->period = atoi(buffer);
-						if(FLAME_in_phase)  current_FLAME_output->phase = atoi(buffer);
+						if(FLAME_in_period == 1) current_FLAME_output->period = atoi(buffer);
+						if(FLAME_in_phase == 1)  current_FLAME_output->phase = atoi(buffer);
 					}
 				}
 			}
@@ -1234,7 +1249,7 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 			i = 0;
 		}
 		/* If in tag put read char into buffer */
-		else if(in_tag)
+		else if(in_tag == 1)
 		{
 			buffer[i] = c;
 			i++;
@@ -1248,7 +1263,7 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 	}
 
 	/* Close the file */
-	fclose(file);
+	(void)fclose(file);
 
 	/* Also try and read environment and agents from 0.xml */
 	readEnvironmentXML(filename);
@@ -1543,7 +1558,7 @@ void FLAME_write_xml(char * location, int iteration_number, int * output_types, 
 	<?if parallel?>if(node_number == totalnodes-1) <?end if?>fputs("</states>\n" , file);
 
 	/* Close the file */
-	fclose(file);
+	(void)fclose(file);
 }
 
 /** \fn void saveiterationdata(int iteration_number)

@@ -13,9 +13,9 @@ static void put_int(int int_single, FILE * file)
 	(void) fputs(buffer, file);
 }
 
-static void put_agent_a(int int_single, FILE * file)
+/*@unused@*/ static void put_agent_a(int int_single, FILE * file)
 {
-	char buffer[BUFFER];
+	/*@unused@*/ char buffer[BUFFER];
 	int int_single_2;
 	
 	int_single_2 = int_single + 1;
@@ -30,14 +30,14 @@ static void put_agent_a(int int_single, FILE * file)
 	(void) fputs("</xagent>\n", file);
 }
 
-static void put_agent_b(FILE * file)
+/*@unused@*/ static void put_agent_b(FILE * file)
 {
 	(void) fputs("<xagent>\n<name>agent_b</name>\n", file);
 	(void) fputs("<int_single>0</int_single>\n", file);
 	(void) fputs("</xagent>\n", file);
 }
 
-int main(int argc, char ** argv)
+/*int main(int argc, char ** argv)
 {
 	FILE * file;
 	int i;
@@ -61,4 +61,4 @@ int main(int argc, char ** argv)
 	(void) fclose(file);
 	
 	return 0;
-}
+}*/

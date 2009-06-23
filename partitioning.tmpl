@@ -97,7 +97,7 @@ static void factor( long num )
     }
     else {
         /* Loop over the lower prime numbers till we have the factors.*/
-    	for ( p = 0; p < sizeof(low_primes)/sizeof(*low_primes); ++p )
+    	for ( p = 0; p < (int)(sizeof(low_primes)/sizeof(*low_primes)); ++p )
     	    if ( ! test_fact( &lnum, low_primes[p] ) ) goto done;
         /* If we didn't find any factors generate some more on the fly. */
     	fact = ( low_primes[p - 1] + 5 ) / 6 * 6 - 1;
@@ -126,7 +126,7 @@ static void factor( long num )
  * \author  C Greenough and DJ Worth CCLRC
  * \date    2007
  */
-void generate_partitions(double cloud_data[6], int partitions, int partition_method)
+void generate_partitions(double cloud_data[], int partitions, int partition_method)
 {
     int geometric = 1;
         int other = 2;
@@ -262,7 +262,7 @@ void generate_partitions(double cloud_data[6], int partitions, int partition_met
  * \author  DJ Worth CCLRC
  * \date    2007
  */
-void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6], int partition_method)
+void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[], int partition_method)
 {
     
 }

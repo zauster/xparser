@@ -26,6 +26,13 @@ void test_4_parallel_3(void);
 void test_4_parallel_4(void);
 void test_input(void);
 void test_debug(void);
+void test_model_code_standard(int n);
+void test_model_code_standard_1(void) { test_model_code_standard(1); }
+void test_model_code_standard_2(void) { test_model_code_standard(2); }
+void test_model_code_standard_3(void) { test_model_code_standard(3); }
+void test_model_code_standard_4(void) { test_model_code_standard(4); }
+void test_model_code_standard_5(void) { test_model_code_standard(5); }
+void test_model_code_standard_6(void) { test_model_code_standard(6); }
 
 /* Define tests within this suite */
 CU_TestInfo test_array_1[] =
@@ -34,13 +41,15 @@ CU_TestInfo test_array_1[] =
 //    {"xparse model with one agent                   ", xparse_test_model_02       },
 //    {"make and run model with one agent             ", make_and_run_test_model_02 },
 //    {"test_model_1             ", test_model_1 },
-	{"test compicated model                           ", test_complicated_model },
+	{"test complicated model                          ", test_complicated_model },
+	{"test model code standard                        ", test_model_code_standard_1 },
     CU_TEST_INFO_NULL,
 };
 
 CU_TestInfo test_array_2[] =
 {
 	{"test reading and writing model data             ", test_reading_and_writing_model_data },
+	{"test model code standard                        ", test_model_code_standard_2 },
     CU_TEST_INFO_NULL,
 };
 
@@ -49,6 +58,7 @@ CU_TestInfo test_array_3[] =
 	{"test code standard                              ", test_code_standard },
 /*	{"test compile warnings                           ", test_compile_warnings },*/
 	{"test truncated empty xml tags                   ", test_truncated_empty_xml_tags },
+	{"test model code standard                        ", test_model_code_standard_3 },
     CU_TEST_INFO_NULL,
 };
 
@@ -58,18 +68,21 @@ CU_TestInfo test_array_4[] =
 	{"test parallel (n 2)                             ", test_4_parallel_2 },
 	{"test parallel (n 3)                             ", test_4_parallel_3 },
 	{"test parallel (n 4)                             ", test_4_parallel_4 },
+	{"test model code standard                        ", test_model_code_standard_4 },
     CU_TEST_INFO_NULL,
 };
 
 CU_TestInfo test_array_5[] =
 {
 	{"test input filter/sort/random                   ", test_input },
+	{"test model code standard                        ", test_model_code_standard_5 },
     CU_TEST_INFO_NULL,
 };
 
 CU_TestInfo test_array_6[] =
 {
 	{"test debug mode                                 ", test_debug },
+	{"test model code standard                        ", test_model_code_standard_6 },
     CU_TEST_INFO_NULL,
 };
 
@@ -477,6 +490,25 @@ void test_4_parallel_2(void) { test_4_parallel(2); }
 void test_4_parallel_3(void) { test_4_parallel(3); }
 void test_4_parallel_4(void) { test_4_parallel(4); }
 
+void test_model_code_standard(int n)
+{
+	int rc;
+	char buffer[1000];
+	
+	sprintf(buffer, "splint -I/Users/stc/workspace/libmboard/include -weak -namechecks -bufferoverflowhigh test%d/*.c", n);
+	
+	/* Test if splint is available */
+	rc = call_external(buffer);
+	
+	if(rc == 0) { CU_PASS(); }
+	else
+	{
+		printf("\n");
+		rc = system(buffer);
+		CU_FAIL();
+	}
+}
+
 int init_test_model(int index, int option)
 {
 	FILE *out;
@@ -517,6 +549,10 @@ int init_test_model(int index, int option)
 					fclose(out);
 					return -1;
 				}
+				if(strstr(buffer, "error") != NULL)
+					printf(buffer);
+				if(strstr(buffer, "warning") != NULL)
+					printf(buffer);
 			}
 
 			fclose(out);

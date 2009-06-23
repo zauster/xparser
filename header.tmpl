@@ -169,10 +169,10 @@ struct xmachine_memory_$name
  */
 struct xmachine_memory_$name_holder
 {
-	struct xmachine_memory_$name * agent;	/**< Pointer to X-machine memory $name. */
+	/*@dependent@*/ struct xmachine_memory_$name * agent;	/**< Pointer to X-machine memory $name. */
 
-	struct xmachine_memory_$name_holder * prev;	/**< Pointer to previous $name agent in the list.  */
-	struct xmachine_memory_$name_holder * next;	/**< Pointer to next $name agent in the list.  */
+	/*@dependent@*/ struct xmachine_memory_$name_holder * prev;	/**< Pointer to previous $name agent in the list.  */
+	/*@dependent@*/ struct xmachine_memory_$name_holder * next;	/**< Pointer to next $name agent in the list.  */
 };
 
 /** \struct xmachine_memory_$name_holder
@@ -180,7 +180,7 @@ struct xmachine_memory_$name_holder
  */
 struct xmachine_memory_$name_state
 {
-	struct xmachine_memory_$name_holder * agents;	/**< Pointer to X-machine memory $name. */
+	/*@dependent@*/ struct xmachine_memory_$name_holder * agents;	/**< Pointer to X-machine memory $name. */
 
 	int count;	/**< Number of agents that were in this state.  */
 };
@@ -190,10 +190,7 @@ struct xmachine_memory_$name_state
  */
 struct xmachine
 {<?foreach xagent?>
-	struct xmachine_memory_$name * xmachine_$name;	/**< Pointer to X-machine memory of type $name.  */<?end foreach?>
-
-	//struct xmachine * prev;	/**< Pointer to previous X-machine in the list.  */
-	//struct xmachine * next;	/**< Pointer to next X-machine in the list.  */
+	/*@dependent@*/ /*@null@*/ /*@out@*/ struct xmachine_memory_$name * xmachine_$name;	/**< Pointer to X-machine memory of type $name.  */<?end foreach?>
 };
 <?foreach message?>
 /** \var void* FLAME_m_$name_composite_params\n
@@ -311,9 +308,9 @@ int totalnodes;
 * \brief Pointer to current x-machine memory that is being processed */
 xmachine * current_xmachine;
 <?foreach xagent?>/* Pointer to current $agent_name agent */
-xmachine_memory_$name * current_xmachine_$name;
-xmachine_memory_$name_holder * temp_xmachine_$name_holder;
-xmachine_memory_$name_holder * current_xmachine_$name_holder;
+/*@dependent@*/ /*@null@*/ /*@out@*/ xmachine_memory_$name * current_xmachine_$name;
+/*@dependent@*/ xmachine_memory_$name_holder * temp_xmachine_$name_holder;
+/*@dependent@*/ /*@null@*/ /*@out@*/ xmachine_memory_$name_holder * current_xmachine_$name_holder;
 xmachine_memory_$name_state * current_xmachine_$name_next_state; /* New agents added to this state */
 <?foreach state?>/* Pointer to list of $agent_name agents in state $name state */
 //xmachine_memory_$agent_name * temp_xmachine_$agent_name_$name;
@@ -398,10 +395,10 @@ void init_$name_array($name_array * array);
 void reset_$name_array($name_array * array);
 void free_$name_array($name_array * array);
 void copy_$name_array($name_array * from, $name_array * to);
-void add_$name($name_array * array<?foreach datatypevar?>, $type <?if modeldatatype?><?if not_array?>* <?end if?><?end if?><?if array?>* <?end if?>$name<?end foreach?>);
+void add_$name($name_array * array<?foreach datatypevar?>, <?if modeldatatype?><?if not_array?>/*@out@*/<?end if?><?end if?><?if array?>/*@out@*/<?end if?> $type <?if modeldatatype?><?if not_array?>* <?end if?><?end if?><?if array?>* <?end if?>$name<?end foreach?>);
 void remove_$name($name_array * array, int index);
 <?end foreach?>
-void init_int_static_array(int * array, int size);
+void init_int_static_array(/*@out@*/ int * array, int size);
 void init_int_array(int_array * array);
 void reset_int_array(int_array * array);
 void free_int_array(int_array * array);
@@ -421,7 +418,7 @@ void copy_float_array(float_array * from, float_array * to);
 void add_float(float_array * array, float new_float);
 void remove_float(float_array * array, int index);
 void print_float_array(float_array * array);
-void init_double_static_array(double* array, int size);
+void init_double_static_array(/*@out@*/ double* array, int size);
 void init_double_array(double_array * array);
 void reset_double_array(double_array * array);
 void free_double_array(double_array * array);
@@ -431,7 +428,7 @@ void copy_double_array(double_array * from, double_array * to);
 void add_double(double_array * array, double new_double);
 void remove_double(double_array * array, int index);
 void print_double_array(double_array * array);
-void init_char_static_array(char * array, int size);
+void init_char_static_array(/*@out@*/ char * array, int size);
 void init_char_array(char_array * array);
 void reset_char_array(char_array * array);
 void free_char_array(char_array * array);
@@ -440,7 +437,7 @@ void add_char(char_array * array, char new_char);
 void remove_char(char_array * array, int index);
 char * copy_array_to_str(char_array * array);
 void print_char_array(char_array * array);
-int idle();
+int idle(void);
 /* xml.c */
 int read_int_static_array(char * buffer, int buffer_size, int * j, int * int_static_array, int size);
 int read_float_static_array(char * buffer, int buffer_size, int * j, float * float_static_array, int size);
@@ -451,8 +448,8 @@ int read_float_dynamic_array(char * buffer, int buffer_size, int * j, float_arra
 int read_double_dynamic_array(char * buffer, int buffer_size, int * j, double_array * double_dynamic_array);
 int read_char_dynamic_array(char * buffer, int buffer_size, int * j, char_array * char_dynamic_array);
 <?foreach datatype?>
-void init_$name($name * temp);
-void init_$name_static_array($name * array, int size);
+void init_$name(/*@out@*/ $name * temp);
+void init_$name_static_array(/*@out@*/ $name * array, int size);
 int read_$name(char * buffer, int buffer_size, int * j, $name * temp_datatype);
 int read_$name_dynamic_array(char * buffer, int buffer_size, int * j, $name_array * temp_datatype_array);
 int read_$name_static_array(char * buffer, int buffer_size, int * j, $name * temp_datatype_array, int size);
@@ -462,7 +459,7 @@ void write_$name_dynamic_array(FILE *file, $name_array * temp_datatype);<?end fo
 <?if parallel?>
 void readprepartitionedinitialstates(char * filename, char * filelocation, int * itno);
 <?end if?>
-void readinitialstates(char * filename, char * filelocation, int * itno, double cloud_data[6],
+void readinitialstates(char * filename, char * filelocation, int * itno, double cloud_data[],
 					   int partition_method, int flag);
 void saveiterationdata(int iteration_number);
 <?foreach datatype?>
@@ -495,11 +492,11 @@ double agent_get_x(void);
 double agent_get_y(void);
 double agent_get_z(void);
 /* partitioning.c */
-<?if serial?>void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[6], int partition_method);<?end if?>
+<?if serial?>void partition_data(int totalnodes, xmachine ** agent_list, double cloud_data[], int partition_method);<?end if?>
 <?if parallel?>void send_spacepartition(int node_id, double minx, double maxx, double miny, double maxy, double minz, double maxz);<?end if?>
 <?if parallel?>void broadcast_node_data(int totalnodes, int node_number);<?end if?>
 void save_partition_data(void);
-void generate_partitions(double cloud_data[6], int partitions, int partition_method);
+void generate_partitions(double cloud_data[], int partitions, int partition_method);
 
 /* messageboard.c */
 <?foreach message?>m_$name * get_next_message_$name_in_range(m_$name * current);
@@ -517,7 +514,7 @@ int FLAME_integer_in_array(int a, int * b, int size);
 /* timing.c */
 double get_time(void);
 <?foreach xagent?><?foreach function?>
-int $name(void);<?if condition?>
+<?if not_idle?>int $name(void);<?end if?><?if condition?>
 int $condition(xmachine_memory_$agent_name *a);<?end if?><?foreach function_input?><?if filter?>
 int $filter(const void *msg, const void *params);<?end if?><?if sort?>
 int $sort();<?end if?><?end foreach?><?end foreach?><?end foreach?>

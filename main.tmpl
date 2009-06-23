@@ -22,16 +22,13 @@ int main(int argc, char * argv[])
 	int lastd = 0;
 	int i;
 	int rc;
-	int iteration_number;
+	int iteration_number = 0;
 	int iteration_total;
-	int * p_iteration_number;
-	/* For backwards compatabilty allocate current_xmachine */
-	current_xmachine = (xmachine *)malloc(sizeof(xmachine));
-	CHECK_POINTER(current_xmachine);
+	int * p_iteration_number = &iteration_number;
 <?foreach xagent?>	//xmachine_memory_$name * temp_xmachine_$name;
 <?end foreach?>
 	/* Particle cloud data */
-	double cloud_data[6];
+	double cloud_data[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
 <?if debug?>	/* Count to debug function branches */
 	int FLAME_debug_count;<?end if?>
 
@@ -51,6 +48,11 @@ int main(int argc, char * argv[])
 	/* Variable to indicate if initial data is pre-partitioned. 0 = no, 1 = yes */
 	int is_prepartitioned = 0;
 <?end if?>
+
+	/* For backwards compatabilty allocate current_xmachine */
+	current_xmachine = (xmachine *)malloc(sizeof(xmachine));
+	if(current_xmachine == NULL) {printf("**** ERROR in Memory check current_xmachine\n");exit(EXIT_FAILURE);}
+	/*CHECK_POINTER(current_xmachine);*/
 
 	/* Output frequency is 1 as default */
 	output_frequency = 1;
@@ -104,7 +106,6 @@ int main(int argc, char * argv[])
 
 	/* Initialise pointers */
 	initialise_pointers();
-	p_iteration_number = &iteration_number;
 
 <?if serial?>
 	printf("FLAME Application: $model_name \n");
@@ -114,7 +115,8 @@ int main(int argc, char * argv[])
 		printf("MPI FLAME Application: $model_name \n");
 	}
 <?end if?>
-<?if debug?>	printf("Debug mode enabled \n");<?end if?>
+<?if debug?>	printf("Debug mode enabled \n");
+FLAME_debug_count = 0;<?end if?>
 
 
 
@@ -195,7 +197,7 @@ if(argc < 2)
 				else
 				{
 					output_offset = atoi(argv[(i+1)]+(c-argv[(i+1)])+1);
-					argv[(i+1)][c-argv[(i+1)]] = 0;
+					argv[(i+1)][c-argv[(i+1)]] = '\0';
 					output_frequency = atoi(argv[(i+1)]);
 					printf("Using output frequency of: %d with offset %d\n", output_frequency, output_offset);
 				}
@@ -300,35 +302,39 @@ if(argc < 2)
 	{<?end if?>
 	/* Write log file */
 	sprintf(logfilepath, "%slog.xml", outputpath);
-	file = fopen(logfilepath, "w");
-	fputs("<model_run>\n", file);
-	fputs("<codetype>", file);
-<?if serial?>	fputs("serial", file);<?end if?>
-<?if parallel?>	fputs("parallel", file);<?end if?>
-	fputs("</codetype>\n", file);
-	fputs("<nodes>", file);
+	if((file = fopen(logfilepath, "w"))==NULL)
+	{
+		printf("Error: cannot open file '%s' for writing\n", logfilepath);
+		exit(0);
+	}
+	(void)fputs("<model_run>\n", file);
+	(void)fputs("<codetype>", file);
+<?if serial?>	(void)fputs("serial", file);<?end if?>
+<?if parallel?>	(void)fputs("parallel", file);<?end if?>
+	(void)fputs("</codetype>\n", file);
+	(void)fputs("<nodes>", file);
 	sprintf(data, "%i", totalnodes);
-	fputs(data, file);
-	fputs("</nodes>\n", file);
+	(void)fputs(data, file);
+	(void)fputs("</nodes>\n", file);
 
 	/* print timer into */
-	fputs("<!-- <time> unit: milliseconds -->\n", file);
+	(void)fputs("<!-- <time> unit: milliseconds -->\n", file);
 
 	<?if serial?>sprintf(data, "unspecified");<?end if?>
 	<?if parallel?>sprintf(data, "%.2e ms", MPI_Wtick() * 1000.0);<?end if?>
-	fputs("<!-- <time> timer resolution: ", file);
-	fputs(data, file);
-	fputs(")-->\n", file);
+	(void)fputs("<!-- <time> timer resolution: ", file);
+	(void)fputs(data, file);
+	(void)fputs(")-->\n", file);
 
 	start = get_time();
 	stop = get_time();
 	sprintf(data, "%.2e ms", (stop - start) * 1000.0);
-	fputs("<!-- <time> timer overhead: ~", file);
-	fputs(data, file);
-	fputs(")-->\n", file);
+	(void)fputs("<!-- <time> timer overhead: ~", file);
+	(void)fputs(data, file);
+	(void)fputs(")-->\n", file);
 
 
-	fclose(file);
+	(void)fclose(file);
 <?if parallel?>	}<?end if?>
 	/* Start timing */
 	start = get_time();
@@ -343,7 +349,7 @@ if(argc < 2)
 		/* Print out iteration number */
 		fprintf(stdout, "Iteration - %d\n", iteration_loop);
 		/* Flush stdout to keep user updated on progress */
-		fflush(stdout);
+		(void)fflush(stdout);
 		<?if parallel?>}<?end if?>
 		/* START OF ITERATION */
 <?foreach layer?><?if debug?><?foreach branching_state?>	/* DEBUG: States with branching functions */
@@ -352,7 +358,7 @@ if(argc < 2)
 		{
 			FLAME_debug_count = 0;
 	<?foreach function?>		/* Function: $name */
-			<?if condition?>if($condition(current_xmachine_$agent_name_holder->agent))
+			<?if condition?>if($condition(current_xmachine_$agent_name_holder->agent)==1)
 			{ FLAME_debug_count++; }<?end if?>
 	<?end foreach?>		/*printf("FLAME_debug_count = %d\n", FLAME_debug_count);*/
 			if(FLAME_debug_count != 1)
@@ -422,7 +428,7 @@ if(argc < 2)
 		<?foreach xagent?>current_xmachine->xmachine_$name = NULL;
 		<?end foreach?>current_xmachine->xmachine_$agent_name = current_xmachine_$agent_name;
 
-		<?if condition?>if($condition(current_xmachine_$agent_name))
+		<?if condition?>if($condition(current_xmachine_$agent_name)==1)
 		{<?end if?>
 
 		<?foreach function_input?>
@@ -594,15 +600,19 @@ if(argc < 2)
 	/* Save iteration time to log file */
 <?if parallel?>		if(node_number == 0)
 		{<?end if?>
-		file = fopen(logfilepath, "a");
-		fputs("<iteration><no>", file);
+		if((file = fopen(logfilepath, "a"))==NULL)
+		{
+			printf("Error: cannot open file '%s' for writing\n", logfilepath);
+			exit(0);
+		}
+		(void)fputs("<iteration><no>", file);
 		sprintf(data, "%i", iteration_loop);
-		fputs(data, file);
-		fputs("</no><time>", file);
+		(void)fputs(data, file);
+		(void)fputs("</no><time>", file);
 		sprintf(data, "%d", (int)((get_time() - interval) * 1000) );
-		fputs(data, file);
-		fputs("</time></iteration>\n", file);
-		fclose(file);
+		(void)fputs(data, file);
+		(void)fputs("</time></iteration>\n", file);
+		(void)fclose(file);
 <?if parallel?>		}<?end if?>
 	}
 
