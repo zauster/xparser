@@ -123,11 +123,15 @@ FLAME_debug_count = 0;<?end if?>
 if(argc < 2)
 	{
 <?if serial?>
-		printf("Usage: %s <number of iterations> [<states_directory>]/<init_state> <partitions> [-r | -g ]\n",argv[0]);
+		printf("Usage: %s <number of iterations> [<states_directory>]/<init_state> <partitions> [-f # | -f #+#]\n",argv[0]);
+		printf("\t-f\tOutput frequency, 1st # is frequency, 2nd # is the offset if required\n");
 <?end if?>
 <?if parallel?>
 		if(node_number == 0) {
-			printf("Usage: mpirun -np <partitions> %s <number of iterations> [<states_directory>]/<init_state> [-g | -r] \n",argv[0]);
+			printf("Usage: mpirun -np <partitions> %s <number of iterations> [<states_directory>]/<init_state> [-r | -g] [-f # | -f #+#]\n",argv[0]);
+			printf("\t-r\tRound-robin partitioning\n");
+			printf("\t-g\tGeometric partitioning\n");
+			printf("\t-f\tOutput frequency, 1st # is frequency, 2nd # is the offset if required\n");
 		}
 <?end if?>
 
@@ -246,7 +250,6 @@ if(argc < 2)
     }
 <?end if?>
 
-
 <?if parallel?>
     /* Broadcast node data */
     broadcast_node_data(totalnodes, node_number);
@@ -269,6 +272,46 @@ if(argc < 2)
     readinitialstates(inputpath, outputpath, p_iteration_number, cloud_data, partition_method, 1);
     }
 <?end if?>
+
+/* Use MB_IndexMap routines from libmboard v0.2 */
+/* For each agent constant (that is used in a filter(?))
+ * declare an index map handle */
+<?foreach constant_filter_variable?>	/* create map */
+	rc = MB_IndexMap_Create(&FLAME_map_$agent_name_$name, "$agent_name $name");
+	if (rc != MB_SUCCESS)
+	{
+		fprintf(stderr, "ERROR: Could not create map of $agent_name $name\n");
+		/* Add reason for error using error codes here */
+		<?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+		exit(rc);
+	}
+	/* loop though $agent_name agents and add $names to map */
+	current_xmachine_$agent_name_holder = $agent_name_$agent_start_state->agents;
+	while(current_xmachine_$agent_name_holder)
+	{
+		//printf("**** $name = %d\n", current_xmachine_$agent_name_holder->agent->$name);
+		rc = MB_IndexMap_AddEntry(FLAME_map_$agent_name_$name, current_xmachine_$agent_name_holder->agent->$name);
+		if (rc != MB_SUCCESS)
+		{
+			fprintf(stderr, "ERROR: Could not add value to map of $agent_name $name\n");
+			/* Add reason for error using error codes here */
+			<?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+			exit(rc);
+		}
+		
+		current_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
+	}
+	/* sync map */
+	rc = MB_IndexMap_Sync(FLAME_map_$agent_name_$name);
+	if (rc != MB_SUCCESS)
+	{
+		fprintf(stderr, "ERROR: Could not sync map of $agent_name $name\n");
+		/* Add reason for error using error codes here */
+		<?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+		exit(rc);
+	}
+<?end foreach?>
+
 <?if serial?>
 		/*i = 0;
 		current_node = *p_node_info;
@@ -402,7 +445,9 @@ if(argc < 2)
     <?if sync_filter?>
     if(FLAME_USE_FILTERS_IN_SYNC) {
     if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_Function_Assign(b_$message_name, MB_NULL_FUNCTION, NULL, 0)\n");
-    rc = MB_Function_Assign(b_$message_name, MB_NULL_FUNCTION, NULL, 0);
+    //rc = MB_Function_Assign(b_$message_name, MB_NULL_FUNCTION, NULL, 0);
+    //printf("** MB_Filter_Delete(&$filter_name_filter)\n");
+    rc = MB_Filter_Delete(&$filter_name_filter);
     if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finish MB_Function_Assign(b_$message_name, MB_NULL_FUNCTION, NULL, 0)\n");
 	if ( rc != MB_SUCCESS )
 	{
@@ -510,9 +555,12 @@ if(argc < 2)
 	}
 	if(FLAME_TEST_PRINT_START_AND_END_OF_MODEL_FUNCTIONS) printf("finish $name\n");
 <?foreach start_sync?>
-// new
-<?if sync_filter?>if(FLAME_USE_FILTERS_IN_SYNC) FLAME_build_filter_param_$filter_name();<?end if?>
-//new
+<?if sync_filter?>	if(FLAME_USE_FILTERS_IN_SYNC) 
+	{
+		//FLAME_build_filter_param_$filter_name();
+		//MB_Filter_Create($filter_sync_filter, $filter_sync)
+		FLAME_create_and_assign_$filter_name();
+	}<?end if?>
 	if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_SyncStart(b_$message_name)\n");
     rc = MB_SyncStart(b_$message_name);
     if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finish MB_SyncStart(b_$message_name)\n");

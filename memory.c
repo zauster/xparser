@@ -8,6 +8,7 @@ void free_modeldata(model_data * modeldata)
 	freevariables(modeldata->p_envvars);
 	freevariables(modeldata->p_envdefines);
 	freevariables(modeldata->p_allvars);
+	freevariables(modeldata->p_constant_filter_vars);
 	freelayers(modeldata->p_layers);
 	freedatatypes(modeldata->p_datatypes);
 	free_flame_communications(modeldata->p_communications);

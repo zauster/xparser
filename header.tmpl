@@ -2,6 +2,8 @@
  * \file  header.h
  * \brief Header for xmachine data structures and transition functions.
  */
+#ifndef _HEADER_H
+#define _HEADER_H
 
 #ifdef _DEBUG_MODE
     #define ERRCHECK
@@ -18,7 +20,7 @@
 
 #define FLAME_TEST_PRINT_START_AND_END_OF_MODEL_FUNCTIONS 0
 #define FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS 0
-#define FLAME_USE_FILTERS_IN_SYNC 0
+#define FLAME_USE_FILTERS_IN_SYNC 1
 
 <?if parallel?>#include <mpi.h>
 <?end if?>
@@ -38,10 +40,10 @@
 #define ARRAY_BLOCK_SIZE 5
 <?foreach message?>/** \def START_$capsname_MESSAGE_LOOP
  * \brief Start of loop to process $name messages. */
-#define START_$capsname_MESSAGE_LOOP  $name_message = get_first_$name_message(); while($name_message) {
+#define START_$capsname_MESSAGE_LOOP  for($name_message = get_first_$name_message(); $name_message != NULL; $name_message = get_next_$name_message($name_message)) {
 /** \def FINISH_$capsname_MESSAGE_LOOP
  * \brief Finish of loop to process $name messages. */
-#define FINISH_$capsname_MESSAGE_LOOP $name_message = get_next_$name_message($name_message); }
+#define FINISH_$capsname_MESSAGE_LOOP }
 <?end foreach?>
 
 struct FLAME_output
@@ -316,6 +318,11 @@ xmachine_memory_$name_state * current_xmachine_$name_next_state; /* New agents a
 //xmachine_memory_$agent_name * temp_xmachine_$agent_name_$name;
 xmachine_memory_$agent_name_state * $agent_name_$name_state;
 <?end foreach?><?end foreach?>
+<?foreach constant_filter_variable?>
+/** \var MBt_IndexMap FLAME_map_$agent_name_$name
+* \brief Declaration of index map handle for constant filter agent variable */
+MBt_IndexMap FLAME_map_$agent_name_$name;
+<?end foreach?>
 <?foreach message?>
 MBt_Board b_$name;
 MBt_Iterator i_$name;
@@ -509,7 +516,8 @@ xmachine * add_xmachine(void);
 <?end if?><?end foreach?><?end foreach?>
 /* rules.c */
 int FLAME_integer_in_array(int a, int * b, int size);
-<?foreach message?><?foreach sync?><?if sync_filter?>int FLAME_build_filter_param_$name();
+<?foreach message?><?foreach sync?><?if sync_filter?>MBt_Filter $name_filter;
+int FLAME_create_and_assign_$name();
 <?end if?><?end foreach?><?end foreach?>
 /* timing.c */
 double get_time(void);
@@ -518,3 +526,4 @@ double get_time(void);
 int $condition(xmachine_memory_$agent_name *a);<?end if?><?foreach function_input?><?if filter?>
 int $filter(const void *msg, const void *params);<?end if?><?if sort?>
 int $sort();<?end if?><?end foreach?><?end foreach?><?end foreach?>
+#endif

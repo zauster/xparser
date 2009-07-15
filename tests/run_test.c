@@ -382,6 +382,7 @@ void test_input(void)
 	char buffer[1000];
 	
 	rc = call_external("test5/main 1 test5/0.xml");
+	//rc = system("test5/main 1 test5/0.xml");
 	CU_ASSERT_EQUAL(rc, 0);
 	
 	if((out = fopen("stdout.out", "r"))==NULL)
@@ -495,7 +496,7 @@ void test_model_code_standard(int n)
 	int rc;
 	char buffer[1000];
 	
-	sprintf(buffer, "splint -I/Users/stc/workspace/libmboard/include -weak -namechecks -bufferoverflowhigh test%d/*.c", n);
+	sprintf(buffer, "splint -I/Users/stc/workspace/libmboard-0.2/include -weak -namechecks -bufferoverflowhigh test%d/*.c", n);
 	
 	/* Test if splint is available */
 	rc = call_external(buffer);
@@ -541,8 +542,9 @@ int init_test_model(int index, int option)
 				if(strstr(buffer, "error: mboard.h: No such file or directory") != NULL)
 				{
 					/* Try again but with Simon's default libmboard location */
-					sprintf(buffer, "make --directory=test%d/ LIBMBOARD_DIR=/Users/stc/workspace/libmboard/", index);
+					sprintf(buffer, "make --directory=test%d/ LIBMBOARD_DIR=/Users/stc/workspace/libmboard-0.2/", index);
 					rc2 = call_external(buffer);
+					//rc2 = system(buffer);
 					if(rc2 == 0) return 0;
 					
 					printf("\nSuite: test_model_%d mboard.h not found", index);

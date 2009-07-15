@@ -75,6 +75,7 @@ int main(int argc, char * argv[])
 	env_func * envfunc;
 	variable * envdefine;
 	variable * allvars;
+	variable * constant_filter_vars;
 	f_code * it_end_code;
 	layer * layers;
 	flame_communication * communications;
@@ -118,13 +119,18 @@ int main(int argc, char * argv[])
 	time_units = NULL;
 	modeldata->p_files = &temp_input_file;
 	temp_input_file = NULL;
+	modeldata->p_constant_filter_vars = &constant_filter_vars;
+	constant_filter_vars = NULL;
 	
 	printf("xparser: Version %d.%d.%d\n", VERSIONMAJOR, VERSIONMINOR, VERSIONMICRO);
 	
 	/* Must be at least the input file name */
 	if(argc < 2)
 	{
-		printf("Usage: xparser [XMML file] [-s | -p]\n");
+		printf("Usage: xparser [XMML file] [-s | -p] [-f]\n");
+		printf("\t-s\tSerial mode\n");
+		printf("\t-p\tParallel mode\n");
+		printf("\t-f\tFinal production mode\n");
 		free_modeldata(modeldata);
 		return 0;
 	}
@@ -273,6 +279,7 @@ int main(int argc, char * argv[])
 	parseAgentHeaderTemplate(directory, modeldata);
 	/*parseUnittest(directory, modeldata);*/
 	/*parser0dtd(directory, modeldata);*/
+	/*parser0xsd(directory, modeldata);*/
 	
 	free_modeldata(modeldata);
 	

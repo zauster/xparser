@@ -13,7 +13,7 @@
 #define VERSIONMINOR 15
 /** \def VERSIONMICRO
  * \brief Bug fixes. */
-#define VERSIONMICRO 13
+#define VERSIONMICRO 14
 /** \def DEBUG
  * \brief Debug output. */
 #define DEBUG 0
@@ -487,6 +487,7 @@ struct model_data
 	struct xmachine_message ** p_xmessages;
 	struct variable ** p_envvars;
 	struct variable ** p_envdefines;
+	struct variable ** p_constant_filter_vars;
 	struct env_func ** p_envfuncs;
 	struct variable ** p_allvars;
 	struct f_code ** p_it_end_code;
@@ -675,4 +676,5 @@ int create_dependency_graph(char * filepath, model_data * modeldata);
 void parseTemplate(char * filename, char * templatename, model_data * modeldata);
 void parseAgentHeaderTemplate(char * directory, model_data * modeldata);
 void parseUnittest(char * directory, model_data * modeldata);
+void parser0xsd(char * directory, model_data * modeldata);
 void parser0dtd(char * directory, model_data * modeldata);

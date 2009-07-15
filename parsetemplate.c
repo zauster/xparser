@@ -1,6 +1,7 @@
 #include "header.h"
 
-void writeRule(rule_data * current_rule_data, FILE *file)
+/* flag: 0 for usual rule, 1 for libmboard sync rule using map index */
+void writeRule(rule_data * current_rule_data, FILE *file, int flag)
 {
 	char data[100];
 	
@@ -18,8 +19,45 @@ void writeRule(rule_data * current_rule_data, FILE *file)
 	{
 		if(current_rule_data->not == 1) fputs("!", file);
 		fputs("(", file);
+		/* If rule operator is '==' and one value is a constant agent var */
+		if(flag == 1 && strcmp(current_rule_data->op, "==") == 0 &&
+			( (current_rule_data->lhs_variable->agent != NULL &&
+			   current_rule_data->lhs_variable->constant == 1) ||
+			  (current_rule_data->rhs_variable->agent != NULL &&
+			   current_rule_data->rhs_variable->constant == 1) ) )
+		{
+			fputs("MB_IndexMap_MemberOf(", file);
+			if(current_rule_data->lhs_variable->agent != NULL &&
+					current_rule_data->lhs_variable->constant == 1)
+			{
+				fputs("FLAME_map_", file);
+				fputs(current_rule_data->lhs_variable->agent->name, file);
+				fputs("_", file);
+				fputs(current_rule_data->lhs_variable->name, file);
+			}
+			if(current_rule_data->rhs_variable->agent != NULL &&
+								current_rule_data->rhs_variable->constant == 1)
+			{
+				fputs("FLAME_map_", file);
+				fputs(current_rule_data->rhs_variable->agent->name, file);
+				fputs("_", file);
+				fputs(current_rule_data->rhs_variable->name, file);
+			}
+			fputs(", pid, ", file);
+			if(!(current_rule_data->lhs_variable->agent != NULL &&
+								current_rule_data->lhs_variable->constant == 1))
+			{
+				fputs(current_rule_data->lhs, file);
+			}
+			if(!(current_rule_data->rhs_variable->agent != NULL &&
+					current_rule_data->rhs_variable->constant == 1))
+			{
+				fputs(current_rule_data->rhs, file);
+			}
+			fputs(")", file);
+		}
 		/* If rule operator is 'IN' i.e. integer value within an integer list */
-		if(strcmp(current_rule_data->op, "IN") == 0)
+		else if(strcmp(current_rule_data->op, "IN") == 0)
 		{
 			fputs("FLAME_integer_in_array(", file);
 			fputs(current_rule_data->lhs, file);
@@ -46,12 +84,12 @@ void writeRule(rule_data * current_rule_data, FILE *file)
 		}
 		else
 		{
-			if(current_rule_data->lhs == NULL) writeRule(current_rule_data->lhs_rule, file);
+			if(current_rule_data->lhs == NULL) writeRule(current_rule_data->lhs_rule, file, 0);
 			else fputs(current_rule_data->lhs, file);
 			fputs(" ", file);
 			fputs(current_rule_data->op, file);
 			fputs(" ", file);
-			if(current_rule_data->rhs == NULL) writeRule(current_rule_data->rhs_rule, file);
+			if(current_rule_data->rhs == NULL) writeRule(current_rule_data->rhs_rule, file, 0);
 			else fputs(current_rule_data->rhs, file);
 		}
 		fputs(")", file);
@@ -1008,7 +1046,19 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					numtag--;
 
 					/* Check for next element in current loop */
-					if (strcmp("foreach functionfiles", &chartag[numtag][0]) == 0)
+					if (strcmp("foreach constant_filter_variable", &chartag[numtag][0]) == 0)
+					{
+						if (current_variable != NULL)
+							current_variable = current_variable->next;
+						if (current_variable == NULL)
+							exitforeach = 1;
+						else
+						{
+							pos = looppos[numtag];
+							numtag++;
+						}
+					}
+					else if (strcmp("foreach functionfiles", &chartag[numtag][0]) == 0)
 					{
 						if (current_envfunc != NULL)
 							current_envfunc = current_envfunc->next;
@@ -1455,6 +1505,21 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							}
 						}
 					}
+				}
+				else if (strcmp(buffer->array, "<?foreach constant_filter_variable?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tforeach constant_filter_variable\tpos: %d\n", numtag, pos);
+					strcpy(&chartag[numtag][0], "foreach constant_filter_variable");
+					strcpy(lastloop, "foreach constant_filter_variable");
+					looppos[numtag] = pos;
+					numtag++;
+					/*lastwrite = write;*/
+
+					current_variable = * modeldata->p_constant_filter_vars;
+					if (current_variable == NULL)
+						write = 0;
+					writetag[numtag] = write;
 				}
 				else if (strcmp(buffer->array, "<?foreach functionfiles?>") == 0)
 				{
@@ -1982,7 +2047,31 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					pos = pos1;
 					c = '$';
 
-					if (strcmp("foreach allvar", lastloop) == 0)
+					if (strcmp("foreach constant_filter_variable", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$name") != 0 &&
+								strcmp(buffer3->array, "$agent_name") != 0 &&
+								strcmp(buffer3->array, "$agent_start") != 0 &&
+								pos <= (pos1 + 14))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$name") == 0)
+							fputs(current_variable->name, file);
+						else if (strcmp(buffer3->array, "$agent_name") == 0)
+							fputs(current_variable->agent->name, file);
+						else if (strcmp(buffer3->array, "$agent_start") == 0)
+							fputs(current_variable->agent->start_state->name, file);
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
+					else if (strcmp("foreach allvar", lastloop) == 0)
 					{
 						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$type") != 0 && strcmp(buffer3->array, "$default_value") != 0 && strcmp(buffer3->array, "$c_type") != 0 && strcmp(buffer3->array, "$notarraytype") != 0 && strcmp(buffer3->array, "$arraylength") != 0 && pos <= (pos1 + 14))
 						{
@@ -2233,7 +2322,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					{
 						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$agent_name") != 0 &&
 								strcmp(buffer3->array, "$filter") != 0 && strcmp(buffer3->array, "$rule") != 0 &&
-								strcmp(buffer3->array, "$sort") != 0 &&pos <= (pos1 + 15))
+								strcmp(buffer3->array, "$sort") != 0 &&
+								strcmp(buffer3->array, "$key") != 0 && pos <= (pos1 + 15))
 						{
 							add_char(buffer3, c);
 							pos++;
@@ -2248,8 +2338,10 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							fputs(current_ioput->filter_function, file);
 						else if (strcmp(buffer3->array, "$sort") == 0)
 							fputs(current_ioput->sort_function, file);
+						else if (strcmp(buffer3->array, "$key") == 0)
+							fputs(current_ioput->sort_key, file);
 						else if (strcmp(buffer3->array, "$rule") == 0)
-							writeRule(current_ioput->filter_rule, file);
+							writeRule(current_ioput->filter_rule, file, 0);
 						else
 						{
 							fputs("$", file);
@@ -2464,7 +2556,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						}
 						else if (strcmp(buffer3->array, "$rule") == 0)
 						{
-							writeRule(current_function->condition_rule, file);
+							writeRule(current_function->condition_rule, file, 0);
 						}
 						else if (strcmp(buffer3->array, "$message_name") == 0)
 							fputs(current_message->name, file);
@@ -2479,7 +2571,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						}
 						else if (strcmp(buffer3->array, "$filter_rule") == 0)
 						{
-							writeRule(current_function->filter_rule, file);
+							/* Rule for libmboard syncs */
+							writeRule(current_function->filter_rule, file, 1);
 						}
 						else
 						{
@@ -2732,6 +2825,38 @@ void parseUnittest(char * directory, model_data * modeldata)
 	fputs("}\n", file);
 
 	/* Close the files */
+	fclose(file);
+}
+
+void parser0xsd(char * directory, model_data * modeldata)
+{
+	FILE *file;
+	char filename[100];
+	/*xmachine * current_xmachine = * modeldata->p_xmachines;*/
+	//variable * current_envvar;
+	//variable * allvar;
+	
+	/* Open the output file */
+	strcpy(filename, directory);
+	strcat(filename, "0.xsd");
+	printf("writing file: %s\n", filename);
+	file = fopen(filename, "w");
+	
+	fputs("<?xml version=\"1.0\"?>\n", file);
+	fputs("<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n", file);
+	
+	fputs("<xs:element name=\"states\">\n", file);
+	fputs("<xs:complexType>\n", file);
+	fputs("<xs:sequence>\n", file);
+	fputs("<xs:element name=\"imports\"/>\n", file);
+	fputs("<xs:element name=\"outputs\">\n", file);
+	fputs("<xs:element name=\"environment\"/>\n", file);
+	fputs("<xs:element name=\"xagents\"/>\n", file);
+	fputs("</xs:sequence>\n", file);
+	fputs("</xs:complexType>\n", file);
+	fputs("</xs:element>\n", file);
+
+	/* Close the file */
 	fclose(file);
 }
 

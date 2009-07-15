@@ -623,6 +623,18 @@ void clean_up(int code)
 <?foreach xagent?>	free_$name_states();
 <?end foreach?>
 
+	/* Free index maps */
+<?foreach constant_filter_variable?>
+	rc = MB_IndexMap_Delete(&FLAME_map_$agent_name_$name);
+	if (rc != MB_SUCCESS)
+	{
+		fprintf(stderr, "ERROR: Could not delete map of $agent_name $name\n");
+		/* Add reason for error using error codes here */
+		<?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+		exit(rc);
+	}
+<?end foreach?>
+
 	/* Free message boards */
 <?foreach message?>
 	rc = MB_Delete(&b_$name);

@@ -86,6 +86,8 @@ int $condition(xmachine_memory_$agent_name *a)
  */
 int $filter(const void *msg, const void *params)
 {
+	//printf("**** $filter(const void *msg, const void *params)\n");
+	
 	<?if has_message_var?>/* Cast the message pointer to the correct message type */
 	m_$name *m = (m_$name*)msg;<?end if?>
 	<?if has_agent_var?>/* Cast the params pointer to the correct agent type */
@@ -97,30 +99,24 @@ int $filter(const void *msg, const void *params)
 }
 <?end if?><?end foreach?><?end foreach?><?end foreach?>
 <?foreach message?><?foreach sync?><?if sync_filter?>/* Filter handling functions for message type $messagename for input layer $layer */
-<?foreach xagent?><?if has_agent_var?>
-/** \struct FLAME_param_$name_$message_name_$layer
- * \brief Structure to hold the variables from an agent type for an input filter.
- */
-struct FLAME_param_$name_$message_name_$layer
-{<?foreach xagentvar?>
-	$type $name; /**< Agent memory variable required for the input filter */<?end foreach?>
-};
-<?end if?><?end foreach?>
 <?foreach xagent?><?foreach function?>
-/** \fn int $name_sync(const void *msg, const void *params)
+/** \fn int $name_sync(const void *msg, int pid)
  * \brief The filter function for a message input used by libmboard in parallel.
  * \param msg The pointer to the message to be filtered.
- * \param params The pointer to the agent filter variable structure.
+ * \param pid The process id provided by libmboard.
  * \return The success (1) or failure (0) of the filter on the message.
  */
-int $name_sync(const void *msg, const void *params)
+int $name_sync(const void *msg, int pid)
 {
 	/* Variable used for the return code */
 	int rc;
+	
+	//printf("**** $name_sync(const void *msg = %p, int pid = %d)\n", msg, pid);
+	
 	<?if has_message_var?>/* Cast the message pointer to the correct message type */
 	m_$message_name *m = (m_$message_name*)msg;<?end if?>
 	<?if has_agent_var?>/* Cast the params pointer to the correct agent filter variable structure */
-	struct FLAME_param_$agent_name_$message_name_$layer *a = (struct FLAME_param_$agent_name_$message_name_$layer *)params;<?end if?>
+	/*struct FLAME_param_$agent_name_$message_name_$layer *a = (struct FLAME_param_$agent_name_$message_name_$layer *)params;*/<?end if?>
 
 	/* The filter */
 	if($filter_rule) rc = 1;
@@ -140,196 +136,52 @@ int $name_sync(const void *msg, const void *params)
  * \param composite_params The pointer to the composite agent filter variable structures.
  * \return The success (1) or failure (0) of the filter on the message.
  */
-int FLAME_sync_filter_$name(const void *m, const void *composite_params)
+int FLAME_sync_filter_$name(const void *m, int pid)
 {
-	/* Testing code */
-	/*<?if parallel?>printf("%d> ", node_number);<?end if?>
-	printf("**** FLAME_sync_filter_$name\n");*/
-
-	/* Variable used in for loops */
-	int i;
-	/* Pointer used to traverse composite params */
-	char *ptr;
-	/* List to hold the number of each agent type */
-	int agent_count[$filteragentcount];
 	/* Variable used for the return code */
 	int rc;
-
-	/* Assert that the composite params is valid and not null */
-	assert(composite_params != NULL);
-	/* Make ptr point to the start of composite params */
-	ptr = (char *)composite_params;
-	/* For each agent type record the number of agents
-	 * and advance the traversal pointer */
-	for(i = 0; i < $filteragentcount; i++)
-	{
-		/* Testing code */
-		/*printf("\tagent_count[%d] = %d\n", i, *(int*)ptr);*/
-		
-		agent_count[i] = *(int*)ptr;
-		ptr += sizeof(int);
-	}
-
-	/* For each agent type agent */
-	<?foreach xagent?>
-	for(i = 0; i < agent_count[$xagent_count]; i++)
-	{
-		/* Test code */
-		/*printf("\t[%d] $agent_name", i);*/
-		<?foreach xagentvar?>
-		/* Test code */
-		/*printf("\t$name=%$c_type", *($type*)ptr);
-		ptr += sizeof($type);*/<?end foreach?>
-		/*printf("\n");*/
-		
-		/* For each function apply input filter.
-		 * If filter successful return success immediately  */
-		<?foreach function?>rc = $name_sync(m, (void*)ptr);
-		if ( rc == 1) return rc;
-		<?end foreach?>
-		
-		/* Advance traversal pointer */
-		ptr += sizeof(struct FLAME_param_$name_$message_name_$layer);
-	}
-	<?end foreach?>
+	
+	//printf("**** FLAME_sync_filter_$name(const void *m = %p, int pid = %d)\n", m, pid);
+	
+	/* For each function apply input filter.
+	 * If filter successful return success immediately  */
+	<?foreach xagent?><?foreach function?>rc = $name_sync(m, pid);
+	if ( rc == 1) return rc;
+	<?end foreach?><?end foreach?>
 
 	/* If no filter is successful then return failure */
 	return 0;
 }
 
-/** \fn int FLAME_build_filter_param_$name()
- * \brief Populate the parameters for a filter sync.
- * \return The return code, only returns 0 for success.
- */
-int FLAME_build_filter_param_$name()
+int FLAME_create_and_assign_$name()
 {
-	/* Pointer to traverse parameter memory */
-	char *ptr;
-	/* Pointer to add agent type count to created memory */
-	int  *ptr_count;
-	/* List to hold counts of each agent type */
-	int agent_count[$filteragentcount];
-	/* List to hold the structure size of agent type filter variables */
-	size_t agent_struct_size[$filteragentcount];
-	/* The total parameter memory size */
-	size_t cparam_size = 0;
-	/* Variable used in for loops */
-	int i;
-	/* Variable used for the return code */
 	int rc;
-	/* TODO */
-	int count = 0;
-	/* Variable to point to a libmboard function */
-    MBt_Function f_handle;
-    /* Pointers for each filter variable type */
-	<?foreach syncvar?>$type * $type_pointer;
-	<?end foreach?>
-
-	/* For each agent type initialise number and structure size to be zero */
-	for(i = 0; i < $filteragentcount; i++)
-	{
-		agent_count[i] = 0;
-		agent_struct_size[i] = 0;
-	}
-
-	/* Loop though all previous states of each agent type that hold agents that could use this filter */
-	<?foreach xagent?><?foreach state?>/* Add agent type state count to total agent type count */
-	agent_count[$xagent_count] += $agent_name_$name_state->count;
-	<?end foreach?>/* Make agent type struct size equal to the agent type filter variable structure size */
-	agent_struct_size[$xagent_count] = sizeof(struct FLAME_param_$name_$message_name_$layer);
-	<?end foreach?>
-
-	/* Testing code */
-	<?if parallel?>/*printf("%d> ", node_number);*/<?end if?>
-	/*printf("FLAME_build_filter_param_$name() - agent_number = %d\n", $filteragentcount);*/
-
-	/* For each agent type add agent count to total agent count */
-	for(i = 0; i < $filteragentcount; i++)
-	{
-		count += agent_count[i];
-	}
-
-	/* Allocate memory required for the composite params */
-	FLAME_m_$messagename_composite_params = cparams_create($filteragentcount, agent_count, agent_struct_size, &cparam_size);
-	/* Make the traversal pointer point to the start of the composite params */
-	ptr = (char *)FLAME_m_$messagename_composite_params;
-	/* For every agent type make the pointer value equal to the
-	 * agent type count and advance the pointer on by the size of the value 
-	 */
-	for(i = 0; i < $filteragentcount; i++)
-	{
-		ptr_count = (int*)ptr;
-		*ptr_count = agent_count[i];
-		ptr += sizeof(int);
-	}
-	/* For each agent in each state */
-	<?foreach xagent?><?foreach state?>
-	current_xmachine_$agent_name_holder = $agent_name_$name_state->agents;
-	while(current_xmachine_$agent_name_holder)
-	{
-		/* For each filter variable add value to the composite params */
-		<?foreach xagentvar?>
-		/* Testing code */
-		/*printf("[%d] $agent_name\t$name\t%$c_type\n", i, current_xmachine_$agent_name_holder->agent->$name);*/
-		/* Point the correct type pointer to the traversal pointer */
-		$type_pointer = ($type*)ptr;
-		/* Make the pointer value equal to the agent variable value */
-		*$type_pointer = current_xmachine_$agent_name_holder->agent->$name;
-		/* Advance the traversal pointer */
-		ptr += sizeof($type);<?end foreach?>
-		/* Point to next agent in state list */
-		current_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
-	}
-	<?end foreach?><?end foreach?>
-
-	/* Testing code */
-	/*ptr = (char *)FLAME_m_$messagename_composite_params;
-	for(i = 0; i < $filteragentcount; i++)
-	{
-		printf("\t*** agent_count[%d] = %d\n", i, *(int*)ptr);
-		agent_count[i] = *(int*)ptr;
-		ptr += sizeof(int);
-	}
-	<?foreach xagent?>
-	for(i = 0; i < agent_count[$xagent_count]; i++)
-	{
-		printf("\t*** [%d] $name", i);
-		<?foreach xagentvar?>
-		printf("\t$name=%$c_type", *($type*)ptr);
-		ptr += sizeof($type);<?end foreach?>
-		printf("\n");
-	}
-	<?end foreach?>*/
-
-	/* Testing code */
-	/*printf("cparam_size = %lu\n", cparam_size);*/
-
-	/* Register the sync filter function with libmboard */
-	rc = MB_Function_Register(&f_handle, &FLAME_sync_filter_$name);
+	
+	//printf("FLAME_create_and_assign_$name()\n");
+	
+	//printf("** MB_Filter_Create(&$name_filter, FLAME_sync_filter_$name)\n");
+	rc = MB_Filter_Create(&$name_filter, FLAME_sync_filter_$name);
 	if ( rc != MB_SUCCESS )
 	{
-		/* If failure write error message and quit */
-		fprintf(stderr, "Error while registering function\n");
+		fprintf(stderr, "Error while creating MB filter\n");
 		exit(1);
 	}
-
-	/* Assign filter function to board, assuming mboard has been created */
-	rc = MB_Function_Assign(b_$messagename, f_handle, FLAME_m_$messagename_composite_params, cparam_size);
+	//printf("** MB_Filter_Assign(b_$messagename, $name_filter)\n");
+	rc = MB_Filter_Assign(b_$messagename, $name_filter);
 	if ( rc != MB_SUCCESS )
 	{
-		/* If failure write error message and quit */
-		fprintf(stderr, "Error while assigning function to board\n");
+		fprintf(stderr, "Error while assigning MB filter\n");
 		exit(1);
 	}
-
-	/* Return success return code */
-	return 0;
+	
+	return 1;
 }
+
 <?end if?><?end foreach?><?end foreach?>
 <?foreach xagent?><?foreach function?><?foreach function_input?><?if sort?>int $sort(const void *x, const void *y)
 {
-	if( ((m_$name *)x)->id2 <?if ascend?><<?end if?><?if descend?>><?end if?> ((m_$name *)y)->id2 ) return -1;
-	else if( ((m_$name *)x)->id2 <?if ascend?>><?end if?><?if descend?><<?end if?> ((m_$name *)y)->id2 ) return 1;
+	if( ((m_$name *)x)->$key <?if ascend?><<?end if?><?if descend?>><?end if?> ((m_$name *)y)->$key ) return -1;
+	else if( ((m_$name *)x)->$key <?if ascend?>><?end if?><?if descend?><<?end if?> ((m_$name *)y)->$key ) return 1;
 	else <?if random?>
 	{
 		if(rand()/((double)RAND_MAX + 1) <= 0.5) return -1;

@@ -443,15 +443,17 @@ int readAgentXML(char * location,
 				int partition_method,
 				int flag,
 				int number_partitions,
-				int agent_count)
+				int agent_count,
+				int * itno)
 {
 	FILE * file;
 	char c = '\0';
 	char buffer[100000];
 	char agentname[10000];
 	int index = 0;
-	/*@unused@*/ int j = 0; /* Index for reading arrays */
-	/*@unused@*/ int rc;
+	int j; /* Index for reading arrays */
+	int rc;
+	int in_itno = 0;
 	int FLAME_in_xagent = 0;
 	int FLAME_in_name = 0;
 	<?foreach xagent?>int in_$name_agent = 0;
@@ -467,6 +469,8 @@ int readAgentXML(char * location,
 	double xcentre=0, ycentre=0, rrange=1.5;
 	double posx=0.0, posy=0.0, posz=0.0;
 
+	j = 0;
+	rc = 0;
 	agentname[0] = '\0';
 	buffer[0] = '\0';
 
@@ -485,6 +489,8 @@ int readAgentXML(char * location,
 		if(c == '>')
 		{
 			buffer[index] = '\0';
+			if(strcmp(buffer, "itno") == 0) in_itno = 1;
+			if(strcmp(buffer, "/itno") == 0) in_itno = 0;
 			if(strcmp(buffer, "xagent") == 0)
 			{
 				FLAME_in_xagent = 1;
@@ -572,6 +578,8 @@ int readAgentXML(char * location,
 		else if(c == '<')
 		{
 			buffer[index] = '\0';
+			
+			if(in_itno && FLAME_in_xagent == 0) *itno = atoi(buffer);
 			if(FLAME_in_xagent == 1)
 			{
 				if(FLAME_in_name == 1)
@@ -665,7 +673,7 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 	char FLAME_type[1000];
 	FLAME_output * current_FLAME_output;
 	/* Temporary node and head of associated agent list to allow adding agents */
-	/*@unused@*/ node_information temp_node;
+	/*@unused@*/ //node_information temp_node;
 	/* Variables for checking tags */
 	int reading = 1;
 	int i = 0;
@@ -747,7 +755,7 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 				{
 					if(strcmp("xml", FLAME_format) == 0)
 					{
-						if(strcmp("agent", FLAME_type) == 0) readAgentXML(FLAME_location, cloud_data, partition_method, flag, number_partitions, agent_count);
+						if(strcmp("agent", FLAME_type) == 0) readAgentXML(FLAME_location, cloud_data, partition_method, flag, number_partitions, agent_count, itno);
 						if(strcmp("environment", FLAME_type) == 0) readEnvironmentXML(FLAME_location);
 					}
 					else
@@ -923,7 +931,7 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 	
     /* Also try and read environment and agents from 0.xml */
 	readEnvironmentXML(filename);
-	readAgentXML(filename, cloud_data, partition_method, flag, number_partitions, agent_count);
+	readAgentXML(filename, cloud_data, partition_method, flag, number_partitions, agent_count, itno);
 
 	/* If outputs is empty add default snapshot for every iteration */
 	if(FLAME_outputs == NULL)
@@ -1091,7 +1099,7 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 				{
 					if(strcmp("xml", FLAME_format) == 0)
 					{
-						if(strcmp("agent", FLAME_type) == 0) readAgentXML(FLAME_location, cloud_data, partition_method, flag, number_partitions, agent_count);
+						if(strcmp("agent", FLAME_type) == 0) readAgentXML(FLAME_location, cloud_data, partition_method, flag, number_partitions, agent_count, itno);
 						if(strcmp("environment", FLAME_type) == 0) readEnvironmentXML(FLAME_location);
 					}
 					else
@@ -1267,7 +1275,7 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 
 	/* Also try and read environment and agents from 0.xml */
 	readEnvironmentXML(filename);
-	readAgentXML(filename, cloud_data, partition_method, flag, number_partitions, agent_count);
+	readAgentXML(filename, cloud_data, partition_method, flag, number_partitions, agent_count, itno);
 
 	/* If outputs is empty add default snapshot for every iteration */
 	if(FLAME_outputs == NULL)
