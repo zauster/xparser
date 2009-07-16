@@ -1176,7 +1176,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			{
 				current_message->name = copy_array_to_str(current_string);
 				printf("Reading message named: ");
-				printf(current_message->name);
+				printf("%s", current_message->name);
 				printf("\n");
 			}
 			else if(state)
@@ -1327,7 +1327,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				{
 					current_xmachine = addxmachine(modeldata->p_xmachines, current_string->array);
 					printf("Reading xagent named : ");
-					printf(current_xmachine->name);
+					printf("%s", current_xmachine->name);
 					printf("\n");
 				}
 			}
@@ -1343,7 +1343,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			{
 				if(modeldata->name == NULL) modeldata->name = copy_array_to_str(current_string);
 				printf("Reading xagent model: ");
-				printf(current_string->array);
+				printf("%s", current_string->array);
 				printf("\n");
 			}
 
