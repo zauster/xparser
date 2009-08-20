@@ -351,6 +351,9 @@ int read_$name_dynamic_array(char * buffer, int buffer_size, int * j, $name_arra
 		while(buffer[(*j)] != '}' && buffer[(*j)] != '\0' && buffer[(*j)] != '{') { (*j)++; }
 	}
 
+	<?foreach datatypevar?><?if array?><?if dynamic_array?>free_$type(&$name);
+	<?end if?><?end if?><?end foreach?>
+	
 	return 0;
 }
 

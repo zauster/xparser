@@ -1369,6 +1369,13 @@ void reset_$name_array($name_array * array)
 */
 void free_$name_array($name_array * array)
 {
+	int i;
+	
+	for(i = 0; i < array->size; i++)
+	{
+		free_$name(&(*array).array[i]);
+	}
+	
 	free((*array).array);
 }
 
