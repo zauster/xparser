@@ -2683,6 +2683,26 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							pos = pos1;
 						}
 					}
+					else if (strcmp("foreach layer", lastloop) == 0)
+					{
+						while (strcmp(buffer3->array, "$number") != 0 && pos <= (pos1 + 16))
+						{
+							add_char(buffer3, c);
+							pos++;
+							c = filebuffer->array[pos];
+						}
+						pos--;
+						if (strcmp(buffer3->array, "$number") == 0)
+						{
+							sprintf(data, "%i", current_layer->number);
+							fputs(data, file);
+						}
+						else
+						{
+							fputs("$", file);
+							pos = pos1;
+						}
+					}
 					else if(write) fputc(c, file);
 				}
 			}
