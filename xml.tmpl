@@ -12,7 +12,7 @@ int read_int_static_array(char * buffer, int /*@unused@*/ buffer_size, int * j, 
 {
 	int arraycount = 0;
 	int array_k;
-	char arraydata[10000];
+	char arraydata[100000];
 	
 	while(buffer[(*j)] != '{')
 	{
@@ -49,7 +49,7 @@ int read_float_static_array(char * buffer, int /*@unused@*/ buffer_size, int * j
 {
 	int arraycount = 0;
 	int array_k;
-	char arraydata[10000];
+	char arraydata[100000];
 
 	while(buffer[(*j)] != '{')
 	{
@@ -86,7 +86,7 @@ int read_double_static_array(char * buffer, int /*@unused@*/ buffer_size, int * 
 {
 	int arraycount = 0;
 	int array_k;
-	char arraydata[10000];
+	char arraydata[100000];
 
 	while(buffer[(*j)] != '{')
 	{
@@ -145,7 +145,7 @@ int read_int_dynamic_array(char * buffer, int /*@unused@*/ buffer_size, int * j,
 {
 	int arraycount = 0;
 	int array_k;
-	char arraydata[10000];
+	char arraydata[100000];
 
 	while(buffer[(*j)] != '{')
 	{
@@ -182,7 +182,7 @@ int read_float_dynamic_array(char * buffer, int /*@unused@*/ buffer_size, int * 
 {
 	int arraycount = 0;
 	int array_k;
-	char arraydata[10000];
+	char arraydata[100000];
 
 	while(buffer[(*j)] != '{')
 	{
@@ -219,7 +219,7 @@ int read_double_dynamic_array(char * buffer, int /*@unused@*/ buffer_size, int *
 {
 	int arraycount = 0;
 	int array_k;
-	char arraydata[10000];
+	char arraydata[100000];
 
 	while(buffer[(*j)] != '{')
 	{
@@ -277,7 +277,7 @@ int read_char_dynamic_array(char * buffer, int /*@unused@*/ buffer_size, int * j
 int read_$name(char * buffer, int /*@unused@*/ buffer_size, int * j, $name * temp_datatype)
 {
 	<?if single_vars?>int array_k;
-	char arraydata[10000];<?end if?>
+	char arraydata[100000];<?end if?>
 	<?if has_arrays_or_adts?>int rc;<?end if?>
 	
 	while(buffer[(*j)] != '{')
@@ -387,7 +387,7 @@ int readEnvironmentXML(char * location)
 {
 	FILE * file;
 	char c = '\0';
-	char buffer[10000];
+	char buffer[100000];
 	int index = 0;
 	int in_environment = 0;
 	<?foreach envvar?>int in_$name = 0;
@@ -671,9 +671,9 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 	/* Char and char buffer for reading file to */
 	char c = '\0';
 	char buffer[100000];
-	char FLAME_location[1000];
-	char FLAME_format[1000];
-	char FLAME_type[1000];
+	char FLAME_location[10000];
+	char FLAME_format[10000];
+	char FLAME_type[10000];
 	FLAME_output * current_FLAME_output;
 	/* Temporary node and head of associated agent list to allow adding agents */
 	/*@unused@*/ //node_information temp_node;
@@ -983,9 +983,9 @@ void readinitialstates(char * filename, char * filelocation, int * itno, double 
 	/* Char and char buffer for reading file to */
 	char c = '\0';
 	char buffer[100000];
-	char FLAME_location[1000];
-	char FLAME_format[1000];
-	char FLAME_type[1000];
+	char FLAME_location[10000];
+	char FLAME_format[10000];
+	char FLAME_type[10000];
 	FLAME_output * current_FLAME_output = NULL;
 
 	/* Things for round-robin partitioning */
@@ -1580,7 +1580,7 @@ void saveiterationdata(int iteration_number)
 {
 	FLAME_output * current_FLAME_output;
 	FLAME_output * current_FLAME_output2;
-	int output_types[100];
+	int output_types[1000];
 	int output_type_size = 0;
 
 	/* For each output */

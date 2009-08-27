@@ -119,6 +119,7 @@ struct variable
 	struct xmachine_message * message;	/**< Pointer to message containing this variable, NULL if not. */
 	struct xmachine * agent;			/**< Pointer to agent containing this variable, NULL if not. */
 	int constant;			/**< Flag for constant value. */
+	char * description;		/**< Description of the variable. */
 
 	struct variable * next;		/**< Pointer to next variable in list. */
 };
@@ -260,6 +261,8 @@ struct xmachine_function
 
 	/* To hold depends tag info */
 	struct adj_function * depends;		/**< Pointer to function note. */
+	
+	char * description;		/**< Description of the function. */
 
 	struct xmachine_function * next;	/**< Pointer to next function in list. */
 };
@@ -347,6 +350,7 @@ struct xmachine_message
 	struct sync * syncs;				/**< List of syncs for this message board. */
 	int var_number;						/**< Number of variables in memory. */
 	char * file;
+	char * description;		/**< Description of the message. */
 
 	struct xmachine_message * next;	/**< Pointer to next message in list.*/
 };
@@ -474,6 +478,22 @@ struct model_colour
 };
 
 typedef struct model_colour model_colour;
+
+/** \struct sub_model_data
+ * \brief Holds sub model data.
+ */
+struct sub_model_data
+{
+	char * name;
+	char * location;
+	struct xmachine ** p_xmachines;
+	struct xmachine_message ** p_xmessages;
+};
+
+/** \typedef struct sub_model_data sub_model_data
+ * \brief Typedef for sub_model_data struct.
+ */
+typedef struct sub_model_data sub_model_data;
 
 /** \struct model_data
  * \brief Holds model data.

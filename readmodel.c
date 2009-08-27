@@ -680,8 +680,8 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/header") == 0) { header = 0; }
 			if(strcmp(current_string->array, "note") == 0) { note = 1; }
 			if(strcmp(current_string->array, "/note") == 0) { note = 0; }
-			if(strcmp(current_string->array, "desc") == 0) { desc = 1; }
-			if(strcmp(current_string->array, "/desc") == 0) { desc = 0; }
+			if(strcmp(current_string->array, "desc") == 0 || strcmp(current_string->array, "description") == 0) { desc = 1; }
+			if(strcmp(current_string->array, "/desc") == 0 || strcmp(current_string->array, "/description") == 0) { desc = 0; }
 			if(strcmp(current_string->array, "messages") == 0) { messages = 1; }
 			if(strcmp(current_string->array, "/messages") == 0) { messages = 0; }
 			if(strcmp(current_string->array, "message") == 0)
@@ -1038,6 +1038,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 						}
 					}
 					if(name) current_variable->name = copy_array_to_str(current_string);
+					if(desc) current_variable->description = copy_array_to_str(current_string);
 				}
 				else if(define)
 				{
@@ -1171,13 +1172,18 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					if(strcmp(temp_char, "false") == 0) current_variable->constant = 0;
 					free(temp_char);
 				}
+				if(desc) current_variable->description = copy_array_to_str(current_string);
 			}
-			else if(message && name)
+			else if(message)
 			{
-				current_message->name = copy_array_to_str(current_string);
-				printf("Reading message named: ");
-				printf("%s", current_message->name);
-				printf("\n");
+				if(name)
+				{
+					current_message->name = copy_array_to_str(current_string);
+					printf("Reading message named: ");
+					printf("%s", current_message->name);
+					printf("\n");
+				}
+				if(desc) current_message->description = copy_array_to_str(current_string);
 			}
 			else if(state)
 			{
@@ -1320,6 +1326,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					if(name) { current_adj_function->name = copy_array_to_str(current_string); }/*charlist = NULL; }*/
 					if(type) { current_adj_function->type = copy_array_to_str(current_string); }/*charlist = NULL; }*/
 				}
+				if(desc) current_function->description = copy_array_to_str(current_string);
 			}
 			else if(xmachine && !memory && !function)
 			{
@@ -1380,7 +1387,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			}
 		}
 		/* If in data read char into buffer */
-		else if(model || enabled || codefile || ((iteration_end_code && code) || codefile || name || type || desc || (memory && (var && (type || name || constant)))) ||
+		else if(model || enabled || codefile || ((iteration_end_code && code) || codefile || name || type || desc || (memory && (var && (type || name || constant || desc)))) ||
 					(message && (name || (var && (type || name))))
 					|| (state && (name || attribute || (transition && (func || dest))))
 						|| (function && (not || name || note || code || depends || type || cur_state || next_state || input || output || messagetype || value || period || phase || var || order))

@@ -306,6 +306,7 @@ variable * addvariable(variable ** p_vars)
 	current->message = NULL;
 	current->agent = NULL;
 	current->constant = 0;
+	current->description = NULL;
 
 	/* Return new element */
 	return current;
@@ -333,6 +334,7 @@ void freevariables(variable ** p_vars)
 		free(head->value);
 		free(head->typenotarray);
 		free(head->file);
+		free(head->description);
 		free(head);
 		head = temp;
 	}
@@ -437,6 +439,7 @@ xmachine_message * addxmessage(xmachine_message ** p_xmessage)
 	//current->first = NULL;
 	//current->last = NULL;
 	current->file = NULL;
+	current->description = NULL;
 
 	/* Return new element */
 	return current;
@@ -463,6 +466,7 @@ void freexmessages(xmachine_message ** p_xmessage)
 		//freexstates(&head->states);
 		freesync(&head->syncs);
 		free(head->file);
+		free(head->description);
 		free(head);
 		head = temp;
 	}
@@ -942,6 +946,7 @@ xmachine_function * addxfunction(xmachine_function ** p_xfunctions)
 	current->filter_rule = NULL;
 	current->has_message_var = 0;
 	current->has_agent_var = 0;
+	current->description = NULL;
 
 	/* Return new element */
 	return current;
@@ -981,6 +986,7 @@ void freexfunctions(xmachine_function ** p_xfunctions)
 		free_adj_function(head->recentdepends);
 		free_rule_data(&head->condition_rule);
 		free_rule_data(&head->filter_rule);
+		free(head->description);
 		free(head);
 		head = temp;
 	}

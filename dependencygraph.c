@@ -9,6 +9,324 @@
 const char *colour_map[]={"blue", "blueviolet", "brown" ,"burlywood4", "cadetblue", "chartreuse","darkgreen","deeppink",  "cyan4", "firebrick", "gold", "lightpink3", "lightslateblue", "magenta", "red", "yellow"};
 const char *colour_map_light[]={"antiquewhite", "aquamarine", "azure3" ,"brown1", "chartreuse1", "orchid1","lightsalmon4","darkgoldenrod1",  "darkkhaki", "darkolivegreen3", "darkslateblue", "forestgreen", "gray70", "indianred", "lightslateblue", "maroon3"};
 
+void latex_print_to_file(char * text, FILE *file)
+{
+	int i;
+	
+	if(text == NULL) return;
+	
+	for(i = 0; i < (int)strlen(text); i++)
+	{
+		if(text[i] == '_' || text[i] == '&' || text[i] == '%' || text[i] == '#') fputs("\\", file);
+		fputc(text[i], file);
+	}
+}
+
+/** \fn void output_latex(char * filename, char * filepath, model_data * modeldata)
+ * \brief Create a latex document for the model.
+ * \param filename Name of file to write to.
+ * \param filepath Path to write file to.
+ * \param modeldata Data from the model.
+ */
+void output_latex(char * filename, char * filepath, model_data * modeldata)
+{
+	/* File to write to */
+	FILE *file;
+	/* Buffer for concatenating strings */
+	char buffer[1000];
+	
+	xmachine * current_xmachine;
+	variable * current_variable;
+	xmachine_function * current_function;
+	xmachine_message * current_message;
+	variable * current_envvar;
+	model_datatype * current_datatype;
+	
+	/* place in 'data' the file to write to */
+	sprintf(buffer, "%s%s", filepath, filename);
+	/* print out the location of the source file */
+	printf("writing file: %s\n", buffer);
+	/* open the file to write to */
+	file = fopen(buffer, "w");
+	
+	fputs("\\documentclass[a4paper,11pt]{article}\n", file);
+	fputs("\\usepackage{amsfonts}\n", file);
+	fputs("\\usepackage{amssymb}\n", file);
+	fputs("\\usepackage{amsmath}\n", file);
+	fputs("\\usepackage{euscript}\n", file);
+	fputs("\\usepackage{boxedminipage}\n", file);
+	fputs("\\usepackage{lscape}\n", file);
+	fputs("\\usepackage{minitoc}\n", file);
+	fputs("\\usepackage{epsfig,psfrag,graphicx,verbatim}\n", file);
+	fputs("\\usepackage{url,natbib}\n", file);
+	fputs("\\usepackage{booktabs, longtable}\n", file);
+	//fputs("\\usepackage{supertabular}\n", file);
+	
+	fputs("\\vfuzz2pt % Don't report over-full v-boxes if over-edge is small\n", file);
+	fputs("\\hfuzz2pt % Don't report over-full h-boxes if over-edge is small\n", file);
+
+	fputs("\\setlength{\\oddsidemargin}{0cm}\n", file);
+	fputs("\\setlength{\\evensidemargin}{0cm}\n", file);
+	fputs("\\setlength{\\textwidth}{16cm}\n", file);
+	fputs("\\setlength{\\textheight}{23cm}\n", file);
+	
+	fputs("\\title{", file);
+	fputs(modeldata->name, file);
+	fputs("}\n", file);
+	fputs("\\author{", file);
+	fputs("to add", file);
+	fputs("}\n", file);
+	fputs("\\date{\\today}\n", file);
+	fputs("\\begin{document}\n", file);
+	fputs("\\maketitle\n", file);
+	fputs("\\tableofcontents\n", file);
+	fputs("\\clearpage\n", file);
+	
+	fputs("\\section{", file);
+	fputs(modeldata->name, file);
+	fputs(" FLAME Implementation}\n", file);
+	
+	current_xmachine = * modeldata->p_xmachines;
+	for(current_xmachine = * modeldata->p_xmachines; current_xmachine != NULL; current_xmachine = current_xmachine->next)
+	{
+		fputs("\\subsection{", file);
+		latex_print_to_file(current_xmachine->name, file);
+		fputs("}\n\n", file);
+		
+		fputs("\\subsubsection{Memory}\n\n", file);
+		
+		fputs("Table \\ref{Table: ", file);
+		fputs(current_xmachine->name, file);
+		fputs(" Memory}.\n", file);
+				
+		fputs("\\begin{center}\n", file);
+		fputs("\\begin{longtable}[H!]{ll}\n", file);
+		fputs("\\caption{{\\bfseries List of memory variables.}}\n", file);
+		fputs("\\label{Table: ", file);
+		fputs(current_xmachine->name, file);
+		fputs(" Memory}\\\\\n", file);
+		
+		fputs("\\toprule \n", file);
+		fputs(" Name & Description \\\\\n", file);
+		fputs("\\midrule\n", file);
+		fputs("\\endfirsthead\n", file);
+		
+		fputs("\\multicolumn{2}{c}%\n", file);
+		fputs("{{\\bfseries \\tablename\\ \\thetable{} -- continued from previous page}} \\\\\n", file);
+		fputs("\\toprule\n", file);
+		fputs(" Name & Description \\\\\n", file);
+		fputs("\\midrule\n", file);
+		fputs("\\endhead\n", file);
+		
+		fputs("\\multicolumn{2}{r}{{\\emph{Continued on next page}}} \\\\\n", file);
+		fputs("\\endfoot\n", file);
+		
+		fputs("\\bottomrule\n", file);
+		fputs("\\endlastfoot\n", file);
+		
+		for(current_variable = current_xmachine->variables; current_variable != NULL;
+					current_variable = current_variable->next)
+		{
+			fputs("\\url{", file);
+			fputs(current_variable->type, file);
+			fputs("} \\url{", file);
+			fputs(current_variable->name, file);
+			fputs("} & \\parbox{10cm}{", file);
+			latex_print_to_file(current_variable->description, file);
+			fputs("} \\\\\n", file);
+		}
+		
+		fputs("\\end{longtable}\n", file);
+		fputs("\\end{center}\n", file);
+	
+		fputs("\\subsubsection{Functions}\n", file);
+		
+		for(current_function = current_xmachine->functions; current_function != NULL;
+			current_function = current_function->next)
+		{
+			fputs("\\paragraph{Function:}\\url{", file);
+			fputs(current_function->name, file);
+			fputs("}.\n", file);
+	
+			fputs("", file);
+			latex_print_to_file(current_function->description, file);
+			fputs("\n", file);
+	
+			fputs("\\paragraph{Details}\n", file);
+	
+			fputs("\\begin{verbatim}\n", file);
+			fputs("\\end{verbatim}\n", file);	
+		}
+	
+		//fputs("\\subsubsection{States}\n", file);
+		
+		//fputs("\\paragraph{State:}\\url{State_name}.\n", file);
+	}
+	
+	fputs("\\subsection{Messages}\n", file);
+	
+	fputs("Table \\ref{Table: Messages}.", file);
+	
+	fputs("\\begin{center}\n", file);
+	fputs("\\begin{longtable}[H!]{ll}\n", file);
+	fputs("\\caption{{\\bfseries List of messages.}}\n", file);
+	fputs("\\label{Table: Messages}\\\\\n", file);
+	
+	fputs("\\toprule \n", file);
+	fputs(" Name & Description \\\\\n", file);
+	fputs("\\midrule\n", file);
+	fputs("\\endfirsthead\n", file);
+	
+	fputs("\\multicolumn{2}{c}%\n", file);
+	fputs("{{\\bfseries \\tablename\\ \\thetable{} -- continued from previous page}} \\\\\n", file);
+	fputs("\\toprule\n", file);
+	fputs(" Name & Description \\\\\n", file);
+	fputs("\\midrule\n", file);
+	fputs("\\endhead\n", file);
+	
+	fputs("\\multicolumn{2}{r}{{\\emph{Continued on next page}}} \\\\\n", file);
+	fputs("\\endfoot\n", file);
+	
+	fputs("\\bottomrule\n", file);
+	fputs("\\endlastfoot\n", file);
+	
+	for(current_message = * modeldata->p_xmessages; current_message != NULL;
+		current_message = current_message->next)
+	{
+		fputs("\\url{", file);
+		fputs(current_message->name, file);
+		fputs("} & \\parbox{10cm}{", file);
+		latex_print_to_file(current_message->description, file);
+		fputs("}\\\\\n", file);
+		fputs("\\midrule\n", file);
+		for(current_variable = current_message->vars; current_variable != NULL;
+							current_variable = current_variable->next)
+		{
+			fputs("\\url{", file);
+			fputs(current_variable->type, file);
+			fputs("} \\url{", file);
+			fputs(current_variable->name, file);	
+			fputs("} & \\parbox{10cm}{", file);
+			latex_print_to_file(current_variable->description, file);
+			fputs("}\\\\\n", file);
+		}
+		if(current_message->next != NULL) fputs("\\midrule\n", file);
+	}
+	
+	fputs("\\end{longtable}\n", file);
+	fputs("\\end{center}\n", file);
+	
+	fputs("\\subsection{Constants}\n", file);
+	fputs("Table \\ref{Table: constants}.\n", file);
+	
+	fputs("\\begin{center}\n", file);
+	fputs("\\begin{longtable}[H!]{lll}\n", file);
+	fputs("\\caption{{\\bfseries List of constants.}}\n", file);
+	fputs("\\label{Table: constants}\\\\\n", file);
+	
+	fputs("\\toprule \n", file);
+	fputs("Name & Value & Description \\\\\n", file);
+	fputs("\\midrule\n", file);
+	fputs("\\endfirsthead\n", file);
+	
+	fputs("\\multicolumn{3}{c}%\n", file);
+	fputs("{{\\bfseries \\tablename\\ \\thetable{} -- continued from previous page}} \\\\\n", file);
+	fputs("\\toprule\n", file);
+	fputs("Name & Value & Description \\\\\n", file);
+	fputs("\\midrule\n", file);
+	fputs("\\endhead\n", file);
+	
+	fputs("\\multicolumn{3}{r}{{\\emph{Continued on next page}}} \\\\\n", file);
+	fputs("\\endfoot\n", file);
+	
+	fputs("\\bottomrule\n", file);
+	fputs("\\endlastfoot\n", file);
+	
+	for(current_envvar = * modeldata->p_envvars; current_envvar != NULL;
+		current_envvar = current_envvar->next)
+	{
+		fputs("\\url{", file);
+		fputs(current_envvar->type, file);
+		fputs("} \\url{", file);
+		fputs(current_envvar->name, file);	
+		fputs("} & value & \\parbox{10cm}{", file);
+		latex_print_to_file(current_envvar->description, file);
+		fputs("}\\\\\n", file);
+		if(current_envvar->next != NULL) fputs("\\midrule\n", file);
+	}
+	
+	fputs("\\end{longtable}\n", file);
+	fputs("\\end{center}\n", file);
+	
+	fputs("\\subsection{Datatypes}\n", file);
+	fputs("Table \\ref{Table: datatypes}.\n", file);
+
+	fputs("\\begin{center}\n", file);
+	fputs("\\begin{longtable}[H!]{ll}\n", file);
+	fputs("\\caption{{\\bfseries List of attributes for ADTs.}}\n", file);
+	fputs("\\label{Table: datatypes}\\\\\n", file);
+	
+	fputs("\\toprule \n", file);
+	fputs("Name & Description \\\\\n", file);
+	fputs("\\midrule\n", file);
+	fputs("\\endfirsthead\n", file);
+	
+	fputs("\\multicolumn{2}{c}%\n", file);
+	fputs("{{\\bfseries \\tablename\\ \\thetable{} -- continued from previous page}} \\\\\n", file);
+	fputs("\\toprule\n", file);
+	fputs("Name & Description \\\\\n", file);
+	fputs("\\midrule\n", file);
+	fputs("\\endhead\n", file);
+	
+	fputs("\\multicolumn{2}{r}{{\\emph{Continued on next page}}} \\\\\n", file);
+	fputs("\\endfoot\n", file);
+	
+	fputs("\\bottomrule\n", file);
+	fputs("\\endlastfoot\n", file);
+	
+	for(current_datatype = * modeldata->p_datatypes; current_datatype != NULL;
+		current_datatype = current_datatype->next)
+	{
+		fputs("\\url{", file);
+		fputs(current_datatype->name, file);
+		fputs("} & \\parbox{8cm}{", file);
+		latex_print_to_file(current_datatype->desc, file);	
+		fputs("} \\\\\n", file);
+		fputs("\\midrule    \n", file);
+		for(current_variable = current_datatype->vars; current_variable != NULL;
+			current_variable = current_variable->next)
+		{
+			fputs("\\url{", file);
+			fputs(current_variable->type, file);
+			fputs("} \\url{", file);
+			fputs(current_variable->name, file);
+			fputs("} & \\parbox{8cm}{", file);
+			latex_print_to_file(current_variable->description, file);
+			fputs("}\\\\\n", file);
+		}
+		if(current_datatype != NULL) fputs("\\midrule\n", file);
+	}
+	
+	fputs("\\end{longtable}\n", file);
+	fputs("\\end{center}\n", file);
+
+	fputs("\\clearpage\n", file);
+	fputs("\\subsection{Stategraph}\n", file);
+	fputs("\\begin{figure}[Hpb!]\n", file);
+	fputs("\\centering\\leavevmode\n", file);
+	fputs("%\\resizebox{!}{19cm}{\\includegraphics{stategraph.eps}}\n", file);
+	fputs("\\caption{Stategraph.}\n", file);
+	fputs("\\label{Figure: Stategraph}\n", file);
+	fputs("\\end{figure}\n", file);
+	
+	
+	fputs("\\end{document}\n", file);
+
+	
+	/* Close the file */
+	fclose(file);
+}
+
 /** \fn void output_dgraph(char * filename, char * filepath, model_data * modeldata)
  * \brief Create a dependency graph of a model.
  * \param filename Name of file to write to.
@@ -3245,6 +3563,8 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 	/*if(modeldata->depends_style == 1) output_dgraph("dgraph.dot", filepath, modeldata);*/
 	//output_communication_graph("communication_graph.dot", filepath, modeldata);
 	output_process_order_graph("process_order_graph.dot", filepath, modeldata);
+	
+	output_latex("latex.tex", filepath, modeldata);
 
 	/*calculate_message_start_end_syncs(modeldata);
 	 * replaced with:
