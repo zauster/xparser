@@ -49,11 +49,6 @@ int main(int argc, char * argv[])
 	int is_prepartitioned = 0;
 <?end if?>
 
-	/* For backwards compatabilty allocate current_xmachine */
-	current_xmachine = (xmachine *)malloc(sizeof(xmachine));
-	if(current_xmachine == NULL) {printf("**** ERROR in Memory check current_xmachine\n");exit(EXIT_FAILURE);}
-	/*CHECK_POINTER(current_xmachine);*/
-
 	/* Output frequency is 1 as default */
 	output_frequency = 1;
 	/* Set random seed */
@@ -103,6 +98,11 @@ int main(int argc, char * argv[])
 
 	}
 	#endif
+    
+	/* For backwards compatabilty allocate current_xmachine */
+	current_xmachine = (xmachine *)malloc(sizeof(xmachine));
+	if(current_xmachine == NULL) {printf("**** ERROR in Memory check current_xmachine\n");exit(EXIT_FAILURE);}
+	/*CHECK_POINTER(current_xmachine);*/
 
 	/* Initialise pointers */
 	initialise_pointers();
