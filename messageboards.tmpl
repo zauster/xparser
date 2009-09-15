@@ -14,6 +14,7 @@ void add_$name_message(<?foreach messagevar?>$type $name<?if static_array?>[]<?e
 {
     int rc;
 	m_$name msg;
+	void * p_msg = &msg;
     
     <?foreach messagevar?><?if modeldatatype?><?if not_array?>copy_$type(&$name, &msg.$name);
     <?end if?><?if dynamic_array?>copy_$type($name, &msg.$name);
@@ -23,7 +24,7 @@ void add_$name_message(<?foreach messagevar?>$type $name<?if static_array?>[]<?e
     <?end if?><?if static_array?>memcpy(msg.$name, $name, $arraylength*sizeof($type));
     <?end if?><?end if?><?end foreach?>
     
-    rc = MB_AddMessage(b_$name, &msg);
+    rc = MB_AddMessage(b_$name, p_msg);
     #ifdef ERRCHECK
     if (rc != MB_SUCCESS)
     {
