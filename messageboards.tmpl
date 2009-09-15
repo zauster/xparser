@@ -6,6 +6,13 @@
 #include "header.h"
 
 <?foreach message?>
+
+union pu_$name 
+{
+    m_$name *ptr;
+    void *ptr_anon;
+};
+
 /** \fn void add_$name_message(<?foreach messagevar?>$type $name<?if notlast?>, <?end if?><?end foreach?>)
  * \brief Add $name message by calling internal and processing.
 <?foreach messagevar?> * \param $name Message variable.
@@ -14,7 +21,6 @@ void add_$name_message(<?foreach messagevar?>$type $name<?if static_array?>[]<?e
 {
     int rc;
 	m_$name msg;
-	void * p_msg = &msg;
     
     <?foreach messagevar?><?if modeldatatype?><?if not_array?>copy_$type(&$name, &msg.$name);
     <?end if?><?if dynamic_array?>copy_$type($name, &msg.$name);
@@ -24,7 +30,7 @@ void add_$name_message(<?foreach messagevar?>$type $name<?if static_array?>[]<?e
     <?end if?><?if static_array?>memcpy(msg.$name, $name, $arraylength*sizeof($type));
     <?end if?><?end if?><?end foreach?>
     
-    rc = MB_AddMessage(b_$name, p_msg);
+    rc = MB_AddMessage(b_$name, &msg);
     #ifdef ERRCHECK
     if (rc != MB_SUCCESS)
     {
@@ -56,7 +62,7 @@ void add_$name_message(<?foreach messagevar?>$type $name<?if static_array?>[]<?e
 inline static m_$name* getInternalMessage_$name(void)
 {
     static m_$name *msg_prev = NULL;
-    m_$name *msg;
+    union pu_$name msg_pu;
     int rc;
     
     /* deallocate previously returned message */
@@ -87,7 +93,7 @@ inline static m_$name* getInternalMessage_$name(void)
     }
     
     /* get next message from iterator */
-    rc = MB_Iterator_GetMessage(i_$name, (void **)&msg);
+    rc = MB_Iterator_GetMessage(i_$name, &(msg_pu.ptr_anon));
     #ifdef ERRCHECK
     if (rc != MB_SUCCESS)
     {
@@ -110,9 +116,9 @@ inline static m_$name* getInternalMessage_$name(void)
     #endif
     
     /* store pointer so memory can be deallocated later */
-    msg_prev = msg;
+    msg_prev = msg_pu.ptr;
     
-    return msg;
+    return msg_pu.ptr;
 }
 
 /** \fn xmachine_message_$name * get_first_$name_message()
