@@ -703,8 +703,9 @@ void clean_up(int code)
 	/* Write log file */
 	sprintf(data, "%slog.xml", outputpath);
 	file = fopen(data, "a");
+	fputs("<!-- <totaltime> unit: seconds -->\n", file);
 	fputs("<totaltime>", file);
-	sprintf(data, "%d", (int)(total_time * 1000.0) % 1000);
+	sprintf(data, "%.3f", total_time);
 	fputs(data, file);
 	fputs("</totaltime>\n", file);
 	/*fputs("<totalmessages>", file);
