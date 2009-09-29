@@ -674,7 +674,7 @@ void readprepartitionedinitialstates(char * fileroot, char * filelocation, int *
 	char FLAME_location[10000];
 	char FLAME_format[10000];
 	char FLAME_type[10000];
-	FLAME_output * current_FLAME_output;
+	FLAME_output * current_FLAME_output = NULL;
 	/* Temporary node and head of associated agent list to allow adding agents */
 	/*@unused@*/ //node_information temp_node;
 	/* Variables for checking tags */
