@@ -320,7 +320,7 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 		fputs("} &  \\parbox{10cm}{", file);
 		latex_print_to_file(current_envvar->description, file);
 		fputs("}\\\\\n", file);
-		if(current_envvar->next != NULL) fputs("\\midrule\n", file);
+		//if(current_envvar->next != NULL) fputs("\\midrule\n", file);
 	}
 	
 	fputs("\\end{longtable}\n", file);
