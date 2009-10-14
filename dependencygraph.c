@@ -106,16 +106,16 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 		fputs("\\subsubsection{Memory}\n\n", file);
 		
 		fputs("See Table \\ref{Table: ", file);
-		fputs(current_xmachine->name, file);
+		latex_print_to_file(current_xmachine->name, file);
 		fputs(" Memory}.\n\n", file);
 				
 		fputs("\\begin{landscape}\n", file);
 		fputs("\\begin{longtable}[H!]{ll}\n", file);
 		fputs("\\caption{{\\bfseries List of memory variables for ", file);
-		fputs(current_xmachine->name, file);
+		latex_print_to_file(current_xmachine->name, file);
 		fputs(" agent.}}\n", file);
 		fputs("\\label{Table: ", file);
-		fputs(current_xmachine->name, file);
+		latex_print_to_file(current_xmachine->name, file);
 		fputs(" Memory}\\\\\n", file);
 		
 		fputs("\\toprule \n", file);
@@ -149,47 +149,25 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 			fputs("} \\\\\n", file);
 			//if(current_variable->next != NULL) fputs("\\midrule\n", file);
 		}
-		
 
 		fputs("\\end{longtable}\n", file);
 		fputs("\\end{landscape}\n\n", file);
 
-		//FUNCTION LIST
-/*
-		fputs("\\subsubsection{Functions}\n", file);
-		
-		for(current_function = current_xmachine->functions; current_function != NULL;
-			current_function = current_function->next)
-		{
-			fputs("\n\\paragraph{Function:}\\url{", file);
-			fputs(current_function->name, file);
-			fputs("}.\n", file);
-
-			fputs("\\paragraph{Description}\n", file);
-	
-			fputs("", file);
-			latex_print_to_file(current_function->description, file);
-			fputs("\n", file);
-	
-			//fputs("\\begin{verbatim}\n", file);
-			//fputs("\\end{verbatim}\n", file);	
-		}
-*/
 		//FUNCTION TABLE
 
 		fputs("\\subsubsection{Functions}\n", file);
 
 		fputs("See Table \\ref{Table: ", file);
-		fputs(current_xmachine->name, file);
+		latex_print_to_file(current_xmachine->name, file);
 		fputs(" Functions}.\n\n", file);
 				
 		fputs("\\begin{landscape}\n", file);
 		fputs("\\begin{longtable}[H!]{ll}\n", file);
 		fputs("\\caption{{\\bfseries List of functions for ", file);
-		fputs(current_xmachine->name, file);
+		latex_print_to_file(current_xmachine->name, file);
 		fputs(" agent.}}\n", file);
 		fputs("\\label{Table: ", file);
-		fputs(current_xmachine->name, file);
+		latex_print_to_file(current_xmachine->name, file);
 		fputs(" Functions}\\\\\n", file);
 		
 		fputs("\\toprule \n", file);
@@ -212,7 +190,7 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 
 		for(current_function = current_xmachine->functions; current_function != NULL;
 			current_function = current_function->next)
-				{
+		{
 			fputs("\\midrule\n", file);
 			fputs("\\url{", file);
 			fputs(current_function->name, file);
@@ -225,7 +203,29 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	
 		//fputs("\\subsubsection{States}\n", file);		
 		//fputs("\\paragraph{State:}\\url{State_name}.\n", file);
-	}
+
+		//FUNCTION LIST
+
+		fputs("\\subsubsection{Functions}\n", file);
+
+		for(current_function = current_xmachine->functions; current_function != NULL;
+			current_function = current_function->next)
+		{
+
+			fputs("\n\\paragraph{Function:}\\url{", file);
+			fputs(current_function->name, file);
+			fputs("}.\n", file);
+
+			fputs("\\paragraph{Description}\n", file);
+			latex_print_to_file(current_function->description, file);
+			fputs("\n", file);
+
+			fputs("\\paragraph{Code}\n", file);
+			fputs("\\begin{verbatim}\n\n", file);
+			fputs("\\end{verbatim}\n", file);	
+		}
+
+	}//end of xmachine
 	
 	//MESSAGE TABLE
 
@@ -304,7 +304,7 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	fputs("\\midrule\n", file);
 	fputs("\\endhead\n", file);
 	
-	fputs("\\multicolumn{}{r}{{\\emph{Continued on next page}}} \\\\\n", file);
+	fputs("\\multicolumn{2}{r}{{\\emph{Continued on next page}}} \\\\\n", file);
 	fputs("\\endfoot\n", file);
 	
 	fputs("\\bottomrule\n", file);
