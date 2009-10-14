@@ -60,7 +60,8 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	fputs("\\usepackage{epsfig,psfrag,graphicx,verbatim}\n", file);
 	fputs("\\usepackage{natbib}\n", file);
 	fputs("\\usepackage{booktabs, longtable}\n", file);
-	fputs("\\usepackage{url}\n\n", file);
+	fputs("\\usepackage{url}\n", file);
+	fputs("\\usepackage{makeidx}\n\n", file);
 	
 	fputs("%% Define a new 'code' style for the url package that will use a sans serif font.\n", file);
 	fputs("\\makeatletter\n", file);
@@ -85,6 +86,7 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	fputs("Author names to add", file);
 	fputs("}\n", file);
 	fputs("\\date{\\today}\n\n", file);
+	fputs("\\makeindex\n\n", file);
 	fputs("\\begin{document}\n", file);
 	fputs("\\maketitle\n", file);
 	fputs("\\tableofcontents\n", file);
@@ -97,18 +99,18 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	current_xmachine = * modeldata->p_xmachines;
 	for(current_xmachine = * modeldata->p_xmachines; current_xmachine != NULL; current_xmachine = current_xmachine->next)
 	{
-		fputs("\n\\subsection{", file);
+		fputs("\n\n\\clearpage\n\\subsection{", file);
 		latex_print_to_file(current_xmachine->name, file);
 		fputs("}\n\n", file);
 		
 		//MEMORY TABLE
-
+/*
 		fputs("\\subsubsection{Memory}\n\n", file);
 		
 		fputs("See Table \\ref{Table: ", file);
 		latex_print_to_file(current_xmachine->name, file);
 		fputs(" Memory}.\n\n", file);
-				
+*/				
 		fputs("\\begin{landscape}\n", file);
 		fputs("\\begin{longtable}[H!]{ll}\n", file);
 		fputs("\\caption{{\\bfseries List of memory variables for ", file);
@@ -144,7 +146,10 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 			fputs(current_variable->type, file);
 			fputs("} \\url{", file);
 			fputs(current_variable->name, file);
-			fputs("} & \\parbox{10cm}{", file);
+			fputs("}", file);
+			fputs(" \\index{\\url{", file);
+			fputs(current_variable->name, file);
+			fputs("}} & \\parbox{10cm}{", file);
 			latex_print_to_file(current_variable->description, file);
 			fputs("} \\\\\n", file);
 			//if(current_variable->next != NULL) fputs("\\midrule\n", file);
@@ -154,13 +159,13 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 		fputs("\\end{landscape}\n\n", file);
 
 		//FUNCTION TABLE
-
+/*
 		fputs("\\subsubsection{Functions}\n", file);
 
 		fputs("See Table \\ref{Table: ", file);
 		latex_print_to_file(current_xmachine->name, file);
 		fputs(" Functions}.\n\n", file);
-				
+*/				
 		fputs("\\begin{landscape}\n", file);
 		fputs("\\begin{longtable}[H!]{ll}\n", file);
 		fputs("\\caption{{\\bfseries List of functions for ", file);
@@ -194,7 +199,10 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 			fputs("\\midrule\n", file);
 			fputs("\\url{", file);
 			fputs(current_function->name, file);
-			fputs("} & \\parbox{10cm}{", file);
+			fputs("}", file);
+			fputs(" \\index{\\url{", file);
+			fputs(current_function->name, file);
+			fputs("}} & \\parbox{10cm}{", file);
 			latex_print_to_file(current_function->description, file);
 			fputs("} \\\\\n", file);
 		}
@@ -206,8 +214,8 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 
 		//FUNCTION LIST
 
-		fputs("\\subsubsection{Functions}\n", file);
-
+		//fputs("\\subsubsection{Functions}\n", file);
+/*
 		for(current_function = current_xmachine->functions; current_function != NULL;
 			current_function = current_function->next)
 		{
@@ -224,7 +232,7 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 			fputs("\\begin{verbatim}\n\n", file);
 			fputs("\\end{verbatim}\n", file);	
 		}
-
+*/
 	}//end of xmachine
 	
 	//MESSAGE TABLE
@@ -272,7 +280,10 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 			fputs(current_variable->type, file);
 			fputs("} \\url{", file);
 			fputs(current_variable->name, file);	
-			fputs("} & \\parbox{10cm}{", file);
+			fputs("}", file);
+			fputs(" \\index{\\url{", file);
+			fputs(current_variable->name, file);
+			fputs("}} & \\parbox{10cm}{", file);
 			latex_print_to_file(current_variable->description, file);
 			fputs("}\\\\\n", file);
 		}
@@ -317,7 +328,10 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 		fputs(current_envvar->type, file);
 		fputs("} \\url{", file);
 		fputs(current_envvar->name, file);	
-		fputs("} &  \\parbox{10cm}{", file);
+		fputs("}", file);
+		fputs(" \\index{\\url{", file);
+		fputs(current_envvar->name, file);
+		fputs("}} & \\parbox{10cm}{", file);
 		latex_print_to_file(current_envvar->description, file);
 		fputs("}\\\\\n", file);
 		//if(current_envvar->next != NULL) fputs("\\midrule\n", file);
@@ -359,7 +373,10 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	{
 		fputs("\\url{", file);
 		fputs(current_datatype->name, file);
-		fputs("} & \\parbox{8cm}{", file);
+		fputs("}", file);
+		fputs(" \\index{\\url{", file);
+		fputs(current_datatype->name, file);
+		fputs("}} & \\parbox{10cm}{", file);
 		latex_print_to_file(current_datatype->desc, file);	
 		fputs("} \\\\\n", file);
 		//fputs("\\midrule    \n", file);
@@ -380,6 +397,7 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	fputs("\\end{longtable}\n", file);
 	fputs("\\end{landscape}\n\n", file);
 
+/*
 	fputs("\\clearpage\n", file);
 	fputs("\n\\subsection{Stategraph}\n", file);
 	fputs("\\begin{figure}[Hpb!]\n", file);
@@ -388,7 +406,8 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	fputs("\\caption{Stategraph.}\n", file);
 	fputs("\\label{Figure: Stategraph}\n", file);
 	fputs("\\end{figure}\n", file);
-	
+*/	
+	fputs("\n\\printindex\n", file);
 	
 	fputs("\n\\end{document}\n", file);
 
