@@ -911,7 +911,7 @@ void remove_int(int_array * array, int index)
 {
 	int i;
 
-	if(index <= (*array).size)
+	if(index < (*array).size)
 	{
 		/* memcopy?? */
 		for(i = index; i < (*array).size - 1; i++)
@@ -1065,7 +1065,7 @@ void remove_float(float_array * array, int index)
 {
 	int i;
 
-	if(index <= (*array).size)
+	if(index < (*array).size)
 	{
 		/* memcopy?? */
 		for(i = index; i < (*array).size - 1; i++)
@@ -1219,7 +1219,7 @@ void add_double(double_array * array, double new_double)
 void remove_double(double_array * array, int index)
 {
 	int i;
-	if(index <= (*array).size)
+	if(index < (*array).size)
 	{
 		/* memcopy?? */
 		for(i = index; i < (*array).size - 1; i++)
@@ -1310,7 +1310,7 @@ void add_char(char_array * array, char new_char)
 void remove_char(char_array * array, int index)
 {
 	int i;
-	if(index <= (*array).size)
+	if(index < (*array).size)
 	{
 		/* memcopy?? */
 		for(i = index; i < (*array).size - 1; i++)
@@ -1423,7 +1423,7 @@ void remove_$name($name_array * array, int index)
 	free_$name(&(*array).array[index]);
 
 	/* Copy all elements up by one */
-	if(index <= (*array).size)
+	if(index < (*array).size)
 	{
 		for(i = index; i < (*array).size - 1; i++)
 		{
