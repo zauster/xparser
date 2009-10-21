@@ -428,6 +428,8 @@ void add_$name_agent(<?foreach xagentvar?>$type <?if dynamic_array?>* <?end if?>
 	xmachine_memory_$name * current;
 
 	current = init_$name_agent();
+	/* new line added to handle dynamic agent creation*/
+	current_xmachine_$name_next_state = $name_$start_state_state;
 	add_$name_agent_internal(current, current_xmachine_$name_next_state);
 
 <?foreach xagentvar?>	<?if modeldatatype?><?if not_array?>copy_$type(&$name, &current->$name);
