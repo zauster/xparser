@@ -95,7 +95,7 @@ sync * addsync(sync ** p_sync)
 	current->name = NULL;
 	current->filter_rule = NULL;
 	current->vars = NULL;
-	current->agents = NULL;
+	current->inputting_agents = NULL;
 	current->filter_agent_count = 0;
 	current->has_agent_and_message_vars = 0;
 	current->lastdepend = NULL;
@@ -122,7 +122,7 @@ void freesync(sync ** p_sync)
 		free(head->name);
 		free_rule_data(&head->filter_rule);
 		freevariables(&head->vars);
-		freexmachines(&head->agents);
+		freexmachines(&head->inputting_agents);
 		freefunction_pointers(&head->outputting_functions);
 		freefunction_pointers(&head->filter_variable_changing_functions);
 		//freesync(&head->previous_sync);
@@ -435,6 +435,8 @@ xmachine_message * addxmessage(xmachine_message ** p_xmessage)
 	//current->agents = NULL;
 	//current->states = NULL;
 	current->syncs = NULL;
+	current->outputting_agents = NULL;
+	current->inputting_agents = NULL;
 	current->next = NULL;
 	//current->first = NULL;
 	//current->last = NULL;
@@ -443,6 +445,45 @@ xmachine_message * addxmessage(xmachine_message ** p_xmessage)
 
 	/* Return new element */
 	return current;
+}
+
+void freexmessage(xmachine_message ** p_xmessage, xmachine_message * message)
+{
+	xmachine_message * next, * prev, * head;
+	head = *p_xmessage;
+	prev = NULL;
+	if(head != NULL) next = head->next;
+	else next = NULL;
+	
+	/* Loop until message */
+	while(head)
+	{
+		if(head == message)
+		{
+			/* Free the cell memory */
+			free(head->name);
+			freevariables(&head->vars);
+			//free_ioput(&head->filters);
+			//freexmachines(&head->agents);
+			//freexstates(&head->states);
+			freesync(&head->syncs);
+			freexmachines(&head->outputting_agents);
+			freexmachines(&head->inputting_agents);
+			free(head->file);
+			free(head);
+			head = NULL;
+			
+			if(message == *p_xmessage) *p_xmessage = next;
+			else prev->next = next;
+		}
+		else
+		{
+			prev = head;
+			head = head->next;
+			if(head != NULL) next = head->next;
+			else next = NULL;
+		}
+	}
 }
 
 /** \fn void freexmessages(xmachine_message ** p_xmessage)
@@ -465,6 +506,7 @@ void freexmessages(xmachine_message ** p_xmessage)
 		//freexmachines(&head->agents);
 		//freexstates(&head->states);
 		freesync(&head->syncs);
+		freexmachines(&head->outputting_agents);
 		free(head->file);
 		free(head->description);
 		free(head);
@@ -1113,6 +1155,7 @@ layer * addlayer(layer ** p_layer)
 	current->start_syncs = NULL;
 	current->complete_syncs = NULL;
 	current->branching_states = NULL;
+	current->finished_messages = NULL;
 
 	/* Return new element */
 	return current;
@@ -1135,6 +1178,7 @@ void freelayers(layer ** p_layers)
 		freesync(&head->start_syncs);
 		freesync(&head->complete_syncs);
 		freestateholder(&head->branching_states);
+		freexmessages(&head->finished_messages);
 		free(head);
 		head = temp;
 	}

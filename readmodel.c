@@ -261,7 +261,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	int intag;
 	/* Variables for checking tags */
 	int xagentmodel, date, author, name, xmachine, memory, var, type, notes;
-	int states, state, attribute, transition, func, dest, functions, function;
+	int states, state, /* attribute, transition,*/ func, dest, functions, function;
 	int note, messages, message, code, cdata, environment, define, value, codefile;
 	int header, iteration_end_code, depends, datatype, desc, cur_state, next_state;
 	int input, output, messagetype, timetag, unit, period, lhs, op, rhs, condition;
@@ -269,7 +269,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	int not_value;
 	/* Pointer to new structs */
 	xmachine_message * current_message;
-	xmachine_state * current_state;
+	/* xmachine_state * current_state; */
 	xmachine_function * current_function;
 	adj_function * current_adj_function;
 	variable * current_envdefine;
@@ -515,7 +515,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/author") == 0) { author = 0; }
 			if(strcmp(current_string->array, "notes") == 0) { notes = 1; cdata = 1;}
 			if(strcmp(current_string->array, "/notes") == 0) { notes = 0; }
-			if(strcmp(current_string->array, "name") == 0) { name = 1; }/*reset_char_array(current_string); }*/
+			if(strcmp(current_string->array, "name") == 0) { name = 1; }/*reset_char_array(current_string); */
 			if(strcmp(current_string->array, "/name") == 0) { name = 0; }
 			if(strcmp(current_string->array, "environment") == 0) { environment = 1; }
 			if(strcmp(current_string->array, "/environment") == 0) { environment = 0; }
@@ -525,7 +525,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				current_envdefine = addvariable(modeldata->p_envdefines);
 			}
 			if(strcmp(current_string->array, "/define") == 0) { define = 0; }
-			if(strcmp(current_string->array, "value") == 0) { value = 1; }/* charlist = NULL; }*/
+			if(strcmp(current_string->array, "value") == 0) { value = 1; }/* charlist = NULL; */
 			if(strcmp(current_string->array, "/value") == 0) { value = 0; }
 			if(strcmp(current_string->array, "xmachine") == 0) { xmachine = 1; }
 			if(strcmp(current_string->array, "/xmachine") == 0) { xmachine = 0; }
@@ -557,7 +557,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				current_variable->file = copystr(inputfile->fullfilepath);
 			}
 			if(strcmp(current_string->array, "/var") == 0 || strcmp(current_string->array, "/variable") == 0) { var = 0; }
-			if(strcmp(current_string->array, "type") == 0) { type = 1; }/*charlist = NULL; }*/
+			if(strcmp(current_string->array, "type") == 0) { type = 1; }/*charlist = NULL; */
 			if(strcmp(current_string->array, "/type") == 0) { type = 0; }
 			if(strcmp(current_string->array, "states") == 0) { states = 1; }
 			if(strcmp(current_string->array, "/states") == 0) { states = 0; }
@@ -574,9 +574,9 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				current_state->attributes = *p_attrib;
 				current_state->transitions = *p_trans;
 			}*/
-			if(strcmp(current_string->array, "func") == 0) { func = 1; }/*charlist = NULL; }*/
+			if(strcmp(current_string->array, "func") == 0) { func = 1; }/*charlist = NULL; */
 			if(strcmp(current_string->array, "/func") == 0) { func = 0; }
-			if(strcmp(current_string->array, "dest") == 0 || strcmp(current_string->array, "description") == 0) { dest = 1; }/*charlist = NULL; }*/
+			if(strcmp(current_string->array, "dest") == 0 || strcmp(current_string->array, "description") == 0) { dest = 1; }/*charlist = NULL; */
 			if(strcmp(current_string->array, "/dest") == 0 || strcmp(current_string->array, "description") == 0) { dest = 0; }
 			if(strcmp(current_string->array, "datatype") == 0 || strcmp(current_string->array, "dataType") == 0)
 			{
@@ -1185,10 +1185,16 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				}
 				if(desc) current_message->description = copy_array_to_str(current_string);
 			}
+            /*
+             ** (lsc) "current_state" is never assigned. 
+             **  Is this legacy code accidentally left behind?
+             **  Comment it out just in case. This can go really wrong if branch taken.
+             ********
 			else if(state)
 			{
 				if(name) current_state->name = copy_array_to_str(current_string);
 			}
+            */
 			else if(function)
 			{
 				if(codefile)
@@ -1323,8 +1329,8 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				}
 				if(depends)
 				{
-					if(name) { current_adj_function->name = copy_array_to_str(current_string); }/*charlist = NULL; }*/
-					if(type) { current_adj_function->type = copy_array_to_str(current_string); }/*charlist = NULL; }*/
+					if(name) { current_adj_function->name = copy_array_to_str(current_string); }/*charlist = NULL; */
+					if(type) { current_adj_function->type = copy_array_to_str(current_string); }/*charlist = NULL; */
 				}
 				if(desc) current_function->description = copy_array_to_str(current_string);
 			}
@@ -1389,7 +1395,8 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 		/* If in data read char into buffer */
 		else if(model || enabled || codefile || ((iteration_end_code && code) || codefile || name || type || desc || (memory && (var && (type || name || constant || desc)))) ||
 					(message && (name || (var && (type || name))))
-					|| (state && (name || attribute || (transition && (func || dest))))
+                    /* (lsc) rule trimmed as "attribute" and "transition" never set! */
+					|| (state && (name /* attribute || (transition && (func || dest))*/ ))
 						|| (function && (not || name || note || code || depends || type || cur_state || next_state || input || output || messagetype || value || period || phase || var || order))
 							|| (define && (name || value)) || (timetag && (name || unit || period)) || condition )
 		{

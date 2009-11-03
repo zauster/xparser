@@ -10,10 +10,10 @@
 #define VERSIONMAJOR 0
 /** \def VERSIONMINOR
  * \brief New features. */
-#define VERSIONMINOR 15
+#define VERSIONMINOR 16
 /** \def VERSIONMICRO
  * \brief Bug fixes. */
-#define VERSIONMICRO 14
+#define VERSIONMICRO 0
 /** \def DEBUG
  * \brief Debug output. */
 #define DEBUG 0
@@ -305,7 +305,7 @@ struct sync
 	struct rule_data * filter_rule;
 	struct variable * vars;			/**< Pointer to agent filter variable types. */
 
-	struct xmachine * agents;	/**< Agents that have inputting filter functions, states holding agents that could use the filter */
+	struct xmachine * inputting_agents;	/**< Agents that have inputting filter functions, states holding agents that could use the filter */
 	int filter_agent_count;
 	int has_agent_and_message_vars;
 
@@ -346,11 +346,13 @@ typedef struct sync_pointer sync_pointer;
 struct xmachine_message
 {
 	char * name;						/**< Pointer to message name. */
-	struct variable * vars;			/**< Pointer to message variables. */
+	struct variable * vars;				/**< Pointer to message variables. */
 	struct sync * syncs;				/**< List of syncs for this message board. */
 	int var_number;						/**< Number of variables in memory. */
 	char * file;
-	char * description;		/**< Description of the message. */
+	struct xmachine * outputting_agents;	/**< Agents that output this message type */
+	struct xmachine * inputting_agents;		/**< Agents that input this message type */
+	char * description;						/**< Description of the message. */
 
 	struct xmachine_message * next;	/**< Pointer to next message in list.*/
 };
@@ -389,6 +391,7 @@ struct layer
 	struct sync * start_syncs;				/**< List of start syncs. */
 	struct sync * complete_syncs;				/**< List of complete syncs. */
 	struct xmachine_state_holder * branching_states; /**< List of branching states whose agents have entered and can be checked. */
+	struct xmachine_message * finished_messages;	/**< List of messages that are not used after this layer. */
 
 	struct layer * next;					/**< Pointer next X-machine in list. */
 };
@@ -627,6 +630,7 @@ void freexmemory(xmachine_memory ** p_xmemory);
 env_func * addenvfunc(env_func ** p_env_funcs);
 void freeenvfunc(env_func ** p_env_funcs);
 xmachine_message * addxmessage(xmachine_message ** p_xmessage);
+void freexmessage(xmachine_message ** p_xmessage, xmachine_message * message);
 void freexmessages(xmachine_message ** p_xmessage);
 void addxstate(char * name, char * agent_name, xmachine_state ** p_xstates);
 void freexstates(xmachine_state ** p_xstates);

@@ -146,7 +146,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	xmachine_message * current_message = NULL;
 	xmachine_function * current_function;
 	xmachine_state * current_state;
-	xmachine_ioput * current_ioput;
+	xmachine_ioput * current_ioput = NULL;
 	variable * current_variable;
 	f_code * current_code;
 	function_pointer * current_function_pointer;
@@ -1103,7 +1103,9 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							numtag++;
 						}
 					}
-					else if (strcmp("foreach xagent", &chartag[numtag][0]) == 0)
+					else if (strcmp("foreach xagent", &chartag[numtag][0]) == 0 ||
+							strcmp("foreach readingxagent", &chartag[numtag][0]) == 0 ||
+							strcmp("foreach sendingxagent", &chartag[numtag][0]) == 0)
 					{
 						if (current_xmachine != NULL)
 						{
@@ -1581,14 +1583,60 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 
 					if(current_sync != NULL)
 					{
-						current_xmachine = current_sync->agents;
+						current_xmachine = current_sync->inputting_agents;
 					}
+					/*else if(current_message != NULL)
+					{
+						current_xmachine = current_message->outputting_agents;
+					}*/
 					else current_xmachine = * modeldata->p_xmachines;
 
 					if (current_xmachine == NULL)
 						write = 0;
 					writetag[numtag] = write;
 					strcpy(lastloop, "foreach xagent");
+				}
+				else if (strcmp(buffer->array, "<?foreach sendingxagent?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tforeach sendingxagent\tpos: %d\n", numtag, pos);
+					strcpy(&chartag[numtag][0], "foreach sendingxagent");
+					strcpy(lastloop, "foreach sendingxagent");
+					looppos[numtag] = pos;
+					numtag++;
+					xagent_count = 0;
+					/*lastwrite = write;*/
+					previous_name = NULL;
+
+					if(current_message != NULL)
+						current_xmachine = current_message->outputting_agents;
+					else current_xmachine = NULL;
+
+					if (current_xmachine == NULL)
+						write = 0;
+					writetag[numtag] = write;
+					strcpy(lastloop, "foreach sendingxagent");
+				}
+				else if (strcmp(buffer->array, "<?foreach readingxagent?>") == 0)
+				{
+					if (log)
+						printf("start :%d\tforeach readingxagent\tpos: %d\n", numtag, pos);
+					strcpy(&chartag[numtag][0], "foreach readingxagent");
+					strcpy(lastloop, "foreach readingxagent");
+					looppos[numtag] = pos;
+					numtag++;
+					xagent_count = 0;
+					/*lastwrite = write;*/
+					previous_name = NULL;
+
+					if(current_message != NULL)
+						current_xmachine = current_message->inputting_agents;
+					else current_xmachine = NULL;
+
+					if (current_xmachine == NULL)
+						write = 0;
+					writetag[numtag] = write;
+					strcpy(lastloop, "foreach readingxagent");
 				}
 				else if (strcmp(buffer->array, "<?foreach xagentvar?>") == 0)
 				{
@@ -1720,7 +1768,9 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					/*lastwrite = write;*/
 					previous_name = NULL;
 
-					current_message = * modeldata->p_xmessages;
+					if(current_layer != NULL) current_message = current_layer->finished_messages;
+					else current_message = * modeldata->p_xmessages;
+					
 					if (current_message == NULL)
 						write = 0;
 					writetag[numtag] = write;
@@ -2147,7 +2197,9 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							pos = pos1;
 						}
 					}
-					else if (strcmp("foreach xagent", lastloop) == 0)
+					else if (strcmp("foreach xagent", lastloop) == 0 ||
+							strcmp("foreach sendingxagent", lastloop) == 0 ||
+							strcmp("foreach readingxagent", lastloop) == 0)
 					{
 						while (strcmp(buffer3->array, "$name") != 0 &&
 								strcmp(buffer3->array, "$rangevar") != 0 &&

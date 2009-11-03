@@ -2154,6 +2154,67 @@ void catalogue_agent_communications(model_data * modeldata)
 	}
 }
 
+int check_message_consistancy(model_data * modeldata)
+{
+	xmachine_message * current_message;
+	xmachine_message * current_message2;
+	xmachine * current_xmachine;
+	xmachine_function * current_function;
+	xmachine_ioput * current_ioput;
+	int output_flag;
+	int input_flag;
+	
+	current_message = * modeldata->p_xmessages;
+	while(current_message != NULL)
+	{
+		output_flag = 0;
+		input_flag = 0;
+		
+		for(current_xmachine = * modeldata->p_xmachines;
+			current_xmachine != NULL;
+			current_xmachine = current_xmachine->next)
+		{
+			for(current_function = current_xmachine->functions;
+				current_function != NULL;
+				current_function = current_function->next)
+			{
+				for(current_ioput = current_function->outputs;
+					current_ioput != NULL;
+					current_ioput = current_ioput->next)
+				{
+					if( strcmp(current_message->name, current_ioput->messagetype) == 0 )
+					{
+						output_flag = 1;
+					}
+				}
+				
+				for(current_ioput = current_function->inputs;
+					current_ioput != NULL;
+					current_ioput = current_ioput->next)
+				{
+					if( strcmp(current_message->name, current_ioput->messagetype) == 0 )
+					{
+						input_flag = 1;
+					}
+				}
+			}
+		}
+		
+		if(input_flag == 0 && output_flag == 1) printf("WARNING: %s message is not input by any agent function\n", current_message->name);
+		if(input_flag == 1 && output_flag == 0) printf("WARNING: %s message is not output by any agent function\n", current_message->name);
+		if(input_flag == 0 && output_flag == 0)
+		{
+			printf("WARNING: %s message is not input or output by any agent function, message removed from model\n", current_message->name);
+			current_message2 = current_message->next;
+			freexmessage(modeldata->p_xmessages, current_message);
+			current_message = current_message2;
+		}
+		else current_message = current_message->next;
+	}
+	
+	return 1;
+}
+
 /** \fn void catalogue_agent_internal(model_data * modeldata)
  * \brief Catalogues dependencies of functions within agents.
  * \param modeldata Data from the model.
@@ -2627,6 +2688,79 @@ int handle_rule_for_message_variable(rule_data * current_rule_data)
 	return 0;
 }
 
+void calculate_message_input_output_agents(model_data * modeldata)
+{
+	xmachine * current_xmachine;
+	xmachine * current_xmachine2;
+	//xmachine * current_xmachine3;
+	xmachine_function * current_function;
+	//xmachine_function * current_function3;
+	xmachine_message * current_message;
+	xmachine_ioput * current_ioput;
+	int flag;
+	
+	for(current_message = * modeldata->p_xmessages;
+		current_message != NULL;
+		current_message = current_message->next)
+	{
+		for(current_xmachine = * modeldata->p_xmachines;
+			current_xmachine != NULL;
+			current_xmachine = current_xmachine->next)
+		{
+			for(current_function = current_xmachine->functions;
+				current_function != NULL;
+				current_function = current_function->next)
+			{
+				/* Find inputting agents */
+				for(current_ioput = current_function->inputs;
+					current_ioput != NULL;
+					current_ioput = current_ioput->next)
+				{	
+					if( strcmp(current_message->name, current_ioput->messagetype) == 0 )
+					{
+						/* Add inputting agents to message type list */
+						flag = 0;
+						for(current_xmachine2 = current_message->inputting_agents;
+							current_xmachine2 != NULL;
+							current_xmachine2 = current_xmachine2->next)
+						{
+							if(strcmp(current_xmachine2->name, current_xmachine->name) == 0) flag = 1;
+						}
+						if(flag == 0)
+						{
+							current_xmachine2 = addxmachine(&current_message->inputting_agents, current_xmachine->name);
+							current_xmachine2->start_state = current_xmachine->start_state;
+						}
+					}
+				}
+				
+				/* Find outputting agents */
+				for(current_ioput = current_function->outputs;
+					current_ioput != NULL;
+					current_ioput = current_ioput->next)
+				{	
+					if( strcmp(current_message->name, current_ioput->messagetype) == 0 )
+					{
+						/* Add outputting agents to message type list */
+						flag = 0;
+						for(current_xmachine2 = current_message->outputting_agents;
+							current_xmachine2 != NULL;
+							current_xmachine2 = current_xmachine2->next)
+						{
+							if(strcmp(current_xmachine2->name, current_xmachine->name) == 0) flag = 1;
+						}
+						if(flag == 0)
+						{
+							current_xmachine2 = addxmachine(&current_message->outputting_agents, current_xmachine->name);
+							current_xmachine2->start_state = current_xmachine->start_state;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 void calculate_communication_syncs(model_data * modeldata)
 {
 	xmachine * current_xmachine;
@@ -2845,7 +2979,7 @@ void calculate_communication_syncs(model_data * modeldata)
 										if(flag == 1)		
 										{
 											/* Add agent and agent variables to the sync */
-											current_xmachine = addxmachine(&current_sync->agents, current_function->agent_name);
+											current_xmachine = addxmachine(&current_sync->inputting_agents, current_function->agent_name);
 											current_sync->filter_agent_count++;
 											/* Add agent filter variables to sync agent */
 											handle_rule_for_agent_variable(current_input->filter_rule, current_xmachine, 1);
@@ -2903,7 +3037,7 @@ void calculate_communication_syncs(model_data * modeldata)
 					}
 	
 					/* For each agent filter var add to sync vars */
-					current_xmachine = current_sync->agents;
+					current_xmachine = current_sync->inputting_agents;
 					while(current_xmachine)
 					{
 						current_variable = current_xmachine->variables;
@@ -3493,7 +3627,7 @@ void print_sync_data(model_data * modeldata)
 					current_sync->filter_rule->lhs_print,
 					current_sync->filter_rule->op_print,
 					current_sync->filter_rule->rhs_print);
-			current_xmachine = current_sync->agents;
+			current_xmachine = current_sync->inputting_agents;
 			while(current_xmachine)
 			{
 				printf("\t\t%s\n", current_xmachine->name);
@@ -3569,7 +3703,7 @@ void find_constant_filter_vars(model_data * modeldata)
 		current_sync = current_message->syncs;
 		while(current_sync)
 		{
-			current_xmachine = current_sync->agents;
+			current_xmachine = current_sync->inputting_agents;
 			while(current_xmachine)
 			{
 				current_variable = current_xmachine->variables;
@@ -3609,6 +3743,70 @@ void find_constant_filter_vars(model_data * modeldata)
 	}
 }
 
+void calculate_last_read_layer_of_message_types(model_data * modeldata)
+{
+	xmachine_message * current_message;
+	xmachine_message * new_message;
+	layer * current_layer;
+	layer * saved_layer;
+	function_pointer * current_function_pointer;
+	xmachine_function * current_function;
+	xmachine_ioput * current_input;
+	
+	/* For each message type */
+	for(current_message = * modeldata->p_xmessages;
+		current_message != NULL;
+		current_message = current_message->next)
+	{
+		saved_layer = NULL;
+		
+		/* For each layer */
+		for(current_layer = * modeldata->p_layers;
+			current_layer != NULL;
+			current_layer = current_layer->next)
+		{
+			/* For each function */
+			for(current_function_pointer = current_layer->functions;
+				current_function_pointer != NULL;
+				current_function_pointer = current_function_pointer->next)
+			{
+				current_function = current_function_pointer->function;
+
+				/* Find last input of a messagetype */
+				for(current_input = current_function->inputs;
+					current_input != NULL;
+					current_input = current_input->next)
+				{
+						if( strcmp(current_message->name, current_input->messagetype) == 0 )
+						{
+							saved_layer = current_layer;
+						}
+				}
+				
+				// Find first input of a messagetype
+				/*current_input = current_function->inputs;
+				while(current_input)
+				{
+					if(current_message->first == NULL)
+					{
+						if( strcmp(current_message->name, current_input->messagetype) == 0 )
+						{
+							current_ioput = addioput(&current_function->first_inputs);
+							current_ioput->messagetype = copystr(current_message->name);
+						}
+					}
+
+					current_input = current_input->next;
+				}*/
+			}
+		}
+		
+		new_message = addxmessage(&saved_layer->finished_messages);
+		new_message->name = copystr(current_message->name);
+		//printf("Last layer read of %s - %d\n", current_message->name, saved_layer->number);
+	}
+}
+
 /** \fn void create_dependency_graph(char * filepath, model_data * modeldata)
  * \brief Calculate agent functions dependency graph and produce a dot graph description output.
  * \param filepath Pointer to the file path and name.
@@ -3627,6 +3825,9 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 	catalogue_agent_communications(modeldata);
 	/* Look for internal dependencies */
 	catalogue_agent_internal(modeldata);
+	
+	rc = check_message_consistancy(modeldata);
+	//if(rc != 0) return -1;
 
 	/* check loops in dependencies */
 	rc = check_dependency_loops(modeldata);
@@ -3636,6 +3837,8 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 	catalogue_states_edges(modeldata);
 	calculate_dependency_graph(modeldata);
 
+	calculate_message_input_output_agents(modeldata);
+	
 	calculate_communication_syncs(modeldata);
 
 	assign_function_order_index_and_sync_dependency_functions(modeldata);
@@ -3661,6 +3864,8 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 	apply_sync_data_to_functions(modeldata);
 
 	calculate_filter_agent_states(modeldata);
+	
+	calculate_last_read_layer_of_message_types(modeldata);
 	
 	/* Calculate data for possible partitioning scheme */
 	/*calculate_partition_data(modeldata);*/

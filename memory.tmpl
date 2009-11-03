@@ -387,6 +387,7 @@ void free_$name_agents()
 		free_$agent_name_agent(current_xmachine_$agent_name_holder, $agent_name_$name_state);
 		current_xmachine_$agent_name_holder = temp_xmachine_$agent_name_holder;
 	}
+	$agent_name_$name_state->count = 0;
 <?end foreach?>}
 
 void free_$name_states()

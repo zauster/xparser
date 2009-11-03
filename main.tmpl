@@ -4,6 +4,7 @@
  */
 
 #include "header.h"
+#define COMPACT_PRINTOUT_P_THRESHOLD 8
 
 /** \fn int main(int argc, char * argv[])
  * \brief Main program loop.
@@ -26,6 +27,9 @@ int main(int argc, char * argv[])
 	int iteration_total;
 	int * p_iteration_number = &iteration_number;
 <?foreach xagent?>	//xmachine_memory_$name * temp_xmachine_$name;
+<?end foreach?>
+<?foreach message?>	int FLAME_$name_message_board_write;
+	int FLAME_$name_message_board_read;
 <?end foreach?>
 	/* Particle cloud data */
 	double cloud_data[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
@@ -334,6 +338,12 @@ if(argc < 2)
 		/* Print number of agents on node */
 		printf("%d> ", node_number);
 		printf("No of agents on node: %d\n", current_node->agent_total);
+		
+		/* Number of each agent type */
+		<?foreach xagent?>
+		printf("%d> ", node_number);
+		printf("$name agents on node: %d\n", $name_$start_state_state->count);
+		<?end foreach?>
 
 		/* Quickly check account for all agents */
 		MPI_Reduce(&current_node->agent_total, &i, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -379,22 +389,121 @@ if(argc < 2)
 
 	(void)fclose(file);
 <?if parallel?>	}<?end if?>
+
+	/* For each message check if their exists agents that input/output the message */
+	<?foreach message?>FLAME_$name_message_board_write = 0;
+	FLAME_$name_message_board_read = 0;
+	/* Sending agents */
+	<?foreach sendingxagent?>if($name_$start_state_state->agents != NULL) FLAME_$message_name_message_board_write = 1;
+	<?end foreach?>
+	/* Reading agents */
+	<?foreach readingxagent?>if($name_$start_state_state->agents != NULL) FLAME_$message_name_message_board_read = 1;
+	<?end foreach?>
+	/* Call message board library with details */
+	if(FLAME_$name_message_board_write == 0 &&
+		FLAME_$name_message_board_read == 0)
+			rc = MB_SetAccessMode(b_$name, MB_MODE_IDLE);
+	if(FLAME_$name_message_board_write == 1 &&
+		FLAME_$name_message_board_read == 0)
+			rc = MB_SetAccessMode(b_$name, MB_MODE_WRITEONLY);
+	if(FLAME_$name_message_board_write == 0 &&
+		FLAME_$name_message_board_read == 1)
+			rc = MB_SetAccessMode(b_$name, MB_MODE_READONLY);
+	if(FLAME_$name_message_board_write == 1 &&
+		FLAME_$name_message_board_read == 1)
+			rc = MB_SetAccessMode(b_$name, MB_MODE_READWRITE);
+	#ifdef ERRCHECK
+	if (rc != MB_SUCCESS)
+	{
+	   fprintf(stderr, "ERROR: Could not set access mode of '$name' board\n");
+	   switch(rc) {
+		   case MB_ERR_INVALID:
+			   fprintf(stderr, "\t reason: '$name' board is invalid\n");
+			   break;
+		   case MB_ERR_LOCKED:
+			   fprintf(stderr, "\t reason: '$name' board is locked\n");
+			   break;
+		   case MB_ERR_MEMALLOC:
+			   fprintf(stderr, "\t reason: out of memory\n");
+			   break;
+		   case MB_ERR_INTERNAL:
+			   fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+			   break;
+		   default:
+			   fprintf(stderr, "\t MB_SyncStart returned error code: %d (see libmboard docs for details)\n", rc);
+			   break;
+	   }
+		   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+		   exit(rc);
+	}
+	#endif
+	<?end foreach?>
+	
 	/* Start timing */
 	start = get_time();
-
-    /* pre-randomise agents for first iteration */
-    //randomisexagent();
 
 	for(iteration_loop=iteration_number+1; iteration_loop < iteration_number+iteration_total+1; iteration_loop++)
 	{
 		interval = get_time();
-		<?if parallel?>if(node_number == 0) {<?end if?>
+
 		/* Print out iteration number */
-		fprintf(stdout, "Iteration - %d\n", iteration_loop);
-		/* Flush stdout to keep user updated on progress */
+		<?if parallel?>
+        if (totalnodes <= COMPACT_PRINTOUT_P_THRESHOLD)
+        {
+            for (i = 0; i < node_number; i++) fprintf(stdout, "-------\t");
+            fprintf(stdout, "P%d:%d\t", node_number, iteration_loop);
+            for (i = node_number + 1; i < totalnodes; i++) fprintf(stdout, "-------\t");
+            fprintf(stdout, "\n");
+        }
+        else
+        {
+            fprintf(stdout, "P%d:%d\n", node_number, iteration_loop);
+        }
+
+        <?end if?>
+		<?if serial?>fprintf(stdout, "Iteration - %d\n", iteration_loop);<?end if?>
 		(void)fflush(stdout);
-		<?if parallel?>}<?end if?>
+        
 		/* START OF ITERATION */
+		<?foreach message?>
+		/* Start sync message boards that don't write */
+		if(FLAME_$name_message_board_write == 0)
+		{
+			/*printf("%d> $name message board sync start early as no agents sending any messages of this type\n", node_number);*/
+			
+			/* ********** sync message board here **********  */
+			if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_SyncStart(b_$name)\n");
+			rc = MB_SyncStart(b_$name);
+			if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finish MB_SyncStart(b_$name)\n");
+			#ifdef ERRCHECK
+			if (rc != MB_SUCCESS)
+			{
+			   fprintf(stderr, "ERROR: Could not start sync of '$name' board\n");
+			   switch(rc) {
+				   case MB_ERR_INVALID:
+					   fprintf(stderr, "\t reason: '$name' board is invalid\n");
+					   break;
+				   case MB_ERR_LOCKED:
+					   fprintf(stderr, "\t reason: '$name' board is locked\n");
+					   break;
+				   case MB_ERR_MEMALLOC:
+					   fprintf(stderr, "\t reason: out of memory\n");
+					   break;
+				   case MB_ERR_INTERNAL:
+					   fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+					   break;
+				   default:
+					   fprintf(stderr, "\t MB_SyncStart returned error code: %d (see libmboard docs for details)\n", rc);
+					   break;
+			   }
+			   
+					   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+					   exit(rc);
+			   }
+			   #endif
+		}
+		<?end foreach?>
+		
 <?foreach layer?><?if debug?><?foreach branching_state?>	/* DEBUG: States with branching functions */
 		current_xmachine_$agent_name_holder = $agent_name_$name_state->agents;
 		while(current_xmachine_$agent_name_holder)
@@ -416,39 +525,40 @@ if(argc < 2)
 			current_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
 		}
 	<?end foreach?><?end if?><?foreach function?><?foreach complete_sync?>
-	if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_SyncComplete(b_$message_name)\n");
-	rc = MB_SyncComplete(b_$message_name);
-	if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finsh MB_SyncComplete(b_$message_name)\n");
-	#ifdef ERRCHECK
-    if (rc != MB_SUCCESS)
-    {
-       fprintf(stderr, "ERROR: Could not complete sync of '$message_name' board\n");
-       switch(rc) {
-            case MB_ERR_INVALID:
-               fprintf(stderr, "\t reason: '$message_name' board is invalid\n");
-               break;
-           case MB_ERR_MEMALLOC:
-               fprintf(stderr, "\t reason: out of memory\n");
-               break;
-           case MB_ERR_INTERNAL:
-               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
-               break;
-           default:
-               fprintf(stderr, "\t MB_SyncComplete returned error code: %d (see libmboard docs for details)\n", rc);
-               break;
-       }
-
-       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
-       exit(rc);
-    }
-    #endif
+	/* If mb is not read then leave sync complete until last possible moment */
+	if(FLAME_$message_name_message_board_read == 1)
+	{
+		if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_SyncComplete(b_$message_name)\n");
+		rc = MB_SyncComplete(b_$message_name);
+		if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finsh MB_SyncComplete(b_$message_name)\n");
+		#ifdef ERRCHECK
+		if (rc != MB_SUCCESS)
+		{
+		   fprintf(stderr, "ERROR: Could not complete sync of '$message_name' board\n");
+		   switch(rc) {
+				case MB_ERR_INVALID:
+				   fprintf(stderr, "\t reason: '$message_name' board is invalid\n");
+				   break;
+			   case MB_ERR_MEMALLOC:
+				   fprintf(stderr, "\t reason: out of memory\n");
+				   break;
+			   case MB_ERR_INTERNAL:
+				   fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+				   break;
+			   default:
+				   fprintf(stderr, "\t MB_SyncComplete returned error code: %d (see libmboard docs for details)\n", rc);
+				   break;
+		   }
+	
+		   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+		   exit(rc);
+		}
+		#endif
     <?if sync_filter?>
     if(FLAME_USE_FILTERS_IN_SYNC) {
-    if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_Function_Assign(b_$message_name, MB_NULL_FUNCTION, NULL, 0)\n");
-    //rc = MB_Function_Assign(b_$message_name, MB_NULL_FUNCTION, NULL, 0);
-    //printf("** MB_Filter_Delete(&$filter_name_filter)\n");
+    if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_Filter_Delete(&$filter_name_filter);\n");
     rc = MB_Filter_Delete(&$filter_name_filter);
-    if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finish MB_Function_Assign(b_$message_name, MB_NULL_FUNCTION, NULL, 0)\n");
+    if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finish MB_Filter_Delete(&$filter_name_filter);\n");
 	if ( rc != MB_SUCCESS )
 	{
 		fprintf(stderr, "Error while assigning NULL function to board\n");
@@ -461,6 +571,7 @@ if(argc < 2)
 	free(FLAME_m_$message_name_composite_params);
 	FLAME_m_$message_name_composite_params = NULL; }
 	<?end if?>
+	}
 	<?end foreach?>
 	if(FLAME_TEST_PRINT_START_AND_END_OF_MODEL_FUNCTIONS) printf("start $name\n");
 	current_xmachine_$agent_name_holder = $agent_name_$current_state_state->agents;
@@ -555,46 +666,84 @@ if(argc < 2)
 	}
 	if(FLAME_TEST_PRINT_START_AND_END_OF_MODEL_FUNCTIONS) printf("finish $name\n");
 <?foreach start_sync?>
+	if(FLAME_$message_name_message_board_write == 1)
+	{
 <?if sync_filter?>	if(FLAME_USE_FILTERS_IN_SYNC) 
 	{
 		//FLAME_build_filter_param_$filter_name();
 		//MB_Filter_Create($filter_sync_filter, $filter_sync)
 		FLAME_create_and_assign_$filter_name();
 	}<?end if?>
-	if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_SyncStart(b_$message_name)\n");
-    rc = MB_SyncStart(b_$message_name);
-    if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finish MB_SyncStart(b_$message_name)\n");
-    #ifdef ERRCHECK
-    if (rc != MB_SUCCESS)
-    {
-       fprintf(stderr, "ERROR: Could not start sync of '$message_name' board\n");
-       switch(rc) {
-           case MB_ERR_INVALID:
-               fprintf(stderr, "\t reason: '$message_name' board is invalid\n");
-               break;
-           case MB_ERR_LOCKED:
-               fprintf(stderr, "\t reason: '$message_name' board is locked\n");
-               break;
-           case MB_ERR_MEMALLOC:
-               fprintf(stderr, "\t reason: out of memory\n");
-               break;
-           case MB_ERR_INTERNAL:
-               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
-               break;
-           default:
-               fprintf(stderr, "\t MB_SyncStart returned error code: %d (see libmboard docs for details)\n", rc);
-               break;
+		if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_SyncStart(b_$message_name)\n");
+		rc = MB_SyncStart(b_$message_name);
+		if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finish MB_SyncStart(b_$message_name)\n");
+		#ifdef ERRCHECK
+		if (rc != MB_SUCCESS)
+		{
+		   fprintf(stderr, "ERROR: Could not start sync of '$message_name' board\n");
+		   switch(rc) {
+			   case MB_ERR_INVALID:
+				   fprintf(stderr, "\t reason: '$message_name' board is invalid\n");
+				   break;
+			   case MB_ERR_LOCKED:
+				   fprintf(stderr, "\t reason: '$message_name' board is locked\n");
+				   break;
+			   case MB_ERR_MEMALLOC:
+				   fprintf(stderr, "\t reason: out of memory\n");
+				   break;
+			   case MB_ERR_INTERNAL:
+				   fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+				   break;
+			   default:
+				   fprintf(stderr, "\t MB_SyncStart returned error code: %d (see libmboard docs for details)\n", rc);
+				   break;
+		   }
 
-       }
-
-       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
-       exit(rc);
+			<?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+			exit(rc);
+		}
+		#endif
     }
-    #endif
+    
 <?end foreach?>
 <?end foreach?>
-<?end foreach?>
+/* End of layer number $number */
+
+/* Clear message boards that have finished being used
+ * and sync complete if doing late sync complete */
 <?foreach message?>
+if(FLAME_$name_message_board_read == 0)
+{
+	/*printf("%d> $name message board sync complete late as no agents reading any messages of this type\n", node_number);*/
+	
+	if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_SyncComplete(b_$name)\n");
+	rc = MB_SyncComplete(b_$name);
+	if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finsh MB_SyncComplete(b_$name)\n");
+	#ifdef ERRCHECK
+	if (rc != MB_SUCCESS)
+	{
+	   fprintf(stderr, "ERROR: Could not complete sync of '$name' board\n");
+	   switch(rc) {
+			case MB_ERR_INVALID:
+			   fprintf(stderr, "\t reason: '$name' board is invalid\n");
+			   break;
+		   case MB_ERR_MEMALLOC:
+			   fprintf(stderr, "\t reason: out of memory\n");
+			   break;
+		   case MB_ERR_INTERNAL:
+			   fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+			   break;
+		   default:
+			   fprintf(stderr, "\t MB_SyncComplete returned error code: %d (see libmboard docs for details)\n", rc);
+			   break;
+	   }
+
+	   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+	   exit(rc);
+	}
+	#endif
+}
+
     rc = MB_Clear(b_$name);
     #ifdef ERRCHECK
     if (rc != MB_SUCCESS)
@@ -620,6 +769,7 @@ if(argc < 2)
        exit(rc);
     }
     #endif
+<?end foreach?>
 <?end foreach?>
 	if(iteration_loop%output_frequency == output_offset)
 	{
@@ -663,6 +813,11 @@ if(argc < 2)
 		(void)fclose(file);
 <?if parallel?>		}<?end if?>
 	}
+
+<?if parallel?>
+    /* Wait till all procs are done */
+    MPI_Barrier(MPI_COMM_WORLD);
+<?end if?>    
 
 	/* Stop timing and print total time */
 	stop = get_time();
