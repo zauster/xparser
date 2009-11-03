@@ -2061,7 +2061,7 @@ int find_agent_start_states(model_data * modeldata)
 		{
 			/*fprintf(stderr, "ERROR: no start state found in '%s' agent\n", current_xmachine->name);
 			return -1;*/
-			fprintf(stderr, "WARNING: no start state found in '%s' agent, agent removed from model\n", current_xmachine->name);
+			fprintf(stderr, "*** WARNING: no start state found in '%s' agent, agent removed from model\n", current_xmachine->name);
 			/* Remove agent from the agent list */
 			if(current_xmachine2 == NULL) * modeldata->p_xmachines = current_xmachine->next;
 			else current_xmachine2->next = current_xmachine->next;
@@ -2200,11 +2200,11 @@ int check_message_consistancy(model_data * modeldata)
 			}
 		}
 		
-		if(input_flag == 0 && output_flag == 1) printf("WARNING: %s message is not input by any agent function\n", current_message->name);
-		if(input_flag == 1 && output_flag == 0) printf("WARNING: %s message is not output by any agent function\n", current_message->name);
+		if(input_flag == 0 && output_flag == 1) printf("*** WARNING: %s message is not input by any agent function\n", current_message->name);
+		if(input_flag == 1 && output_flag == 0) printf("*** WARNING: %s message is not output by any agent function\n", current_message->name);
 		if(input_flag == 0 && output_flag == 0)
 		{
-			printf("WARNING: %s message is not input or output by any agent function, message removed from model\n", current_message->name);
+			printf("*** WARNING: %s message is not input or output by any agent function, message removed from model\n", current_message->name);
 			current_message2 = current_message->next;
 			freexmessage(modeldata->p_xmessages, current_message);
 			current_message = current_message2;
