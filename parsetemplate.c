@@ -166,10 +166,10 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 	writetag[0] = 1;
 
 	/* Open the output file */
-	printf("writing file: %s\t", filename);
+	printf("Generating %s ", filename);
 	file = fopen(filename, "w");
 	/* Open the template file */
-	printf("using template: %s\n", templatename);
+	printf("using %s\n", templatename);
 	tmplfile = fopen(templatename, "r");
 
 	/* Read the template file into memory */
@@ -2805,7 +2805,7 @@ void parseAgentHeaderTemplate(char * directory, model_data * modeldata)
 		strcpy(filename, directory);
 		strcat(filename, current_xmachine->name);
 		strcat(filename, "_agent_header.h");
-		printf("writing file: %s\n", filename);
+		printf("Writing header file : %s\n", filename);
 		file = fopen(filename, "w");
 
 		fputs("/**\n", file);

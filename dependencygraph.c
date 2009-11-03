@@ -45,7 +45,7 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	/* place in 'data' the file to write to */
 	sprintf(buffer, "%s%s", filepath, filename);
 	/* print out the location of the source file */
-	printf("writing file: %s\n", buffer);
+	printf("Writing file : %s\n", buffer);
 	/* open the file to write to */
 	file = fopen(buffer, "w");
 	
@@ -435,7 +435,7 @@ void output_dgraph(char * filename, char * filepath, model_data * modeldata)
 	/* place in 'data' the file to write to */
 	sprintf(buffer, "%s%s", filepath, filename);
 	/* print out the location of the source file */
-	printf("writing file: %s\n", buffer);
+	printf("Writing file : %s\n", buffer);
 	/* open the file to write to */
 	file = fopen(buffer, "w");
 
@@ -552,7 +552,7 @@ void output_stategraph(char * filename, char * filepath, model_data * modeldata,
 	/* place in 'data' the file to write to */
 	sprintf(buffer, "%s%s", filepath, filename);
 	/* print out the location of the source file */
-	printf("writing file: %s\n", buffer);
+	printf("Writing file : %s\n", buffer);
 	/* open the file to write to */
 	file = fopen(buffer, "w");
 
@@ -1062,7 +1062,7 @@ void output_communication_graph(char * filename, char * filepath, model_data * m
 	/* place in 'data' the file to write to */
 	sprintf(buffer, "%s%s", filepath, filename);
 	/* print out the location of the source file */
-	printf("writing file: %s\n", buffer);
+	printf("Writing file : %s\n", buffer);
 	/* open the file to write to */
 	file = fopen(buffer, "w");
 
@@ -1174,7 +1174,7 @@ void output_process_order_graph(char * filename, char * filepath, model_data * m
 	/* place in 'data' the file to write to */
 	sprintf(buffer, "%s%s", filepath, filename);
 	/* print out the location of the source file */
-	printf("writing file: %s\n", buffer);
+	printf("Writing file : %s\n", buffer);
 	/* open the file to write to */
 	file = fopen(buffer, "w");
 
@@ -1564,7 +1564,7 @@ void output_stategraph_colour(char * filename, char * filepath, model_data * mod
 	/* place in 'data' the file to write to */
 	sprintf(buffer, "%s%s", filepath, filename);
 	/* print out the location of the source file */
-	printf("writing file: %s\n", buffer);
+	printf("Writing file : %s\n", buffer);
 	/* open the file to write to */
 	file = fopen(buffer, "w");
 
@@ -2061,7 +2061,7 @@ int find_agent_start_states(model_data * modeldata)
 		{
 			/*fprintf(stderr, "ERROR: no start state found in '%s' agent\n", current_xmachine->name);
 			return -1;*/
-			fprintf(stderr, "*** WARNING: no start state found in '%s' agent, agent removed from model\n", current_xmachine->name);
+			fprintf(stderr, "!!! WARNING: no start state found in '%s' agent, agent removed from model\n", current_xmachine->name);
 			/* Remove agent from the agent list */
 			if(current_xmachine2 == NULL) * modeldata->p_xmachines = current_xmachine->next;
 			else current_xmachine2->next = current_xmachine->next;
@@ -2200,11 +2200,11 @@ int check_message_consistancy(model_data * modeldata)
 			}
 		}
 		
-		if(input_flag == 0 && output_flag == 1) printf("*** WARNING: %s message is not input by any agent function\n", current_message->name);
-		if(input_flag == 1 && output_flag == 0) printf("*** WARNING: %s message is not output by any agent function\n", current_message->name);
+		if(input_flag == 0 && output_flag == 1) printf("!!! WARNING: %s message is not input by any agent function\n", current_message->name);
+		if(input_flag == 1 && output_flag == 0) printf("!!! WARNING: %s message is not output by any agent function\n", current_message->name);
 		if(input_flag == 0 && output_flag == 0)
 		{
-			printf("*** WARNING: %s message is not input or output by any agent function, message removed from model\n", current_message->name);
+			printf("!!! WARNING: %s message is not input or output by any agent function, message removed from model\n", current_message->name);
 			current_message2 = current_message->next;
 			freexmessage(modeldata->p_xmessages, current_message);
 			current_message = current_message2;
@@ -3842,13 +3842,14 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 	calculate_communication_syncs(modeldata);
 
 	assign_function_order_index_and_sync_dependency_functions(modeldata);
-	printf("Total communication sync lengths: %d\n", calculate_sync_lengths(modeldata));
-	printf("Order functions in process layers\n");
+	printf("Total communication sync lengths = %d\n", calculate_sync_lengths(modeldata));
+	printf("Ordering functions in process layers\n");
 	//output_process_order_graph("process_order_graph_pre.dot", filepath, modeldata);
 	order_functions_in_process_layers(modeldata);
 	assign_function_order_index_and_sync_dependency_functions(modeldata);
-	printf("Total communication sync lengths: %d\n", calculate_sync_lengths(modeldata));
-
+	printf("New communication sync lengths = %d\n", calculate_sync_lengths(modeldata));
+    printf("\n");
+    
 	/*if(modeldata->depends_style == 0)*/
 	output_stategraph("stategraph.dot", filepath, modeldata, 1);
 	output_stategraph_colour("stategraph_colour.dot", filepath, modeldata, 1);
@@ -3872,6 +3873,7 @@ int create_dependency_graph(char * filepath, model_data * modeldata)
 	/*print_sync_data(modeldata);*/
 
 	find_constant_filter_vars(modeldata);
+    printf("\n");
 	
 	return 0;
 }

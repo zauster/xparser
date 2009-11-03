@@ -310,7 +310,10 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 		fprintf(stderr, "ERROR: Cannot read file: %s\n", inputfile->fullfilepath);
 		exit(1);
 	}
-	else { printf("reading xmml: %s\n", inputfile->fullfilepath); }
+	else 
+    { 
+        printf("Reading XMML file (%s)\n", inputfile->fullfilepath); 
+    }
 
 	/* Initialise variables */
 	/*p_charlist = &charlist;*/
@@ -508,7 +511,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			}
 
 			if(strcmp(current_string->array, "xmachine_agent_model") == 0 || strcmp(current_string->array, "xmodel") == 0) { xagentmodel = 1; }
-			if(strcmp(current_string->array, "/xmachine_agent_model") == 0 || strcmp(current_string->array, "/xmodel") == 0) { xagentmodel = 0; reading = 0; printf("End of xagent model.\n"); }
+			if(strcmp(current_string->array, "/xmachine_agent_model") == 0 || strcmp(current_string->array, "/xmodel") == 0) { xagentmodel = 0; reading = 0; printf("End of XMML file\n\n"); }
 			if(strcmp(current_string->array, "date") == 0) { date = 1; }
 			if(strcmp(current_string->array, "/date") == 0) { date = 0; }
 			if(strcmp(current_string->array, "author") == 0) { author = 1; }
@@ -836,9 +839,9 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			{
 				model = 0;
 
-				printf("Input model file: %s ", current_input_file->fullfilepath);
-				if(current_input_file->enabled == 1) printf("enabled\n");
-				else printf("disabled\n");
+				printf("- Nested model   : %s ", current_input_file->fullfilepath);
+				if(current_input_file->enabled == 1) printf("(enabled)\n");
+				else printf("(disabled)\n");
 			}
 			if(strcmp(current_string->array, "depends") == 0)
 			{
@@ -1000,7 +1003,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					else if(name)
 					{
 						current_datatype->name = copy_array_to_str(current_string);
-						printf("Reading data type named: %s\n", current_datatype->name);
+						printf("- Datatype : %s\n", current_datatype->name);
 					}
 				}
 				else if(var)
@@ -1121,14 +1124,14 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 						printf("*** xparser aborted ***\n");
 						exit(0);
 					}
-					else printf("reading file: %s\n", chardata);
+					/* else printf("- Loading file : %s\n", chardata); */
 
 					/*charlist = NULL;*/
 					reset_char_array(current_string);
 
 					if(functions)
 					{
-						printf("%s is a functions file\n", chardata);
+				         printf("- Functions file : %s\n", chardata); 
 					}
 					else
 					{
@@ -1145,6 +1148,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 								add_char(current_string, c);
 							}
 						}
+
 
 						/*if(environment == 1) current_envfunc->code = *p_charlist;*/
 						/*else current_fcode->code = *p_charlist;*/
@@ -1179,7 +1183,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				if(name)
 				{
 					current_message->name = copy_array_to_str(current_string);
-					printf("Reading message named: ");
+					printf("- Message  : ");
 					printf("%s", current_message->name);
 					printf("\n");
 				}
@@ -1339,7 +1343,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				if(name)
 				{
 					current_xmachine = addxmachine(modeldata->p_xmachines, current_string->array);
-					printf("Reading xagent named : ");
+					printf("- xagent   : ");
 					printf("%s", current_xmachine->name);
 					printf("\n");
 				}
@@ -1355,7 +1359,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			else if(name)
 			{
 				if(modeldata->name == NULL) modeldata->name = copy_array_to_str(current_string);
-				printf("Reading xagent model: ");
+				printf("- Model name     : ");
 				printf("%s", current_string->array);
 				printf("\n");
 			}

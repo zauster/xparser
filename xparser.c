@@ -122,7 +122,7 @@ int main(int argc, char * argv[])
 	modeldata->p_constant_filter_vars = &constant_filter_vars;
 	constant_filter_vars = NULL;
 	
-	printf("xparser: Version %d.%d.%d\n", VERSIONMAJOR, VERSIONMINOR, VERSIONMICRO);
+	printf("xparser (Version %d.%d.%d)\n", VERSIONMAJOR, VERSIONMINOR, VERSIONMICRO);
 	
 	/* Must be at least the input file name */
 	if(argc < 2)
@@ -156,7 +156,7 @@ int main(int argc, char * argv[])
 		else
 		{
 			strcpy(inputfile,argv[1]);
-			printf("XMML input file: %s\n",argv[1]);
+			/* printf("XMML input file : %s\n",argv[1]); */
 		}
 		argc--;
 		argv++;
@@ -169,9 +169,12 @@ int main(int argc, char * argv[])
 	}
 	
 	/* Print what type of code writing */
-	if(modeldata->code_type == 0) printf("code-type   : Serial\n");
-	if(modeldata->code_type == 1) printf("code-type   : Parallel\n");
-	if(modeldata->debug_mode == 1) printf("debug mode is enabled\n");
+    printf("\n");
+    printf("Code type       : ");
+	if(modeldata->code_type == 0) printf("Serial");
+	if(modeldata->code_type == 1) printf("Parallel");
+	if(modeldata->debug_mode == 1) printf(" (DEBUG)");
+    printf("\n");
 	
 	/* Calculate directory to write files to */
 	i = 0;
@@ -210,9 +213,10 @@ int main(int argc, char * argv[])
 	}
 	else templatedirectory[0] = '\0';
 	
-	printf("inputfile: %s\n", inputfile);
-	printf("directory: %s\n", directory);
-	printf("templates: %s\n", templatedirectory);
+	printf("Input XMML file : %s\n", inputfile);
+	printf("Model root dir  : %s\n", directory);
+	printf("Template dir    : %s\n", templatedirectory);
+    printf("\n");
 	
 	current_input_file = add_input_file(modeldata->p_files);
 	current_input_file->fullfilepath = copystr(inputfile);
@@ -276,6 +280,8 @@ int main(int argc, char * argv[])
 	strcpy(filename, directory); strcat(filename, "rules.c");
 	strcpy(templatename, templatedirectory); strcat(templatename, "rules.tmpl");
 	parseTemplate(filename, templatename, modeldata);
+
+    printf("\n");
 	parseAgentHeaderTemplate(directory, modeldata);
 	/*parseUnittest(directory, modeldata);*/
 	/*parser0dtd(directory, modeldata);*/
@@ -283,7 +289,7 @@ int main(int argc, char * argv[])
 	
 	free_modeldata(modeldata);
 	
-	printf("--- xparser finished ---\n\n");
+	printf("\n--- xparser finished ---\n\n");
     
     printf("To compile and run the generated code, you will need:\n");
     printf(" * libmboard (version %s or newer)\n", LIBMBOARD_MINVER_STR);
