@@ -283,7 +283,10 @@ int main(int argc, char * argv[])
 	
 	free_modeldata(modeldata);
 	
-	printf("xparser finished\n");
+	printf("--- xparser finished ---\n\n");
+    
+    printf("To compile and run the generated code, you will need:\n");
+    printf(" * libmboard (version %s or newer)\n", LIBMBOARD_MINVER_STR);
 	
 	/* Exit successfully by returning zero to Operating System */
 	return 0;

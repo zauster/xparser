@@ -23,6 +23,9 @@
 /** \def ARRAY_BLOCK_SIZE
  * \brief The block size to allocate to dynamic arrays. */
 #define ARRAY_BLOCK_SIZE 5
+/** \def LIBMBOARD_MINVER_STR
+ * \brief Minimum version of libmboard needed to compile/run generated code */
+#define LIBMBOARD_MINVER_STR "0.2.1"
 
 /*****************************************************************
 * NAME:    struct datatype definitions                           *
