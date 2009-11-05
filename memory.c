@@ -1386,7 +1386,7 @@ void add_int(int_array * array, int new_int)
 {
 	if(array->size == array->total_size)
 	{
-		array->total_size = array->total_size + ARRAY_BLOCK_SIZE;
+		array->total_size = (int)(array->total_size * ARRAY_GROWTH_RATE);
 		array->array = (int *)realloc(array->array, (array->total_size * sizeof(int)));
 	}
 	
@@ -1488,7 +1488,7 @@ void add_double(double_array * array, double new_double)
 {
 	if(array->size == array->total_size)
 	{
-		array->total_size = array->total_size + ARRAY_BLOCK_SIZE;
+		array->total_size = (int)(array->total_size * ARRAY_GROWTH_RATE);
 		array->array = (double *)realloc(array->array, (array->total_size * sizeof(double)));
 	}
 	
@@ -1571,7 +1571,7 @@ void add_char(char_array * array, char new_char)
 {
 	if(array->size + 1 == array->total_size)
 	{
-		array->total_size = array->total_size + ARRAY_BLOCK_SIZE;
+		array->total_size = (int)(array->total_size * ARRAY_GROWTH_RATE);
 		array->array = (char *)realloc(array->array, (array->total_size * sizeof(char)));
 	}
 	

@@ -22,7 +22,14 @@
 #define LOG 0
 /** \def ARRAY_BLOCK_SIZE
  * \brief The block size to allocate to dynamic arrays. */
-#define ARRAY_BLOCK_SIZE 5
+#define ARRAY_BLOCK_SIZE 10
+/** \def ARRAY_GROWTH_RATE
+ * \brief Growth ratio to scale size of dynamic arrays. 
+ * Use golden ratio. This makes for a Fibonacci sequence, so the next allocation size 
+ * is the sum of the current size and the previous size thus improving the chance of 
+ * memory block reuse. It also allows for moderate rate of growth.
+ */
+#define ARRAY_GROWTH_RATE 1.618034
 /** \def LIBMBOARD_MINVER_STR
  * \brief Minimum version of libmboard needed to compile/run generated code */
 #define LIBMBOARD_MINVER_STR "0.2.1"

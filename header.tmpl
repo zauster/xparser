@@ -38,7 +38,14 @@
 #define $uc_name (FLAME_get_environment_variable_$name())<?end foreach?>
 /** \def ARRAY_BLOCK_SIZE
  * \brief The block size to allocate to dynamic arrays. */
-#define ARRAY_BLOCK_SIZE 5
+#define ARRAY_BLOCK_SIZE 10
+/** \def ARRAY_GROWTH_RATE
+ * \brief Growth ratio to scale size of dynamic arrays. 
+ * Use golden ratio. This makes for a Fibonacci sequence, so the next allocation size 
+ * is the sum of the current size and the previous size thus improving the chance of 
+ * memory block reuse. It also allows for moderate rate of growth.
+ */
+#define ARRAY_GROWTH_RATE 1.618034
 <?foreach message?>/** \def START_$capsname_MESSAGE_LOOP
  * \brief Start of loop to process $name messages. */
 #define START_$capsname_MESSAGE_LOOP  for($name_message = get_first_$name_message(); $name_message != NULL; $name_message = get_next_$name_message($name_message)) {

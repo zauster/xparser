@@ -898,7 +898,7 @@ void add_int(int_array * array, int new_int)
 {
 	if((*array).size == (*array).total_size)
 	{
-		(*array).total_size = (*array).total_size + ARRAY_BLOCK_SIZE;
+		(*array).total_size = (int)((*array).total_size * ARRAY_GROWTH_RATE);
 		(*array).array = (int *)realloc((*array).array, ((*array).total_size * sizeof(int)));
 	}
 	(*array).array[(*array).size] = new_int;
@@ -1052,7 +1052,7 @@ void add_float(float_array * array, float new_float)
 {
 	if((*array).size == (*array).total_size)
 	{
-		(*array).total_size = (*array).total_size + ARRAY_BLOCK_SIZE;
+		(*array).total_size = (int)((*array).total_size * ARRAY_GROWTH_RATE);
 		(*array).array = (float *)realloc((*array).array, ((*array).total_size * sizeof(float)));
 	}
 	(*array).array[(*array).size] = new_float;
@@ -1207,7 +1207,7 @@ void add_double(double_array * array, double new_double)
 {
 	if((*array).size == (*array).total_size)
 	{
-		(*array).total_size = (*array).total_size + ARRAY_BLOCK_SIZE;
+		(*array).total_size = (int)((*array).total_size * ARRAY_GROWTH_RATE);
 		(*array).array = (double *)realloc((*array).array, ((*array).total_size * sizeof(double)));
 	}
 	(*array).array[(*array).size] = new_double;
@@ -1297,7 +1297,7 @@ void add_char(char_array * array, char new_char)
 {
 	if((*array).size + 1 == (*array).total_size)
 	{
-		(*array).total_size = (*array).total_size + ARRAY_BLOCK_SIZE;
+		(*array).total_size = (int)((*array).total_size * ARRAY_GROWTH_RATE);
 		(*array).array = (char *)realloc((*array).array, ((*array).total_size * sizeof(char)));
 	}
 	(*array).array[(*array).size] = new_char;
@@ -1404,7 +1404,7 @@ void add_$name($name_array * array<?foreach datatypevar?>, <?if modeldatatype?><
 {
 	if((*array).size == (*array).total_size)
 	{
-		(*array).total_size = (*array).total_size + ARRAY_BLOCK_SIZE;
+		(*array).total_size = (int)((*array).total_size * ARRAY_GROWTH_RATE);
 		(*array).array = ($name *)realloc((*array).array, ((*array).total_size * sizeof($name)));
 	}
 	init_$name(&(*array).array[(*array).size]);
