@@ -33,11 +33,17 @@ int read_int_static_array(char * buffer, int /*@unused@*/ buffer_size, int * j, 
 			(*j)++;
 		}
 		arraydata[array_k] = '\0';
-		int_static_array[arraycount] = atoi(arraydata);
+		if (arraycount < size) int_static_array[arraycount] = atoi(arraydata);
 		arraycount++;
 		if(buffer[(*j)] != '}') (*j)++;
 	}
 
+	if (arraycount > size)
+	{
+				fprintf(stderr, "WARNING: %d 'int' values provided for static array of size %d. Surplus values ignored.\n",
+				arraycount, size);
+	}
+	
 	(*j)++;
 	return 0;
 }
@@ -70,11 +76,17 @@ int read_float_static_array(char * buffer, int /*@unused@*/ buffer_size, int * j
 			(*j)++;
 		}
 		arraydata[array_k] = '\0';
-		float_static_array[arraycount] = (float)atof(arraydata);
+		if (arraycount < size) float_static_array[arraycount] = (float)atof(arraydata);
 		arraycount++;
 		if(buffer[(*j)] != '}') (*j)++;
 	}
-
+	
+	if (arraycount > size)
+	{
+				fprintf(stderr, "WARNING: %d 'float' values provided for static array of size %d. Surplus values ignored.\n",
+				arraycount, size);
+	}
+	
 	(*j)++;
 	return 0;
 }
@@ -107,11 +119,17 @@ int read_double_static_array(char * buffer, int /*@unused@*/ buffer_size, int * 
 			(*j)++;
 		}
 		arraydata[array_k] = '\0';
-		double_static_array[arraycount] = atof(arraydata);		
+		if (arraycount < size) double_static_array[arraycount] = atof(arraydata);		
 		arraycount++;
 		if(buffer[(*j)] != '}') (*j)++;
 	}
 
+	if (arraycount > size)
+	{
+		fprintf(stderr, "WARNING: %d 'double' values provided for static array of size %d. Surplus values ignored.\n",
+				arraycount, size);
+	}
+	
 	(*j)++;
 	return 0;
 }
