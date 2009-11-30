@@ -90,6 +90,7 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	fputs("\\begin{document}\n", file);
 	fputs("\\maketitle\n", file);
 	fputs("\\tableofcontents\n", file);
+	fputs("\\listoftables\n", file);
 	fputs("\\clearpage\n\n", file);
 	
 	fputs("\\section{", file);
