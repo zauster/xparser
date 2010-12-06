@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+	<xs:annotation>
+		<xs:documentation>
+		  Description   : XMML Schema for FLAME 
+		  Project URL   : http://http://ccpforge.cse.rl.ac.uk/gf/project/xagents/
+		  Schema Author : Shawn Chin (STFC Rutherford Appleton Laboratory)
+		  SVN Revision  : $Id$
+		</xs:documentation>
+	</xs:annotation>
+	
+	<!-- DERIVED TYPES -->
+	
+	<xs:simpleType name="trueFalseString">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="true" />
+      <xs:enumeration value="false" />
+    </xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="sortOrderString">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ascending" />
+      <xs:enumeration value="descending" />
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="opString">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="EQ" />
+      <xs:enumeration value="NEQ" />
+      <xs:enumeration value="LEQ" />
+      <xs:enumeration value="GEQ" />
+      <xs:enumeration value="LT" />
+      <xs:enumeration value="GT" />
+      <xs:enumeration value="IN" />
+      <xs:enumeration value="AND" />
+      <xs:enumeration value="OR" />
+    </xs:restriction>
+  </xs:simpleType>
+  
+	<xs:complexType name="variableType">
+    <xs:all>
+      <xs:element name="name" type="xs:string" />
+      <xs:element name="description" type="xs:string" minOccurs="0" />
+      <xs:element name="type" type="xs:string" />
+    </xs:all>
+	</xs:complexType>
+	
+	<xs:complexType name="agentMemoryVariableType">
+    <xs:all>
+      <xs:element name="name" type="xs:string" />
+      <xs:element name="description" type="xs:string" minOccurs="0" />
+      <xs:element name="constant" type="trueFalseString" minOccurs="0" />
+      <xs:element name="type" type="xs:string" />
+    </xs:all>
+	</xs:complexType>
+	
+  <xs:complexType name="datatypeType">
+    <xs:all>
+      <xs:element name="name" type="xs:string" />
+      <xs:element name="description" type="xs:string" minOccurs="0" />
+      <xs:element name="variables">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="variable" type="variableType" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>  	 
+	</xs:complexType>
+	
+	<xs:complexType name="filterSegmentType">
+    <xs:choice>
+      <xs:element name="value" type="xs:string" />
+      <xs:group ref="filterParamGroup" />
+      <xs:element name="not">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:group ref="filterParamGroup" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:complexType>
+	
+  <xs:group name="filterParamGroup">
+    <xs:sequence>
+      <xs:element name="lhs" type="filterSegmentType" />
+      <xs:element name="op" type="opString" />
+      <xs:element name="rhs" type="filterSegmentType" />
+    </xs:sequence>
+  </xs:group>
+
+  
+  <xs:complexType name="conditionTimeType">
+    <xs:sequence>
+      <xs:element name="period" type="xs:string" />
+      <xs:element name="phase" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:group name="conditionChoiceGroup">
+    <xs:choice>
+      <xs:element name="time" type="conditionTimeType" />
+      <xs:group ref="conditionParamGroup" />
+    </xs:choice>
+  </xs:group>
+  
+  <xs:complexType name="conditionSegmentType">
+    <xs:choice>
+      <xs:element name="value" type="xs:string" />
+      <xs:group ref="conditionChoiceGroup" />
+      <xs:element name="not">
+        <xs:complexType>
+          <xs:group ref="conditionChoiceGroup" />
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:complexType>
+  
+  <xs:group name="conditionParamGroup">
+	  <xs:sequence>
+	    <xs:element name="lhs" type="conditionSegmentType" />
+	    <xs:element name="op" type="opString" />
+	    <xs:element name="rhs" type="conditionSegmentType" />
+	  </xs:sequence>
+  </xs:group>
+  
+  <xs:complexType name="conditionType">
+    <xs:choice>
+      <xs:group ref="conditionChoiceGroup" />
+      <xs:element name="not">
+        <xs:complexType>
+          <xs:group ref="conditionChoiceGroup" />
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:complexType>
+  
+
+	<!-- LOW LEVEL ELEMENTS -->
+	
+	<xs:element name="input">
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="messageName" type="xs:string" />
+        <xs:element name="filter" minOccurs="0">
+          <xs:complexType>
+            <xs:group ref="filterParamGroup" />
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="sort" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="key" type="xs:string" />
+              <xs:element name="order" type="sortOrderString" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+	
+	<xs:element name="output">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="messageName" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+	</xs:element>
+	
+	<xs:element name="function">
+    <!-- used in agents/xagent/functions -->
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="name" type="xs:string" />
+        <xs:element name="description" type="xs:string" minOccurs="0" />
+        <xs:element name="currentState" type="xs:string" />
+        <xs:element name="nextState" type="xs:string" />
+        <xs:element name="condition" type="conditionType" minOccurs="0" />
+        <xs:element name="inputs" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element ref="input" minOccurs="0" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="outputs" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element ref="output" minOccurs="0" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:all>
+    </xs:complexType>
+	</xs:element>
+	
+	<!-- 3rd LEVEL ELEMENTS -->
+	
+	<xs:element name="xagent">
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="name" type="xs:string" />
+        <xs:element name="description" type="xs:string" minOccurs="0" />
+        <xs:element name="memory">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="variable" type="agentMemoryVariableType" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="functions">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element ref="function" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  
+	<xs:element name="constants">
+	  <!-- used in environment -->
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="variable" type="variableType" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
+    </xs:complexType>
+	</xs:element>
+	
+	<xs:element name="functionFiles">
+    <!-- used in environment -->
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="file" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+	
+	<xs:element name="dataTypes">
+    <!-- used in environment -->
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="dataType" type="datatypeType" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="timeUnits">
+    <!-- used in environment -->
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="timeUnit">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="name" type="xs:string" />
+              <xs:element name="unit" type="xs:string" />
+              <xs:element name="phase" type="xs:nonNegativeInteger" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+	<!-- 2nd LEVEL ELEMENTS -->
+	
+	<xs:element name="models">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="model" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="file" type="xs:string" />
+              <xs:element name="enabled" type="trueFalseString" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+	</xs:element>
+	
+	<xs:element name="environment">
+    <xs:complexType>
+      <xs:all>
+        <xs:element ref="constants" minOccurs="0" />
+        <xs:element ref="functionFiles" minOccurs="0" />
+        <xs:element ref="dataTypes" minOccurs="0" />
+        <xs:element ref="timeUnits" minOccurs="0" />
+      </xs:all>
+    </xs:complexType>
+	</xs:element>
+	
+	<xs:element name="agents">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="xagent" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+	<xs:element name="messages">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="message" type="datatypeType" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
+    </xs:complexType>
+	</xs:element>
+	
+	<!-- ROOT ELEMENT = xmodel -->
+	
+	<xs:element name="xmodel">
+	 <xs:complexType>
+	   <xs:all>
+	   
+		    <xs:element name="name" type="xs:string">
+		      <xs:annotation>
+		        <xs:documentation>Model name</xs:documentation>
+		      </xs:annotation>
+		    </xs:element>
+		    
+		    <xs:element name="version" type="xs:string" minOccurs="0">
+		      <xs:annotation>
+            <xs:documentation>Model version</xs:documentation>
+          </xs:annotation>
+		    </xs:element>
+		    
+		    <xs:element name="author" type="xs:string" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>Model author</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        
+		    <xs:element name="description" type="xs:string" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>Model description</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        
+        <xs:element ref="models" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>List of nested models</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        
+        <xs:element ref="environment" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>Environment data</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        
+        <xs:element ref="agents">
+          <xs:annotation>
+            <xs:documentation>List of agent types</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        
+        <xs:element ref="messages" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>List of message types</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        
+	    </xs:all>
+    </xs:complexType>
+	</xs:element>
+	
+</xs:schema>
