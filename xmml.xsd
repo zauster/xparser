@@ -12,11 +12,13 @@
 	
 	<!-- 
 	TODO:
-	 * check uniqueness of "name"
-	 * check that "unit" is a valid base unit
-	 * check "messageName" is a valid message
-	 * check that "type" is a valid datatype
+	 * check uniqueness of "name" : xagent, datatype, timeunit, message, constant (xs:unique)
+	 * check no duplicates in model files and function files (xs:unique)
+	 * check that "unit" is a valid base unit (xs:keyref?)
+	 * check "messageName" is a valid message (xs:keyref)
+	 * check that "type" is a valid datatype (xs:keyref)
 	 -->
+	 
 	<!-- DERIVED TYPES -->
 	
 	<xs:simpleType name="trueFalseString">
