@@ -10,6 +10,13 @@
 		</xs:documentation>
 	</xs:annotation>
 	
+	<!-- 
+	TODO:
+	 * check uniqueness of "name"
+	 * check that "unit" is a valid base unit
+	 * check "messageName" is a valid message
+	 * check that "type" is a valid datatype
+	 -->
 	<!-- DERIVED TYPES -->
 	
 	<xs:simpleType name="trueFalseString">
@@ -23,6 +30,18 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="ascend" />
       <xs:enumeration value="descend" />
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="CSourceFilename">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".+\.c" />
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="XMLFilename">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".+\.[xX][mM][lL]" />
     </xs:restriction>
   </xs:simpleType>
   
@@ -264,7 +283,7 @@
     <!-- used in environment -->
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="file" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="file" type="CSourceFilename" minOccurs="0" maxOccurs="unbounded">
           <xs:annotation>
             <xs:documentation>C source file that contains agent functions (use relative path)</xs:documentation>
           </xs:annotation>
@@ -329,7 +348,7 @@
           </xs:annotation>
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="file" type="xs:string">
+              <xs:element name="file" type="XMLFilename">
                 <xs:annotation>
                   <xs:documentation>XML file of nested model (use relative path)</xs:documentation>
                 </xs:annotation>
