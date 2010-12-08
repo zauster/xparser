@@ -12,10 +12,7 @@
 	
 	<!-- 
 	TODO:
-	 * check uniqueness of "name" : xagent, datatype, timeunit, message, constant (xs:unique)
-	 * check no duplicates in model files and function files (xs:unique)
 	 * check that "unit" is a valid base unit (xs:keyref?)
-	 * check "messageName" is a valid message (xs:keyref)
 	 * check that "type" is a valid datatype (xs:keyref)
 	 -->
 	 
@@ -403,7 +400,7 @@
           </xs:annotation>
         </xs:element>
       </xs:sequence>
-    </xs:complexType>
+    </xs:complexType> 
   </xs:element>
   
 	<xs:element name="messages">
@@ -474,6 +471,81 @@
         
 	    </xs:all>
     </xs:complexType>
+    
+    <!-- CONSTRAINTS -->
+    
+    <xs:unique name="agentNameUnique">
+      <xs:annotation>
+        <xs:documentation>Names of agents must be unique</xs:documentation>
+      </xs:annotation>
+      <xs:selector xpath="agents/xagent" />
+      <xs:field xpath="name" />
+    </xs:unique>
+    
+    <xs:unique name="envConstantNameUnique">
+      <xs:annotation>
+        <xs:documentation>Names of environment constants must be unique</xs:documentation>
+      </xs:annotation>
+      <xs:selector xpath="environment/constants/variable" />
+      <xs:field xpath="name" />
+    </xs:unique>
+    
+    <xs:unique name="timeUnitNameUnique">
+      <xs:annotation>
+        <xs:documentation>Names of custom time units must be unique</xs:documentation>
+      </xs:annotation>
+      <xs:selector xpath="environment/timeUnits/timeUnit" />
+      <xs:field xpath="name" />
+    </xs:unique>
+    
+    <xs:unique name="dataTypeNameUnique">
+      <xs:annotation>
+        <xs:documentation>Names of custom datatypes must be unique</xs:documentation>
+      </xs:annotation>
+      <xs:selector xpath="environment/dataTypes/dataType" />
+      <xs:field xpath="name" />
+    </xs:unique>
+    
+    <xs:unique name="modelFileUnique">
+      <xs:annotation>
+        <xs:documentation>Each nested model should only be referenced once</xs:documentation>
+      </xs:annotation>
+      <xs:selector xpath="models/model" />
+      <xs:field xpath="file" />
+    </xs:unique>
+    
+    <xs:unique name="functionFileUnique">
+      <xs:annotation>
+        <xs:documentation>Each C source file should only be referenced once</xs:documentation>
+      </xs:annotation>
+      <xs:selector xpath="environment/functionFiles" />
+      <xs:field xpath="file" />
+    </xs:unique>
+    
+    <xs:key name="messageNameKey">
+      <xs:annotation>
+        <xs:documentation>Names of messages must be unique. Referenced by other nodes in the model.</xs:documentation>
+      </xs:annotation>
+      <xs:selector xpath="messages/message" />
+      <xs:field xpath="name" />
+    </xs:key>
+    
+    <xs:keyref name="outputMessageRef" refer="messageNameKey">
+      <xs:annotation>
+        <xs:documentation>messageName must refer to a valid message</xs:documentation>
+      </xs:annotation>
+      <xs:selector xpath="agents/xagent/functions/function/outputs/output" />
+      <xs:field xpath="messageName" />
+    </xs:keyref>
+    
+    <xs:keyref name="inputMessageRef" refer="messageNameKey">
+      <xs:annotation>
+        <xs:documentation>messageName must refere to a valid message</xs:documentation>
+      </xs:annotation>
+      <xs:selector xpath="agents/xagent/functions/function/inputs/input" />
+      <xs:field xpath="messageName" />
+    </xs:keyref>
+    
 	</xs:element>
 	
 </xs:schema>
