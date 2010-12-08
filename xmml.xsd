@@ -21,8 +21,8 @@
 	
 	<xs:simpleType name="sortOrderString">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="ascending" />
-      <xs:enumeration value="descending" />
+      <xs:enumeration value="ascend" />
+      <xs:enumeration value="descend" />
     </xs:restriction>
   </xs:simpleType>
   
@@ -206,16 +206,18 @@
         <xs:element name="name" type="xs:string" />
         <xs:element name="description" type="xs:string" minOccurs="0" />
         <xs:element name="memory">
+          <!-- possibly empty (memory defined in parent model) -->
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="variable" type="agentMemoryVariableType" maxOccurs="unbounded" />
+              <xs:element name="variable" type="agentMemoryVariableType" minOccurs="0" maxOccurs="unbounded" />
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="functions">
+        <xs:element name="functions" minOccurs="0">
+          <!-- can possibly be empty if agent functions defined in nested model -->
           <xs:complexType>
             <xs:sequence>
-              <xs:element ref="function" maxOccurs="unbounded" />
+              <xs:element ref="function" minOccurs="0" maxOccurs="unbounded" />
             </xs:sequence>
           </xs:complexType>
         </xs:element>
@@ -254,12 +256,12 @@
     <!-- used in environment -->
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="timeUnit">
+        <xs:element name="timeUnit" minOccurs="0" maxOccurs="unbounded">
           <xs:complexType>
             <xs:sequence>
               <xs:element name="name" type="xs:string" />
               <xs:element name="unit" type="xs:string" />
-              <xs:element name="phase" type="xs:nonNegativeInteger" />
+              <xs:element name="period" type="xs:nonNegativeInteger" />
             </xs:sequence>
           </xs:complexType>
         </xs:element>
