@@ -203,21 +203,43 @@
 	<xs:element name="xagent">
     <xs:complexType>
       <xs:all>
-        <xs:element name="name" type="xs:string" />
-        <xs:element name="description" type="xs:string" minOccurs="0" />
+        <xs:element name="name" type="xs:string">
+          <xs:annotation>
+            <xs:documentation>Name of agent</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="description" type="xs:string" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>Description of agent</xs:documentation>
+          </xs:annotation>
+        </xs:element>
         <xs:element name="memory">
+          <xs:annotation>
+            <xs:documentation>List of agent memory variables</xs:documentation>
+          </xs:annotation>
           <!-- possibly empty (memory defined in parent model) -->
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="variable" type="agentMemoryVariableType" minOccurs="0" maxOccurs="unbounded" />
+              <xs:element name="variable" type="agentMemoryVariableType" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                  <xs:documentation>Memory variable for this agent</xs:documentation>
+                </xs:annotation>
+              </xs:element>
             </xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name="functions" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>List of agent transition functions</xs:documentation>
+          </xs:annotation>
           <!-- can possibly be empty if agent functions defined in nested model -->
           <xs:complexType>
             <xs:sequence>
-              <xs:element ref="function" minOccurs="0" maxOccurs="unbounded" />
+              <xs:element ref="function" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                  <xs:documentation>Transition function for this agent</xs:documentation>
+                </xs:annotation>
+              </xs:element>
             </xs:sequence>
           </xs:complexType>
         </xs:element>
@@ -229,7 +251,11 @@
 	  <!-- used in environment -->
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="variable" type="variableType" minOccurs="0" maxOccurs="unbounded" />
+        <xs:element name="variable" type="variableType" minOccurs="0" maxOccurs="unbounded">
+          <xs:annotation>
+            <xs:documentation>Environment constant</xs:documentation>
+          </xs:annotation>
+        </xs:element>
       </xs:sequence>
     </xs:complexType>
 	</xs:element>
@@ -238,7 +264,11 @@
     <!-- used in environment -->
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="file" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+        <xs:element name="file" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+          <xs:annotation>
+            <xs:documentation>C source file that contains agent functions (use relative path)</xs:documentation>
+          </xs:annotation>
+        </xs:element>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -247,7 +277,11 @@
     <!-- used in environment -->
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="dataType" type="datatypeType" minOccurs="0" maxOccurs="unbounded" />
+        <xs:element name="dataType" type="datatypeType" minOccurs="0" maxOccurs="unbounded">
+          <xs:annotation>
+            <xs:documentation>Custom datatype</xs:documentation>
+          </xs:annotation>
+        </xs:element>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -257,11 +291,26 @@
     <xs:complexType>
       <xs:sequence>
         <xs:element name="timeUnit" minOccurs="0" maxOccurs="unbounded">
+          <xs:annotation>
+            <xs:documentation>Custom time unit</xs:documentation>
+          </xs:annotation>
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="name" type="xs:string" />
-              <xs:element name="unit" type="xs:string" />
-              <xs:element name="period" type="xs:nonNegativeInteger" />
+              <xs:element name="name" type="xs:string">
+                <xs:annotation>
+                  <xs:documentation>Name of time unit</xs:documentation>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="unit" type="xs:string">
+                <xs:annotation>
+                  <xs:documentation>Base unit - either "iteration" or name of another custom time unit</xs:documentation>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="period" type="xs:nonNegativeInteger">
+                <xs:annotation>
+                  <xs:documentation>Multiple of base unit represented by this custom time unit</xs:documentation>
+                </xs:annotation>
+              </xs:element>
             </xs:sequence>
           </xs:complexType>
         </xs:element>
@@ -275,10 +324,21 @@
     <xs:complexType>
       <xs:sequence>
         <xs:element name="model" minOccurs="0" maxOccurs="unbounded">
+          <xs:annotation>
+            <xs:documentation>Link to nested model</xs:documentation>
+          </xs:annotation>
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="file" type="xs:string" />
-              <xs:element name="enabled" type="trueFalseString" />
+              <xs:element name="file" type="xs:string">
+                <xs:annotation>
+                  <xs:documentation>XML file of nested model (use relative path)</xs:documentation>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="enabled" type="trueFalseString">
+                <xs:annotation>
+                  <xs:documentation>Is this nested model enabled? ("true" or "false")</xs:documentation>
+                </xs:annotation>
+              </xs:element>
             </xs:sequence>
           </xs:complexType>
         </xs:element>
@@ -289,10 +349,26 @@
 	<xs:element name="environment">
     <xs:complexType>
       <xs:all>
-        <xs:element ref="constants" minOccurs="0" />
-        <xs:element ref="functionFiles" minOccurs="0" />
-        <xs:element ref="dataTypes" minOccurs="0" />
-        <xs:element ref="timeUnits" minOccurs="0" />
+        <xs:element ref="constants" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>List of environment constants</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element ref="functionFiles" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>List of C source files where functions are defined</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element ref="dataTypes" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>List of custom datatypes</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element ref="timeUnits" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>List of custom time units</xs:documentation>
+          </xs:annotation>
+        </xs:element>
       </xs:all>
     </xs:complexType>
 	</xs:element>
@@ -300,7 +376,11 @@
 	<xs:element name="agents">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="xagent" minOccurs="0" maxOccurs="unbounded" />
+        <xs:element ref="xagent" minOccurs="0" maxOccurs="unbounded">
+          <xs:annotation>
+            <xs:documentation>Agent definition</xs:documentation>
+          </xs:annotation>
+        </xs:element>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -308,7 +388,11 @@
 	<xs:element name="messages">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="message" type="datatypeType" minOccurs="0" maxOccurs="unbounded" />
+        <xs:element name="message" type="datatypeType" minOccurs="0" maxOccurs="unbounded">
+          <xs:annotation>
+            <xs:documentation>Message definition</xs:documentation>
+          </xs:annotation>
+        </xs:element>
       </xs:sequence>
     </xs:complexType>
 	</xs:element>
