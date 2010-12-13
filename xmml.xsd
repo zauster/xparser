@@ -13,7 +13,8 @@
 	<!-- 
 	TODO:
 	 * check that "unit" is a valid base unit (xs:keyref?)
-	 * check that "type" is a valid datatype (xs:keyref)
+	 * check that "type" is a valid data type (xs:keyref)
+	 (alas, the two items above cannot be achieved using XML Schema alone)
 	 -->
 	 
 	<!-- DERIVED TYPES -->
