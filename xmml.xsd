@@ -1,50 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="qualified">
 
-	<xs:annotation>
-		<xs:documentation>
-		  Description   : XMML Schema for FLAME 
-		  Project URL   : http://http://ccpforge.cse.rl.ac.uk/gf/project/xagents/
-		  Schema Author : Shawn Chin (STFC Rutherford Appleton Laboratory)
-		  SVN Revision  : $Id$
-		</xs:documentation>
-	</xs:annotation>
-	
-	<!-- 
-	TODO:
-	 * check that "unit" is a valid base unit (xs:keyref?)
-	 * check that "type" is a valid data type (xs:keyref)
-	 (alas, the two items above cannot be achieved using XML Schema alone)
-	 -->
-	 
-	<!-- DERIVED TYPES -->
-	
-	<xs:simpleType name="trueFalseString">
+  <xs:annotation>
+    <xs:documentation>
+      Description : XMML Schema for FLAME
+      Project URL : http://http://ccpforge.cse.rl.ac.uk/gf/project/xagents/
+      Schema Author : Shawn Chin (STFC Rutherford Appleton Laboratory)
+      SVN Revision : $Id$
+    </xs:documentation>
+  </xs:annotation>
+
+  <!-- TODO: 
+     * check that "unit" is a valid base unit (xs:keyref?) 
+     * check that "type" is a valid data type (xs:keyref) 
+     (alas, the two items above cannot be achieved using XML Schema alone) 
+  -->
+
+  <!-- DERIVED TYPES -->
+
+  <xs:simpleType name="trueFalseString">
     <xs:restriction base="xs:string">
       <xs:enumeration value="true" />
       <xs:enumeration value="false" />
     </xs:restriction>
-	</xs:simpleType>
-	
-	<xs:simpleType name="sortOrderString">
+  </xs:simpleType>
+
+  <xs:simpleType name="sortOrderString">
     <xs:restriction base="xs:string">
       <xs:enumeration value="ascend" />
       <xs:enumeration value="descend" />
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="CSourceFilename">
     <xs:restriction base="xs:string">
       <xs:pattern value=".+\.c" />
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="XMLFilename">
     <xs:restriction base="xs:string">
       <xs:pattern value=".+\.[xX][mM][lL]" />
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="opString">
     <xs:restriction base="xs:string">
       <xs:enumeration value="EQ" />
@@ -58,24 +58,24 @@
       <xs:enumeration value="OR" />
     </xs:restriction>
   </xs:simpleType>
-  
-	<xs:complexType name="variableType">
+
+  <xs:complexType name="variableType">
     <xs:all>
       <xs:element name="name" type="xs:string" />
       <xs:element name="description" type="xs:string" minOccurs="0" />
       <xs:element name="type" type="xs:string" />
     </xs:all>
-	</xs:complexType>
-	
-	<xs:complexType name="agentMemoryVariableType">
+  </xs:complexType>
+
+  <xs:complexType name="agentMemoryVariableType">
     <xs:all>
       <xs:element name="name" type="xs:string" />
       <xs:element name="description" type="xs:string" minOccurs="0" />
       <xs:element name="constant" type="trueFalseString" minOccurs="0" />
       <xs:element name="type" type="xs:string" />
     </xs:all>
-	</xs:complexType>
-	
+  </xs:complexType>
+
   <xs:complexType name="datatypeType">
     <xs:all>
       <xs:element name="name" type="xs:string" />
@@ -87,10 +87,10 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-    </xs:all>  	 
-	</xs:complexType>
-	
-	<xs:complexType name="filterSegmentType">
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="filterSegmentType">
     <xs:choice>
       <xs:element name="value" type="xs:string" />
       <xs:group ref="filterParamGroup" />
@@ -103,7 +103,7 @@
       </xs:element>
     </xs:choice>
   </xs:complexType>
-	
+
   <xs:group name="filterParamGroup">
     <xs:sequence>
       <xs:element name="lhs" type="filterSegmentType" />
@@ -112,21 +112,21 @@
     </xs:sequence>
   </xs:group>
 
-  
+
   <xs:complexType name="conditionTimeType">
     <xs:sequence>
       <xs:element name="period" type="xs:string" />
       <xs:element name="phase" type="xs:string" />
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:group name="conditionChoiceGroup">
     <xs:choice>
       <xs:element name="time" type="conditionTimeType" />
       <xs:group ref="conditionParamGroup" />
     </xs:choice>
   </xs:group>
-  
+
   <xs:complexType name="conditionSegmentType">
     <xs:choice>
       <xs:element name="value" type="xs:string" />
@@ -138,15 +138,15 @@
       </xs:element>
     </xs:choice>
   </xs:complexType>
-  
+
   <xs:group name="conditionParamGroup">
-	  <xs:sequence>
-	    <xs:element name="lhs" type="conditionSegmentType" />
-	    <xs:element name="op" type="opString" />
-	    <xs:element name="rhs" type="conditionSegmentType" />
-	  </xs:sequence>
+    <xs:sequence>
+      <xs:element name="lhs" type="conditionSegmentType" />
+      <xs:element name="op" type="opString" />
+      <xs:element name="rhs" type="conditionSegmentType" />
+    </xs:sequence>
   </xs:group>
-  
+
   <xs:complexType name="conditionType">
     <xs:choice>
       <xs:group ref="conditionChoiceGroup" />
@@ -157,11 +157,11 @@
       </xs:element>
     </xs:choice>
   </xs:complexType>
-  
 
-	<!-- LOW LEVEL ELEMENTS -->
-	
-	<xs:element name="input">
+
+  <!-- LOW LEVEL ELEMENTS -->
+
+  <xs:element name="input">
     <xs:complexType>
       <xs:all>
         <xs:element name="messageName" type="xs:string" />
@@ -181,16 +181,16 @@
       </xs:all>
     </xs:complexType>
   </xs:element>
-	
-	<xs:element name="output">
+
+  <xs:element name="output">
     <xs:complexType>
       <xs:sequence>
         <xs:element name="messageName" type="xs:string" />
       </xs:sequence>
     </xs:complexType>
-	</xs:element>
-	
-	<xs:element name="function">
+  </xs:element>
+
+  <xs:element name="function">
     <!-- used in agents/xagent/functions -->
     <xs:complexType>
       <xs:all>
@@ -215,11 +215,11 @@
         </xs:element>
       </xs:all>
     </xs:complexType>
-	</xs:element>
-	
-	<!-- 3rd LEVEL ELEMENTS -->
-	
-	<xs:element name="xagent">
+  </xs:element>
+
+  <!-- 3rd LEVEL ELEMENTS -->
+
+  <xs:element name="xagent">
     <xs:complexType>
       <xs:all>
         <xs:element name="name" type="xs:string">
@@ -251,7 +251,8 @@
           <xs:annotation>
             <xs:documentation>List of agent transition functions</xs:documentation>
           </xs:annotation>
-          <!-- can possibly be empty if agent functions defined in nested model -->
+          <!-- can possibly be empty if agent functions defined in nested 
+            model -->
           <xs:complexType>
             <xs:sequence>
               <xs:element ref="function" minOccurs="0" maxOccurs="unbounded">
@@ -265,9 +266,9 @@
       </xs:all>
     </xs:complexType>
   </xs:element>
-  
-	<xs:element name="constants">
-	  <!-- used in environment -->
+
+  <xs:element name="constants">
+    <!-- used in environment -->
     <xs:complexType>
       <xs:sequence>
         <xs:element name="variable" type="variableType" minOccurs="0" maxOccurs="unbounded">
@@ -277,22 +278,24 @@
         </xs:element>
       </xs:sequence>
     </xs:complexType>
-	</xs:element>
-	
-	<xs:element name="functionFiles">
+  </xs:element>
+
+  <xs:element name="functionFiles">
     <!-- used in environment -->
     <xs:complexType>
       <xs:sequence>
         <xs:element name="file" type="CSourceFilename" minOccurs="0" maxOccurs="unbounded">
           <xs:annotation>
-            <xs:documentation>C source file that contains agent functions (use relative path)</xs:documentation>
+            <xs:documentation>
+              C source file that contains agent functions (use relative path)
+            </xs:documentation>
           </xs:annotation>
         </xs:element>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-	
-	<xs:element name="dataTypes">
+
+  <xs:element name="dataTypes">
     <!-- used in environment -->
     <xs:complexType>
       <xs:sequence>
@@ -304,7 +307,7 @@
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-  
+
   <xs:element name="timeUnits">
     <!-- used in environment -->
     <xs:complexType>
@@ -322,12 +325,16 @@
               </xs:element>
               <xs:element name="unit" type="xs:string">
                 <xs:annotation>
-                  <xs:documentation>Base unit - either "iteration" or name of another custom time unit</xs:documentation>
+                  <xs:documentation>
+                    Base unit - either "iteration" or name of another custom time unit
+                  </xs:documentation>
                 </xs:annotation>
               </xs:element>
               <xs:element name="period" type="xs:nonNegativeInteger">
                 <xs:annotation>
-                  <xs:documentation>Multiple of base unit represented by this custom time unit</xs:documentation>
+                  <xs:documentation>
+                    Multiple of base unit represented by this custom time unit
+                  </xs:documentation>
                 </xs:annotation>
               </xs:element>
             </xs:sequence>
@@ -336,10 +343,10 @@
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-  
-	<!-- 2nd LEVEL ELEMENTS -->
-	
-	<xs:element name="models">
+
+  <!-- 2nd LEVEL ELEMENTS -->
+
+  <xs:element name="models">
     <xs:complexType>
       <xs:sequence>
         <xs:element name="model" minOccurs="0" maxOccurs="unbounded">
@@ -350,12 +357,16 @@
             <xs:sequence>
               <xs:element name="file" type="XMLFilename">
                 <xs:annotation>
-                  <xs:documentation>XML file of nested model (use relative path)</xs:documentation>
+                  <xs:documentation>
+                    XML file of nested model (use relative path)
+                  </xs:documentation>
                 </xs:annotation>
               </xs:element>
               <xs:element name="enabled" type="trueFalseString">
                 <xs:annotation>
-                  <xs:documentation>Is this nested model enabled? ("true" or "false")</xs:documentation>
+                  <xs:documentation>
+                    Is this nested model enabled? ("true" or "false")
+                  </xs:documentation>
                 </xs:annotation>
               </xs:element>
             </xs:sequence>
@@ -363,9 +374,9 @@
         </xs:element>
       </xs:sequence>
     </xs:complexType>
-	</xs:element>
-	
-	<xs:element name="environment">
+  </xs:element>
+
+  <xs:element name="environment">
     <xs:complexType>
       <xs:all>
         <xs:element ref="constants" minOccurs="0">
@@ -375,24 +386,28 @@
         </xs:element>
         <xs:element ref="functionFiles" minOccurs="0">
           <xs:annotation>
-            <xs:documentation>List of C source files where functions are defined</xs:documentation>
+            <xs:documentation>
+              List of C source files where functions are defined
+            </xs:documentation>
           </xs:annotation>
         </xs:element>
         <xs:element ref="dataTypes" minOccurs="0">
           <xs:annotation>
-            <xs:documentation>List of custom datatypes</xs:documentation>
+            <xs:documentation>List of custom datatypes
+            </xs:documentation>
           </xs:annotation>
         </xs:element>
         <xs:element ref="timeUnits" minOccurs="0">
           <xs:annotation>
-            <xs:documentation>List of custom time units</xs:documentation>
+            <xs:documentation>List of custom time units
+            </xs:documentation>
           </xs:annotation>
         </xs:element>
       </xs:all>
     </xs:complexType>
-	</xs:element>
-	
-	<xs:element name="agents">
+  </xs:element>
+
+  <xs:element name="agents">
     <xs:complexType>
       <xs:sequence>
         <xs:element ref="xagent" minOccurs="0" maxOccurs="unbounded">
@@ -401,10 +416,10 @@
           </xs:annotation>
         </xs:element>
       </xs:sequence>
-    </xs:complexType> 
+    </xs:complexType>
   </xs:element>
-  
-	<xs:element name="messages">
+
+  <xs:element name="messages">
     <xs:complexType>
       <xs:sequence>
         <xs:element name="message" type="datatypeType" minOccurs="0" maxOccurs="unbounded">
@@ -414,139 +429,158 @@
         </xs:element>
       </xs:sequence>
     </xs:complexType>
-	</xs:element>
-	
-	<!-- ROOT ELEMENT = xmodel -->
-	
-	<xs:element name="xmodel">
-	 <xs:complexType>
-	   <xs:all>
-	   
-		    <xs:element name="name" type="xs:string">
-		      <xs:annotation>
-		        <xs:documentation>Model name</xs:documentation>
-		      </xs:annotation>
-		    </xs:element>
-		    
-		    <xs:element name="version" type="xs:string" minOccurs="0">
-		      <xs:annotation>
+  </xs:element>
+
+  <!-- ROOT ELEMENT = xmodel -->
+
+  <xs:element name="xmodel">
+    <xs:complexType>
+      <xs:all>
+
+        <xs:element name="name" type="xs:string">
+          <xs:annotation>
+            <xs:documentation>Model name</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+
+        <xs:element name="version" type="xs:string" minOccurs="0">
+          <xs:annotation>
             <xs:documentation>Model version</xs:documentation>
           </xs:annotation>
-		    </xs:element>
-		    
-		    <xs:element name="author" type="xs:string" minOccurs="0">
+        </xs:element>
+
+        <xs:element name="author" type="xs:string" minOccurs="0">
           <xs:annotation>
             <xs:documentation>Model author</xs:documentation>
           </xs:annotation>
         </xs:element>
-        
-		    <xs:element name="description" type="xs:string" minOccurs="0">
+
+        <xs:element name="description" type="xs:string" minOccurs="0">
           <xs:annotation>
             <xs:documentation>Model description</xs:documentation>
           </xs:annotation>
         </xs:element>
-        
+
         <xs:element ref="models" minOccurs="0">
           <xs:annotation>
             <xs:documentation>List of nested models</xs:documentation>
           </xs:annotation>
         </xs:element>
-        
+
         <xs:element ref="environment" minOccurs="0">
           <xs:annotation>
             <xs:documentation>Environment data</xs:documentation>
           </xs:annotation>
         </xs:element>
-        
+
         <xs:element ref="agents">
           <xs:annotation>
             <xs:documentation>List of agent types</xs:documentation>
           </xs:annotation>
         </xs:element>
-        
+
         <xs:element ref="messages" minOccurs="0">
           <xs:annotation>
             <xs:documentation>List of message types</xs:documentation>
           </xs:annotation>
         </xs:element>
-        
-	    </xs:all>
+
+      </xs:all>
     </xs:complexType>
-    
+
     <!-- CONSTRAINTS -->
-    
+
     <xs:unique name="agentNameUnique">
       <xs:annotation>
-        <xs:documentation>Names of agents must be unique</xs:documentation>
+        <xs:documentation>
+          Names of agents must be unique
+        </xs:documentation>
       </xs:annotation>
       <xs:selector xpath="agents/xagent" />
       <xs:field xpath="name" />
     </xs:unique>
-    
+
     <xs:unique name="envConstantNameUnique">
       <xs:annotation>
-        <xs:documentation>Names of environment constants must be unique</xs:documentation>
+        <xs:documentation>
+          Names of environment constants must be unique
+        </xs:documentation>
       </xs:annotation>
       <xs:selector xpath="environment/constants/variable" />
       <xs:field xpath="name" />
     </xs:unique>
-    
+
     <xs:unique name="timeUnitNameUnique">
       <xs:annotation>
-        <xs:documentation>Names of custom time units must be unique</xs:documentation>
+        <xs:documentation>
+          Names of custom time units must be unique
+        </xs:documentation>
       </xs:annotation>
       <xs:selector xpath="environment/timeUnits/timeUnit" />
       <xs:field xpath="name" />
     </xs:unique>
-    
+
     <xs:unique name="dataTypeNameUnique">
       <xs:annotation>
-        <xs:documentation>Names of custom datatypes must be unique</xs:documentation>
+        <xs:documentation>
+          Names of custom datatypes must be unique
+        </xs:documentation>
       </xs:annotation>
       <xs:selector xpath="environment/dataTypes/dataType" />
       <xs:field xpath="name" />
     </xs:unique>
-    
+
     <xs:unique name="modelFileUnique">
       <xs:annotation>
-        <xs:documentation>Each nested model should only be referenced once</xs:documentation>
+        <xs:documentation>
+          Each nested model should only be referenced once
+        </xs:documentation>
       </xs:annotation>
       <xs:selector xpath="models/model" />
       <xs:field xpath="file" />
     </xs:unique>
-    
+
     <xs:unique name="functionFileUnique">
       <xs:annotation>
-        <xs:documentation>Each C source file should only be referenced once</xs:documentation>
+        <xs:documentation>
+          Each C source file should only be referenced once
+        </xs:documentation>
       </xs:annotation>
       <xs:selector xpath="environment/functionFiles" />
       <xs:field xpath="file" />
     </xs:unique>
-    
+
     <xs:key name="messageNameKey">
       <xs:annotation>
-        <xs:documentation>Names of messages must be unique. Referenced by other nodes in the model.</xs:documentation>
+        <xs:documentation>
+          Names of messages must be unique. 
+          Referenced by other nodes in the model.
+        </xs:documentation>
       </xs:annotation>
       <xs:selector xpath="messages/message" />
       <xs:field xpath="name" />
     </xs:key>
-    
+
     <xs:keyref name="outputMessageRef" refer="messageNameKey">
       <xs:annotation>
-        <xs:documentation>messageName must refer to a valid message</xs:documentation>
+        <xs:documentation>
+          messageName must refer to a valid message
+        </xs:documentation>
       </xs:annotation>
       <xs:selector xpath="agents/xagent/functions/function/outputs/output" />
       <xs:field xpath="messageName" />
     </xs:keyref>
-    
+
     <xs:keyref name="inputMessageRef" refer="messageNameKey">
       <xs:annotation>
-        <xs:documentation>messageName must refere to a valid message</xs:documentation>
+        <xs:documentation>
+          messageName must refere to a valid message
+        </xs:documentation>
       </xs:annotation>
       <xs:selector xpath="agents/xagent/functions/function/inputs/input" />
       <xs:field xpath="messageName" />
     </xs:keyref>
-    
-	</xs:element>
-	
+
+  </xs:element>
+
 </xs:schema>
