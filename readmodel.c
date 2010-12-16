@@ -996,8 +996,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					{
 						if(type) { handleVariableType(current_string, current_variable, modeldata); }
 						if(name) { handleVariableName(current_string, current_variable); }
-						/*if(type) current_variable->type = copy_array_to_str(current_string);*/
-						/*if(name) current_variable->name = copy_array_to_str(current_string);*/
+						if(desc) current_variable->description = copy_array_to_str(current_string);
 					}
 					else if(name)
 					{
