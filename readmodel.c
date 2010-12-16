@@ -991,7 +991,6 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				}
 				else if(datatype)
 				{
-					if(desc) current_datatype->desc = copy_array_to_str(current_string);
 
 					if(var)
 					{
@@ -1005,6 +1004,10 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 						current_datatype->name = copy_array_to_str(current_string);
 						printf("- Datatype : %s\n", current_datatype->name);
 					}
+                    else if(desc)
+                    {
+					    current_datatype->desc = copy_array_to_str(current_string);
+                    }
 				}
 				else if(var)
 				{
