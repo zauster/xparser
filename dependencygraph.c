@@ -50,6 +50,7 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	file = fopen(buffer, "w");
 	
 	fputs("\\documentclass[a4paper,11pt]{article}\n", file);
+	fputs("\\usepackage[table]{xcolor}\n", file);
 	fputs("\\usepackage{amsfonts}\n", file);
 	fputs("\\usepackage{amssymb}\n", file);
 	fputs("\\usepackage{amsmath}\n", file);
@@ -88,9 +89,9 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	fputs("\\date{\\today}\n\n", file);
 	fputs("\\makeindex\n\n", file);
 	fputs("\\begin{document}\n", file);
+	fputs("\\rowcolors[]{2}{lightgray!40}{yellow!25} %% color table rows with alternating colors\n", file);
 	fputs("\\maketitle\n", file);
 	fputs("\\tableofcontents\n", file);
-	fputs("\\listoftables\n", file);
 	fputs("\\clearpage\n\n", file);
 	
 	fputs("\\section{", file);
@@ -100,19 +101,21 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	current_xmachine = * modeldata->p_xmachines;
 	for(current_xmachine = * modeldata->p_xmachines; current_xmachine != NULL; current_xmachine = current_xmachine->next)
 	{
-		fputs("\n\n\\clearpage\n\\subsection{", file);
+		//fputs("\n\n\\clearpage", file);
+		
+		//Section header
+		fputs("\n\\subsection{", file);
 		latex_print_to_file(current_xmachine->name, file);
 		fputs("}\n\n", file);
 		
 		//MEMORY TABLE
 /*
 		fputs("\\subsubsection{Memory}\n\n", file);
-		
 		fputs("See Table \\ref{Table: ", file);
 		latex_print_to_file(current_xmachine->name, file);
 		fputs(" Memory}.\n\n", file);
 */				
-		fputs("\\begin{landscape}\n", file);
+		//fputs("\\begin{landscape}\n", file);
 		fputs("\\begin{longtable}[H!]{ll}\n", file);
 		fputs("\\caption{{\\bfseries List of memory variables for ", file);
 		latex_print_to_file(current_xmachine->name, file);
@@ -143,11 +146,11 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 					current_variable = current_variable->next)
 		{
 			fputs("\\midrule\n", file);
-			fputs("\\url{", file);
+			fputs("\\parbox{5cm}{\\url{", file);
 			fputs(current_variable->type, file);
 			fputs("} \\url{", file);
 			fputs(current_variable->name, file);
-			fputs("}", file);
+			fputs("}}", file);
 			fputs(" \\index{\\url{", file);
 			fputs(current_variable->name, file);
 			fputs("}} & \\parbox{10cm}{", file);
@@ -157,7 +160,7 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 		}
 
 		fputs("\\end{longtable}\n", file);
-		fputs("\\end{landscape}\n\n", file);
+		//fputs("\\end{landscape}\n\n", file);
 
 		//FUNCTION TABLE
 /*
@@ -167,7 +170,7 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 		latex_print_to_file(current_xmachine->name, file);
 		fputs(" Functions}.\n\n", file);
 */				
-		fputs("\\begin{landscape}\n", file);
+		//fputs("\\begin{landscape}\n", file);
 		fputs("\\begin{longtable}[H!]{ll}\n", file);
 		fputs("\\caption{{\\bfseries List of functions for ", file);
 		latex_print_to_file(current_xmachine->name, file);
@@ -198,9 +201,9 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 			current_function = current_function->next)
 		{
 			fputs("\\midrule\n", file);
-			fputs("\\url{", file);
+			fputs("\\parbox{5cm}{\\url{", file);
 			fputs(current_function->name, file);
-			fputs("}", file);
+			fputs("}}", file);
 			fputs(" \\index{\\url{", file);
 			fputs(current_function->name, file);
 			fputs("}} & \\parbox{10cm}{", file);
@@ -208,7 +211,7 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 			fputs("} \\\\\n", file);
 		}
 		fputs("\\end{longtable}\n", file);
-		fputs("\\end{landscape}\n\n", file);
+		//fputs("\\end{landscape}\n\n", file);
 	
 		//fputs("\\subsubsection{States}\n", file);		
 		//fputs("\\paragraph{State:}\\url{State_name}.\n", file);
@@ -237,13 +240,12 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	}//end of xmachine
 	
 	//MESSAGE TABLE
-
-	fputs("\\subsection{Messages}\n", file);
-	
+	fputs("\\subsection{Messages}\n", file);	
 	fputs("See Table \\ref{Table: Messages}.", file);
-	
-	fputs("\\begin{landscape}\n", file);
+
+	//fputs("\\begin{landscape}\n", file);
 	fputs("\\begin{longtable}[H!]{ll}\n", file);
+	
 	fputs("\\caption{{\\bfseries List of messages.}}\n", file);
 	fputs("\\label{Table: Messages}\\\\\n", file);
 	
@@ -292,15 +294,16 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	}
 	
 	fputs("\\end{longtable}\n", file);
-	fputs("\\end{landscape}\n\n", file);
+	//fputs("\\end{landscape}\n\n", file);
 	
 	//CONSTANTS TABLE
 
 	fputs("\\subsection{Constants}\n", file);
-	fputs("See Table \\ref{Table: constants}.\n", file);
+	//fputs("See Table \\ref{Table: constants}.\n", file);
 	
-	fputs("\\begin{landscape}\n", file);
+	//fputs("\\begin{landscape}\n", file);
 	fputs("\\begin{longtable}[H!]{ll}\n", file);
+
 	fputs("\\caption{{\\bfseries List of constants.}}\n", file);
 	fputs("\\label{Table: constants}\\\\\n", file);
 	
@@ -339,15 +342,15 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 	}
 	
 	fputs("\\end{longtable}\n", file);
-	fputs("\\end{landscape}\n\n", file);
+	//fputs("\\end{landscape}\n\n", file);
 	
 	//ADT TABLE
-
 	fputs("\\subsection{Datatypes}\n", file);
-	fputs("See Table \\ref{Table: datatypes}.\n", file);
+	//fputs("See Table \\ref{Table: datatypes}.\n", file);
 
-	fputs("\\begin{landscape}\n", file);
+	//fputs("\\begin{landscape}\n", file);
 	fputs("\\begin{longtable}[H!]{ll}\n", file);
+
 	fputs("\\caption{{\\bfseries List of attributes for ADTs.}}\n", file);
 	fputs("\\label{Table: datatypes}\\\\\n", file);
 	
@@ -381,6 +384,7 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 		latex_print_to_file(current_datatype->desc, file);	
 		fputs("} \\\\\n", file);
 		//fputs("\\midrule    \n", file);
+
 		for(current_variable = current_datatype->vars; current_variable != NULL;
 			current_variable = current_variable->next)
 		{
@@ -392,11 +396,12 @@ void output_latex(char * filename, char * filepath, model_data * modeldata)
 			latex_print_to_file(current_variable->description, file);
 			fputs("}\\\\\n", file);
 		}
-		if(current_datatype != NULL) fputs("\\midrule\n", file);
+
+		if(current_datatype->next != NULL) fputs("\\midrule\n", file);
 	}
 	
 	fputs("\\end{longtable}\n", file);
-	fputs("\\end{landscape}\n\n", file);
+	//fputs("\\end{landscape}\n\n", file);
 
 /*
 	fputs("\\clearpage\n", file);
