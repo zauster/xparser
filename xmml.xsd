@@ -486,6 +486,9 @@
         </xs:element>
 
       </xs:all>
+      
+      <xs:attribute name="version" type="xs:string" use="required"/>
+      
     </xs:complexType>
 
     <!-- CONSTRAINTS -->
@@ -546,8 +549,8 @@
           Each C source file should only be referenced once
         </xs:documentation>
       </xs:annotation>
-      <xs:selector xpath="environment/functionFiles" />
-      <xs:field xpath="file" />
+      <xs:selector xpath="environment/functionFiles/file" />
+      <xs:field xpath="." />
     </xs:unique>
 
     <xs:key name="messageNameKey">
