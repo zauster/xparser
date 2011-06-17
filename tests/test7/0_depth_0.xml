@@ -1,0 +1,34 @@
+<states>
+<itno>0</itno>
+<imports>
+	<import>
+		<location>0_depth_1.xml</location>
+		<format>xml</format>
+		<type>agent</type>
+	</import>
+	<import>
+		<location>0_depth_1.xml</location>
+		<format>xml</format>
+		<type>environment</type>
+	</import>
+	<import>
+		<location>../test7/0_depth_1_agent.xml</location>
+		<format>xml</format>
+		<type>agent</type>
+	</import>
+	<import>
+		<location>./0_depth_1_env.xml</location>
+		<format>xml</format>
+		<type>environment</type>
+	</import>
+</imports>
+<environment>
+<env_int>1</env_int>
+</environment>
+<agents>
+<xagent>
+<name>agent_a</name>
+<id>1</id>
+</xagent>
+</agents>
+</states>

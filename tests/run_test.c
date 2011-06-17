@@ -26,6 +26,8 @@ void test_4_parallel_3(void);
 void test_4_parallel_4(void);
 void test_input(void);
 void test_debug(void);
+void test_imports(void);
+void test_outputs(void);
 void test_model_code_standard(int n);
 void test_model_code_standard_1(void) { test_model_code_standard(1); }
 void test_model_code_standard_2(void) { test_model_code_standard(2); }
@@ -33,6 +35,7 @@ void test_model_code_standard_3(void) { test_model_code_standard(3); }
 void test_model_code_standard_4(void) { test_model_code_standard(4); }
 void test_model_code_standard_5(void) { test_model_code_standard(5); }
 void test_model_code_standard_6(void) { test_model_code_standard(6); }
+void test_model_code_standard_7(void) { test_model_code_standard(7); }
 
 /* Define tests within this suite */
 CU_TestInfo test_array_1[] =
@@ -83,6 +86,14 @@ CU_TestInfo test_array_6[] =
 {
 	{"test debug mode                                 ", test_debug },
 	{"test model code standard                        ", test_model_code_standard_6 },
+    CU_TEST_INFO_NULL,
+};
+
+CU_TestInfo test_array_7[] =
+{
+	{"test imports                                    ", test_imports },
+	{"test outputs                                    ", test_outputs },
+	{"test model code standard                        ", test_model_code_standard_7 },
     CU_TEST_INFO_NULL,
 };
 
@@ -496,7 +507,7 @@ void test_model_code_standard(int n)
 	int rc;
 	char buffer[1000];
 	
-	sprintf(buffer, "splint -I/Users/stc/workspace/libmboard-0.2/include -weak -namechecks -bufferoverflowhigh test%d/*.c", n);
+	sprintf(buffer, "splint -I/Users/stc/workspace/libmboard/include -weak -namechecks -bufferoverflowhigh test%d/*.c", n);
 	
 	/* Test if splint is available */
 	rc = call_external(buffer);
@@ -507,6 +518,57 @@ void test_model_code_standard(int n)
 		printf("\n");
 		rc = system(buffer);
 		CU_FAIL();
+	}
+}
+
+void test_imports(void)
+{
+	int rc;
+
+	rc = call_external("test7/main 1 test7/0_depth_0.xml");
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = compare_chars_in_files("test7/1.xml", "test7/1.xml.saved");
+	CU_ASSERT_EQUAL(rc, 0);
+}
+
+void test_outputs(void)
+{
+	int rc;
+	FILE * file;
+
+	rc = call_external("test7/main 30 test7/0.xml");
+	CU_ASSERT_EQUAL(rc, 0);
+
+	if((file = fopen("test7/2.xml", "r"))==NULL)
+	{
+		CU_FAIL("cannot read test7/2.xml");
+	}
+	else
+	{
+		fclose(file);
+		remove("test7/2.xml");
+		CU_PASS();
+	}
+	if((file = fopen("test7/12.xml", "r"))==NULL)
+	{
+		CU_FAIL("cannot read test7/12.xml");
+	}
+	else
+	{
+		fclose(file);
+		remove("test7/12.xml");
+		CU_PASS();
+	}
+	if((file = fopen("test7/22.xml", "r"))==NULL)
+	{
+		CU_FAIL("cannot read test7/22.xml");
+	}
+	else
+	{
+		fclose(file);
+		remove("test7/22.xml");
+		CU_PASS();
 	}
 }
 
@@ -542,7 +604,7 @@ int init_test_model(int index, int option)
 				if(strstr(buffer, "error: mboard.h: No such file or directory") != NULL)
 				{
 					/* Try again but with Simon's default libmboard location */
-					sprintf(buffer, "make --directory=test%d/ LIBMBOARD_DIR=/Users/stc/workspace/libmboard-0.2/", index);
+					sprintf(buffer, "make --directory=test%d/ LIBMBOARD_DIR=/Users/stc/workspace/libmboard/", index);
 					rc2 = call_external(buffer);
 					//rc2 = system(buffer);
 					if(rc2 == 0) return 0;
@@ -552,9 +614,9 @@ int init_test_model(int index, int option)
 					return -1;
 				}
 				if(strstr(buffer, "error") != NULL)
-					printf(buffer);
+					printf("%s", buffer);
 				if(strstr(buffer, "warning") != NULL)
-					printf(buffer);
+					printf("%s", buffer);
 			}
 
 			fclose(out);
@@ -594,6 +656,8 @@ int  init_test_model_5(void) { return init_test_model(5, 0);  }
 int clean_test_model_5(void) { return clean_test_model(5); }
 int  init_test_model_6(void) { return init_test_model(6, 0);  }
 int clean_test_model_6(void) { return clean_test_model(6); }
+int  init_test_model_7(void) { return init_test_model(7, 0);  }
+int clean_test_model_7(void) { return clean_test_model(7); }
 
 static int clean_quit(void)
 {
@@ -636,12 +700,13 @@ int main(int argc, char ** argv)
 	/* Register test suite */
 	CU_SuiteInfo suites[] =
 	{
-			{"Test parsing", NULL, clean_test_model_3, test_array_3},
+/*			{"Test parsing", NULL, clean_test_model_3, test_array_3},
 			{"Test_model_1", init_test_model_1, clean_test_model_1, test_array_1},
 			{"Test reading and writing model data", init_test_model_2, clean_test_model_2, test_array_2},
 			{"Test input filters, sort, random", init_test_model_5, clean_test_model_5, test_array_5},
 			{"Test debug mode", init_test_model_6, clean_test_model_6, test_array_6},
-			{"Test parallel syncs", init_test_model_4, clean_test_model_4, test_array_4},
+			{"Test parallel syncs", init_test_model_4, clean_test_model_4, test_array_4},*/
+			{"Test imports and outputs", init_test_model_7, clean_test_model_7, test_array_7},
 			CU_SUITE_INFO_NULL,
     };
 
