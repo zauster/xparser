@@ -27,8 +27,11 @@ dvi: images
 ps: dvi
 	dvips -t a4 user_manual.dvi -o user_manual.ps
 
+pdf: dvi
+	dvipdf user_manual.dvi user_manual.pdf
+
 clean:
-	rm -f *.aux user_manual.bbl user_manual.blg user_manual.dvi *.log user_manual.lof user_manual.lot user_manual.toc *.ps
+	rm -f *.aux user_manual.bbl user_manual.blg user_manual.dvi *.log user_manual.lof user_manual.lot user_manual.toc *.ps *.pdf
 
 vclean: clean
 	rm -f *.bak

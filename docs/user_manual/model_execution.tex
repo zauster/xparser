@@ -66,13 +66,14 @@ The format of the initial start states XML is given by the following example:
 <my_constant>6</my_constant>
 </environment>
 
+<agents>
 <xagent>
 <name>agent_name</name>
 <var_name>0</var_name>
 ...
 </xagent>
-
 ...
+</agents>
 
 </states>
 \end{verbatim}
@@ -89,3 +90,24 @@ brackets with commas between each element.
 When a simulation is running after every iteration, a states file is produced
 in the same directory and in the same format as the start states file with the
 values of each agent's memory.
+
+For advanced usage one can use the `import' and `output' tags.
+
+Import tags are used to include other locations of start state data. You have 
+to provide the location (from where the current file is located), the format 
+(currently only `xml' is avaliable) and the type (either `environment' data 
+or `agent' data). Currently the import tags work to only one depth, they 
+cannot be nested.
+
+Output tags are used to better define what output one wants to save from a 
+simulation. Outputs can have two types, either `snapshot' (where the whole 
+simulation state, environment and agents, is output) or `agent' where the 
+agent name is specified and only that agent type is output. The format of the 
+output can be specified (although only xml is provided currently) and the 
+output location. Finally the timing can be specified. The `period' defines 
+the number of iterations between producing output, for example a period of 10 
+means data is output every 10 iterations, so if we start with iteration number 
+0 the data will be output in iterations 10, 20, 30\ldots. A phase can also be
+applied to the output timing. A phase of 2 when used with a period of 10 means
+data is output 2 iterations after it usually would, for example it would now be
+2, 12, 22, 32\ldots. 

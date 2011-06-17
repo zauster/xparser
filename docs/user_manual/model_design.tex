@@ -24,6 +24,14 @@ functions \\(including possible conditions on variables for the functions to
 occur)
 \end{itemize}
 
+\begin{figure}[ht]
+\begin{center}
+\includegraphics*[scale=0.5]{xmachine.eps}
+\caption{Machine model of agents}
+\label{fig:xmachine}
+\end{center}
+\end{figure}
+
 Agent functions can accept an input stream of messages, which are handled by the
 implementation of each function currently written in source code, and can
 produce a stream of output messages. This provides a level of description that
@@ -77,7 +85,8 @@ The messages required for communication between agents are a signal message,
 which is output from `signal' and input to `observe', see Figure
 \ref{fig:swarm_3}. This message would include the position of the agent that
 sent it, see Table \ref{tab:signal_message}. A feature of swarm models and most
-agent-based models is that there is generally a limit on incoming communication. In the swarm case this is the perceived distance of sight that an agent can view the location of other
+agent-based models is that there is generally a limit on incoming communication. 
+In the swarm case this is the perceived distance of sight that an agent can view the location of other
 agents. This feature can be added to the model as a filter on inputs to a
 function, where the filter is a formula involving the position contained in the
 message (the position of the sending agent) and the receiving agent position.
