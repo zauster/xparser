@@ -700,12 +700,12 @@ int main(int argc, char ** argv)
 	/* Register test suite */
 	CU_SuiteInfo suites[] =
 	{
-/*			{"Test parsing", NULL, clean_test_model_3, test_array_3},
+			{"Test parsing", NULL, clean_test_model_3, test_array_3},
 			{"Test_model_1", init_test_model_1, clean_test_model_1, test_array_1},
 			{"Test reading and writing model data", init_test_model_2, clean_test_model_2, test_array_2},
 			{"Test input filters, sort, random", init_test_model_5, clean_test_model_5, test_array_5},
 			{"Test debug mode", init_test_model_6, clean_test_model_6, test_array_6},
-			{"Test parallel syncs", init_test_model_4, clean_test_model_4, test_array_4},*/
+			{"Test parallel syncs", init_test_model_4, clean_test_model_4, test_array_4},
 			{"Test imports and outputs", init_test_model_7, clean_test_model_7, test_array_7},
 			CU_SUITE_INFO_NULL,
     };
