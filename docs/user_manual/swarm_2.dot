@@ -1,6 +1,6 @@
 digraph state_graph {
 	rankdir=LR;
-	size="8,5;"
+	//size="8,5;"
 	
 	/* States */
 	swarm_start [label = "start"];

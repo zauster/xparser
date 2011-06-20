@@ -1,0 +1,32 @@
+digraph G
+{
+	
+	it_start [shape=plaintext, label = "iteration\nstart"];
+	it_end [shape=plaintext, label = "iteration\nend"];
+	it_1 [style=invis, shape=point];
+	it_2 [style=invis, shape=point];
+	it_3 [style=invis, shape=point];
+	it_start -> it_1 -> it_2 -> it_3 -> it_end [style=invis];
+
+	subgraph cluster_a
+	{
+		a_start [label = "start"];
+		a_s1 [label = ""];
+		a_end [label = "end"];
+		a_f1 [label = "function 1", shape = rect];
+		a_f2 [label = "function 2", shape = rect];
+		a_start -> a_f1 -> a_s1 -> a_f2 -> a_end;
+		label = "agent a";
+	}
+	
+	subgraph cluster_b
+	{
+		b_start [label = "start"];
+		b_s1 [label = ""];
+		b_end [label = "end"];
+		b_f1 [label = "function 1", shape = rect];
+		b_f2 [label = "function 2", shape = rect];
+		b_start -> b_f1 -> b_s1 -> b_f2 -> b_end;
+		label = "agent b";
+	}
+}

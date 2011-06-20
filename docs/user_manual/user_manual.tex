@@ -46,10 +46,17 @@ Details are also included about how to execute a model.
 \section{Introduction}
 
 The FLAME framework is an enabling tool to create agent-based models that can
-be run on high performance computers (HPCs). Models are created based upon
-extended finite state machines that include message input and output streams.
-This information is used by the framework to automatically generate a simulation program that
-can run models efficiently on HPCs.
+be run on high performance computers (HPCs). Models are created based upon a
+model of computation called extended finite state machines. By defining
+agent-based models in this way the FLAME framework can
+automatically generate simulation programs that can run models efficiently on
+HPCs.
+The user manual is split into 3 parts. Section \ref{sec:model_design} describes
+how to design models for the framework. Section \ref{sec:model_description}
+describes the way to specify the model design while Section
+\ref{sec:model_implementation} describes how to implement the model
+functionality. Section \ref{sec:model_execution} finishes with how to run a
+model.
 
 \include{model_design}
 \include{model_description}

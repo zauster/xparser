@@ -1,18 +1,40 @@
 \section{Model Design}
-\label{model_design}
+\label{sec:model_design}
 
 The philosophy of FLAME is to specify an agent-based model as you would specify
 software behaviour, as ultimately the execution of the model will be in software.
-Traditionally specifying software behaviour has included the use of finite state
-machines which allow modelling of a system in terms of its inputs and outputs. Testing a system
-specified as a finite state machine makes it easier for the behaviour to be
-expressed as a graph and allow traversals of all possible and impossible
-executions of the system. Conventional state machines describe the
-state-dependent behaviour of a system in terms of its inputs, but this fails to
-include the effect of data. X-Machines are an extension to conventional state
-machines that include the manipulation of memory as part of the system behaviour,
-and thus are a suitable way to specify agents. Describing a system would thus
-include the following individual stages for creating a model:
+The behaviour model is based upon state machines which are composed of a number
+of states with transition functions between those states. There is a single
+start state and by traversing states using the transition functions the machine
+executes the functions until it reaches an end state. This happens to each
+machine as one time step or iteration is completed. The Figure
+\ref{fig:iteration_1} shows a model consisting of two agents each with two
+functions run one after the other. A time step or iteration of the model is when
+each agent goes from their start state to an end state.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics*[scale=0.5]{iteration_1.ps}
+\caption{An iteration with 2 agents with 2 functions each}
+\label{fig:iteration_1}
+\end{center}
+\end{figure}
+
+The transition functions of each agent can read and write to the agent's memory
+and read input messages and write output messages. For example Figure \ref{fig:xmachine} shows
+an agent machine with a start state, an end state and one transition function
+from one to the other which has access to the agent memory and recieves inputs
+and produces outputs.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics*[scale=0.5]{xmachine.eps}
+\caption{An agent as a computational machine}
+\label{fig:xmachine}
+\end{center}
+\end{figure}
+
+Describing a system would thus include the following individual stages for creating a model:
 
 \begin{itemize}
 \item Identifying the agents and their functions
@@ -24,20 +46,13 @@ functions \\(including possible conditions on variables for the functions to
 occur)
 \end{itemize}
 
-\begin{figure}[ht]
-\begin{center}
-\includegraphics*[scale=0.5]{xmachine.eps}
-\caption{Machine model of agents}
-\label{fig:xmachine}
-\end{center}
-\end{figure}
-
 Agent functions can accept an input stream of messages, which are handled by the
 implementation of each function currently written in source code, and can
 produce a stream of output messages. This provides a level of description that
 FLAME can use to produce a simulation program of the model which can be
-executed on parallel computers. Future work would also allow the
-lower level description of functions that handle individual messages.
+executed on parallel computers.
+%Future work would also allow the lower level description of functions that
+% handle individual messages.
 
 \subsection{Swarm Example}
 
@@ -183,12 +198,12 @@ start&&&signal&&signal&1\\
 \end{table}
 %\end{landscape}
 
-Section \ref{model_description} on model description describes how to write a
-model description into an XML file that FLAME can understand. Section
-\ref{model_implementation} on model implementation describes how to implement
-the individual agent functions, i.e. $M_{post}$ from the transition table.
-Section \ref{model_execution} on model execution describes how to use the tools
-in FLAME to generate a simulation program, compile it, and run it.
+Section \ref{sec:model_description} on model description describes how to write
+a model description into an XML file that FLAME can understand. Section
+\ref{sec:model_implementation} on model implementation describes how to
+implement the individual agent functions, i.e. $M_{post}$ from the transition table.
+Section \ref{sec:model_execution} on model execution describes how to use the
+tools in FLAME to generate a simulation program, compile it, and run it.
 
 % \begin{equation}\label{streamxmachine}
 %     X = (\Sigma, \Gamma, Q, M, \Phi, F, q_{0}, m_{0})
