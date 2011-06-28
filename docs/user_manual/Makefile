@@ -1,16 +1,16 @@
 all: dvi ps
 
-swarm_1.ps: swarm_1.dot
-	dot -Tps swarm_1.dot -o swarm_1.ps
+swarm_1.eps: swarm_1.dot
+	dot -Teps swarm_1.dot -o swarm_1.eps
 
-swarm_2.ps: swarm_2.dot
-	dot -Tps swarm_2.dot -o swarm_2.ps
+swarm_2.eps: swarm_2.dot
+	dot -Teps swarm_2.dot -o swarm_2.eps
 
-swarm_3.ps: swarm_3.dot
-	dot -Tps swarm_3.dot -o swarm_3.ps
+swarm_3.eps: swarm_3.dot
+	dot -Teps swarm_3.dot -o swarm_3.eps
 
-iteration_1.ps: iteration_1.dot
-	dot -Tps iteration_1.dot -o iteration_1.ps
+iteration_1.eps: iteration_1.dot
+	dot -Teps iteration_1.dot -o iteration_1.eps
 
 spell:
 	aspell -c user_manual.tex
@@ -19,7 +19,9 @@ spell:
 	aspell -c model_implementation.tex
 	aspell -c model_execution.tex
 
-images: swarm_1.ps swarm_2.ps swarm_3.ps iteration_1.ps
+images: swarm_1.eps swarm_2.eps swarm_3.eps iteration_1.eps
+
+png: iteration_1.png swarm_2.png
 
 dvi: images
 	#latex user_manual
@@ -33,8 +35,16 @@ ps: dvi
 pdf: dvi
 	dvipdf user_manual.dvi user_manual.pdf
 
+html:
+	latex2html -nonavigation -noinfo -split 0 user_manual.tex
+
+overview:
+	latex overview
+	dvipdf overview.dvi overview.pdf
+
 clean:
-	rm -f *.aux user_manual.bbl user_manual.blg user_manual.dvi *.log user_manual.lof user_manual.lot user_manual.toc *.ps *.pdf
+	rm -f *.aux user_manual.bbl user_manual.blg *.dvi *.log user_manual.lof user_manual.lot user_manual.toc *.ps *.pdf *.eps
+	rm -R user_manual
 
 vclean: clean
 	rm -f *.bak

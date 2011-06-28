@@ -7,104 +7,105 @@ header files, one for the overall framework and one for the particular agent tha
 Functions for different agents cannot be contained in the same file.
 Thus, at the top of each file two headers are required:
 
-\begin{mylisting}
+%\begin{mylisting}
 \begin{verbatim}
-#include "header.h"
-#include "<agentname>_agent_header.h"
+  #include "header.h"
+  #include "<agentname>_agent_header.h"
 \end{verbatim}
-\end{mylisting}
+%\end{mylisting}
 
 Where `<agent\_name>' is replaced with the actual agent name.
 Agent functions can then be written in the following style:
 
-\begin{mylisting}
+%\begin{mylisting}
 \begin{verbatim}
-/*
- * \fn: int function_name()
- * \brief: A brief description of the function.
- */
-int function_name()
-{
-   /* Function code here */
-
-   return 0; /* Returning zero means the agent is not removed */
-}
+  /*
+   * \fn: int function_name()
+   * \brief: A brief description of the function.
+   */
+  int function_name()
+  {
+     /* Function code here */
+    
+     return 0; /* Returning zero means the agent is not removed */
+  }
 \end{verbatim}
-\end{mylisting}
+%\end{mylisting}
 
 The first commented part (four lines) is good practice and can be used to
 auto-generate source code documentation. The function name should coordinate
 with the agent function name and the function should return an integer. The
 functions have no parameters. Returning zero means the agent is not removed from
-the simulation, and one removes the agent immediately from the simulation.
+the simulation, and returning the number one removes the agent immediately from
+the simulation.
 
 \subsection{Accessing Agent Memory Variables}
 
 After including the specific agent header, the variables in the
 agent memory can be accessed by capitalising the variable name:
 
-\begin{mylisting}
+%\begin{mylisting}
 \begin{verbatim}
-AGENT_VARIABLE
+  AGENT_VARIABLE
 \end{verbatim}
-\end{mylisting}
+%\end{mylisting}
 
 To access elements of a static array use square brackets and the index number:
 
-\begin{mylisting}
+%\begin{mylisting}
 \begin{verbatim}
-MY_STATIC_ARRAY[index]
+  MY_STATIC_ARRAY[index]
 \end{verbatim}
-\end{mylisting}
+%\end{mylisting}
 
 To access the elements and the size of dynamic array variables use
 `.size' and `.array[index]':
 
-\begin{mylisting}
+%\begin{mylisting}
 \begin{verbatim}
-MY_DYNAMIC_ARRAY.size
-MY_DYNAMIC_ARRAY.array[index]
+  MY_DYNAMIC_ARRAY.size
+  MY_DYNAMIC_ARRAY.array[index]
 \end{verbatim}
-\end{mylisting}
+%\end{mylisting}
 
 To access variables of a model data type use `.variablename':
 
-\begin{mylisting}
+%\begin{mylisting}
 \begin{verbatim}
-MY_DATA_TYPE.variablename
+  MY_DATA_TYPE.variablename
 \end{verbatim}
-\end{mylisting}
+%\end{mylisting}
 
 \subsubsection{Using Model Data Types}
 
 The following is an example of how to use a data type called
 \emph{vacancy}:
 
-\begin{mylisting}
+%\begin{mylisting}
 \begin{verbatim}
-/* To allocate a local data type */
-vacancy vac;
-
-/* And initialise */
-init_vacancy(&vac);
-
-/* Initialise a static array of the data type */
-init_vacancy_static_array(&vac_static_array, array_size);
-
-/* Free a data type */
-free_vacancy(&vac);
-
-/* Free a static array of a data type */
-free_vacancy_static_array(&vac_static_array, array_size);
-
-/* Copy a data type */
-copy_vacancy(&vac_from, &vac_to);
-
-/* Copy a static array of a data type */
-copy_vacancy_static_array(&vac_static_array_from,
-                          &vac_static_array_to, array_size);
-\end{verbatim}
-\end{mylisting}
+  /* To allocate a local data type */
+  vacancy vac;
+  
+  /* And initialise */
+  init_vacancy(&vac);
+  
+  /* Initialise a static array of the data type */
+  init_vacancy_static_array(&vac_static_array, array_size);
+  
+  /* Free a data type */
+  free_vacancy(&vac);
+  
+  /* Free a static array of a data type */
+  free_vacancy_static_array(&vac_static_array, array_size);
+  
+  /* Copy a data type */
+  copy_vacancy(&vac_from, &vac_to);
+  
+  /* Copy a static array of a data type */
+  copy_vacancy_static_array(&vac_static_array_from,
+                            &vac_static_array_to, array_size);
+  \end{verbatim}
+%\end{mylisting}
 
 If the data type is a variable from the agent memory, then the data type
 variable name must be capitalised.
@@ -116,30 +117,30 @@ The following is an example of how to use a dynamic array:
 % When passing a dynamic array variable to the following functions
 % place an \& in front of the array.
 
-\begin{mylisting}
+%\begin{mylisting}
 \begin{verbatim}
-/* Allocate local dynamic array */
-vacancy_array vacancy_list;
+  /* Allocate local dynamic array */
+  vacancy_array vacancy_list;
 
-/* And initialise */
-init_vacancy_array(&vacancy_list);
-
-/* Reset a dynamic array */
-reset_vacancy_array(&vacancy_list);
-
-/* Free a dynamic array */
-free_vacancy_array(&vacancy_list);
-
-/* Add an element to the dynamic array */
-add_vacancy(&vacancy_list, var1, .. varN);
-
-/* Remove an element at index index */
-remove_vacancy(&vacancy_list, index);
-
-/* Copy the array */
-copy_vacancy_array(&from_list, &to_list);
+  /* And initialise */
+  init_vacancy_array(&vacancy_list);
+  
+  /* Reset a dynamic array */
+  reset_vacancy_array(&vacancy_list);
+  
+  /* Free a dynamic array */
+  free_vacancy_array(&vacancy_list);
+  
+  /* Add an element to the dynamic array */
+  add_vacancy(&vacancy_list, var1, .. varN);
+  
+  /* Remove an element at index index */
+  remove_vacancy(&vacancy_list, index);
+  
+  /* Copy the array */
+  copy_vacancy_array(&from_list, &to_list);
 \end{verbatim}
-\end{mylisting}
+%\end{mylisting}
 
 If the dynamic array is a variable from the agent memory, then the dynamic
 array variable name must be capitalised.
@@ -150,17 +151,17 @@ Messages can be read using macros to loop through the incoming message list as
 per the template below, where `messagename' is replaced by the actual message
 name. Message variables can be accessed using an arrow `->':
 
-\begin{mylisting}
+%\begin{mylisting}
 \begin{verbatim}
-START_MESSAGENAME_MESSAGE_LOOP
- messagename_message->variablename
-FINISH_MESSAGENAME_MESSAGE_LOOP
+  START_MESSAGENAME_MESSAGE_LOOP
+    messagename_message->variablename
+  FINISH_MESSAGENAME_MESSAGE_LOOP
 \end{verbatim}
-\end{mylisting}
+%\end{mylisting}
 
 Messages are sent or added to the message list by
-\begin{mylisting}
+%\begin{mylisting}
 \begin{verbatim}
- add_messagename_message(var1, .. varN);
+  add_messagename_message(var1, .. varN);
 \end{verbatim}
-\end{mylisting}
+%\end{mylisting}

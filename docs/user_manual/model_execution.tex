@@ -2,44 +2,61 @@
 \label{sec:model_execution}
 
 FLAME contains a parser program called `xparser' that parses a model
-XML definition into simulation program source code that can be compiled
-together with model implementation source code. The xparser includes
-template files which are used to generate the simulation program source code.
+XMML definition into simulation program source code that can be compiled
+together with the agent functions implementation source code. The xparser
+includes template files which are used to generate the simulation program source code.
 
 The xparser takes as parameters the location of the model file and an option
 for serial or parallel (MPI) version, serial being the default if the option is
-not specified.
+not specified. A production mode can also be switched on which removes any
+debugging features in the simulation program.
+
+\begin{verbatim}
+  xparser (Version 0.16.2)
+  Usage: xparser [XMML file] [-s | -p] [-f]
+          -s      Serial mode
+          -p      Parallel mode
+          -f      Final production mode
+\end{verbatim}
 
 \subsection{Generated Files}
 
 The xparser then generates simulation source code files in the same directory
-as the model file. These files include:
+as the model file. These files include documentation of the model:
 
 \begin{itemize}
-  \item Doxyfile -- a configuration file for generating documentation using
- the program `doxygen'
-  \item header.h -- a C header file for global variables and function
-  declarations between source code files
-  \item low\_primes.h -- holds data used for partitioning agents
-  \item main.c -- the source code file containing the main program loop
-  \item Makefile -- the compilation script used by the program `make'
-  \item memory.c -- the source code file that handles the memory requirements
-  of the simulation
-  \item xml.c -- the source code file that handles inputs and outputs of the
-  simulation
-  \item <agent\_name>\_agent\_header.h -- the header file containing macros for
-  accessing agent memory variables
-  \item rules.c -- the source code file containing the generated rules for
-  function conditions and message input filters
-  \item messageboards.c -- deprecated?
-  \item partitioning.c -- still used?
+  \item stategraph.dot -- 
+  \item stategraph_colour.dot --
+  \item process_order_graph.dot --
+  \item latex.dot --
 \end{itemize}
 
-and in parallel the additional files:
+The simulation program source code files:
 
 \begin{itemize}
-  \item propagate\_messages.c -- deprecated?
-  \item propagate\_agents.c -- still used?
+  \item Makefile -- the compilation script used by the program `make'
+  \item xml.c -- the source code file that handles inputs and outputs of the
+  simulation
+  \item main.c -- the source code file containing the main program loop
+  \item header.h -- a C header file for global variables and function
+  declarations between source code files
+  \item memory.c -- the source code file that handles the memory requirements
+  of the simulation
+  \item low\_primes.h -- holds data used for partitioning agents
+  \item messageboards.c -- 
+  \item partitioning.c -- 
+  \item timing.c -- 
+  \item Doxyfile -- a configuration file for generating documentation using
+ the program `doxygen'
+  \item rules.c -- the source code file containing the generated rules for
+  function conditions and message input filters
+\end{itemize}
+
+For each agent type an associated header file is created:
+
+\begin{itemize}
+\item <agent\_name>\_agent\_header.h -- the header file containing macros for
+  accessing agent memory variables
 \end{itemize}
 
 The simulation source code files then require compilation, which can be easily
@@ -57,27 +74,27 @@ states (memory) of the agents, currently a formatted XML file.
 
 The format of the initial start states XML is given by the following example:
 
-\begin{mylisting}
+%\begin{mylisting}
 \begin{verbatim}
-<states>
-<itno>0</itno>
+  <states>
+  <itno>0</itno>
+  
+  <environment>
+  <my_constant>6</my_constant>
+  </environment>
+  
+  <agents>
+    <xagent>
+      <name>agent_name</name>
+      <var_name>0</var_name>
+      ...
+    </xagent>
+    ...
+  </agents>
 
-<environment>
-<my_constant>6</my_constant>
-</environment>
-
-<agents>
-<xagent>
-<name>agent_name</name>
-<var_name>0</var_name>
-...
-</xagent>
-...
-</agents>
-
-</states>
+  </states>
 \end{verbatim}
-\end{mylisting}
+%\end{mylisting}
 
 The root tag is called `states' and the `itno' tag holds the iteration number
 that these states refer to. If there are any environment constants these are

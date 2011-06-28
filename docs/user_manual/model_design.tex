@@ -7,23 +7,25 @@ The behaviour model is based upon state machines which are composed of a number
 of states with transition functions between those states. There is a single
 start state and by traversing states using the transition functions the machine
 executes the functions until it reaches an end state. This happens to each
-machine as one time step or iteration is completed. The Figure
+machine as one time step or iteration is completed. Figure
 \ref{fig:iteration_1} shows a model consisting of two agents each with two
 functions run one after the other. A time step or iteration of the model is when
 each agent goes from their start state to an end state.
 
 \begin{figure}[ht]
 \begin{center}
-\includegraphics*[scale=0.5]{iteration_1.ps}
+\includegraphics*[scale=0.5]{iteration_1.eps}
 \caption{An iteration with 2 agents with 2 functions each}
 \label{fig:iteration_1}
 \end{center}
 \end{figure}
 
-The transition functions of each agent can read and write to the agent's memory
-and read input messages and write output messages. For example Figure \ref{fig:xmachine} shows
-an agent machine with a start state, an end state and one transition function
-from one to the other which has access to the agent memory and recieves inputs
+Each agent has a memory that holds variables. Transition functions can read and
+write to variables in the agent's memory. Communication between agents is
+achieved via messages. Transition functions can also read incoming messages and write
+outgoing messages. Figure \ref{fig:xmachine} shows an agent machine with a start state, 
+an end state and one transition function from one to the other which has access to the 
+agent memory and recieves inputs
 and produces outputs.
 
 \begin{figure}[ht]
@@ -34,35 +36,41 @@ and produces outputs.
 \end{center}
 \end{figure}
 
-Describing a system would thus include the following individual stages for creating a model:
+\clearpage
+
+Describing an agent-based model would thus include the following individual
+stages for creating a model:
 
 \begin{itemize}
 \item Identifying the agents and their functions
 \item Identify the states which impose some order of function execution
-\item Identify the input messages and output messages of each function 
-\\(including possible filters on inputs)
 \item Identify the memory as the set of variables that are accessed by
 functions \\(including possible conditions on variables for the functions to
 occur)
+\item Identify the input messages and output messages of each function 
+\\(including possible filters on inputs)
+
 \end{itemize}
 
-Agent functions can accept an input stream of messages, which are handled by the
-implementation of each function currently written in source code, and can
-produce a stream of output messages. This provides a level of description that
-FLAME can use to produce a simulation program of the model which can be
-executed on parallel computers.
-%Future work would also allow the lower level description of functions that
-% handle individual messages.
+Once a model has been defined using these criteria the implementation of the
+agent functions can be written as source code in the C programming language.
+FLAME can then use the model description to create a simulation program that
+handles agent execution and communication in parallel.
 
 \subsection{Swarm Example}
 
-For example a simple swarm (flocking) model would include agents with the
-functions:
+For example a simple swarm (flocking) model would include an agent for a bird.
+Because agents can only communicate via messages in FLAME each bird needs to
+have a function that sends out a message with their current location. A second
+function is needed to read the messages and update the birds velocity depending
+on the other birds locations. A third function then updates the birds location
+using the birds new velocity. The three functions required of the bird agent are
+then:
 
 \begin{itemize}
-\item signal -- send out current position
-\item observe -- read positions from other agents and possibly change velocity
-\item respond -- update position via the current velocity
+\item signal -- send out current position message
+\item observe -- read position messages from other agents and update velocity
+\item respond -- update position using the current velocity
 \end{itemize}
 
 The functions occur in this order so states are included to impose this
@@ -75,7 +83,7 @@ possible end states.
 
 \begin{figure}[ht]
 \begin{center}
-\includegraphics*[scale=0.5]{swarm_1.ps}
+\includegraphics*[scale=0.5]{swarm_1.eps}
 \caption{Swarm model including states}
 \label{fig:swarm_1}
 \end{center}
@@ -90,7 +98,7 @@ function condition would be when the z-axis position was zero, see Figure
 
 \begin{figure}[ht]
 \begin{center}
-\includegraphics*[scale=0.5]{swarm_2.ps}
+\includegraphics*[scale=0.5]{swarm_2.eps}
 \caption{Swarm model including function conditions}
 \label{fig:swarm_2}
 \end{center}
@@ -125,7 +133,7 @@ double&pz&z-axis position\\
 
 \begin{figure}[ht]
 \begin{center}
-\includegraphics*[scale=0.5]{swarm_3.ps}
+\includegraphics*[scale=0.5]{swarm_3.eps}
 \caption{Swarm model including messages}
 \label{fig:swarm_3}
 \end{center}
