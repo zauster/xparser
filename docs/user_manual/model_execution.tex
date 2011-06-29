@@ -25,10 +25,12 @@ The xparser then generates simulation source code files in the same directory
 as the model file. These files include documentation of the model:
 
 \begin{itemize}
-  \item stategraph.dot -- 
-  \item stategraph_colour.dot --
-  \item process_order_graph.dot --
-  \item latex.dot --
+  \item stategraph.dot -- a directed acyclic graph of the states, functions and
+  messages of agents in the model
+  \item stategraph\_colour.dot -- as above but functions are coloured
+  \item process\_order\_graph.dot -- as above but the message syncronisation is
+  shown
+  \item latex.dot -- a latex document describing the model
 \end{itemize}
 
 The simulation program source code files:
@@ -43,9 +45,10 @@ The simulation program source code files:
   \item memory.c -- the source code file that handles the memory requirements
   of the simulation
   \item low\_primes.h -- holds data used for partitioning agents
-  \item messageboards.c -- 
-  \item partitioning.c -- 
-  \item timing.c -- 
+  \item messageboards.c -- the source code that handles message functionality
+  \item partitioning.c -- the source code that handles the partitioning of
+  agents between nodes in parallel
+  \item timing.c -- the source code that provides timing routines
   \item Doxyfile -- a configuration file for generating documentation using
  the program `doxygen'
   \item rules.c -- the source code file containing the generated rules for
@@ -64,11 +67,35 @@ achieved using the included compilation script `Makefile' using the `make'
 build automation tool. The program `make' invokes the `gcc' C compiler, which
 are both free and available on various operating systems. If the parallel
 version of the simulation was specified the compiler invoked by `make' is
-`mpicc' which is a script usually available on parallel systems.
+`mpicc' which is a script usually available on parallel systems. To manually
+change the C compiler used the parameter `CC' can be set:
+
+\begin{verbatim}
+  make CC=gcc
+\end{verbatim}
+
+To compile a model the message board library is required and the installation
+directory is needed by the compilation script. Currently the directory for
+`libmboard' is set in the same location of the model file. This can also be
+manually changed by using the parameter `LIBMBOARD\_DIR':
+
+\begin{verbatim}
+  make LIBMBOARD_DIR=/location/of/libmboard
+\end{verbatim}
 
 The compiled program is called `main'. The parameters required to run a
 simulation include the number of iterations to run for and the initial start
 states (memory) of the agents, currently a formatted XML file.
+
+\begin{verbatim}
+  FLAME Application: test_model_simple_everthing 
+  Debug mode enabled 
+  Usage: ./main <number of iterations> [<states_directory>]/<init_state>
+<partitions> [-f # | -f #+#]
+  -f	Output frequency, 1st # is frequency, 2nd # is the offset if required
+\end{verbatim}
+
+The frequency of producing output files can also be set by the parameter `-f'.
 
 \subsection{Start States Files}
 
@@ -114,7 +141,31 @@ Import tags are used to include other locations of start state data. You have
 to provide the location (from where the current file is located), the format 
 (currently only `xml' is avaliable) and the type (either `environment' data 
 or `agent' data). Currently the import tags work to only one depth, they 
-cannot be nested.
+cannot be nested. The following import tags read in agent and environment data
+from the file at `0\_depth\_1.xml' and agent data from
+`../test7/0\_depth\_1\_agent.xml':
+
+\clearpage
+
+\begin{verbatim}
+  <imports>
+    <import>
+      <location>0_depth_1.xml</location>
+      <format>xml</format>
+      <type>agent</type>
+    </import>
+    <import>
+      <location>../test7/0_depth_1_agent.xml</location>
+      <format>xml</format>
+      <type>agent</type>
+    </import>
+    <import>
+      <location>0_depth_1.xml</location>
+      <format>xml</format>
+      <type>environment</type>
+    </import>
+  </imports>
+\end{verbatim}
 
 Output tags are used to better define what output one wants to save from a 
 simulation. Outputs can have two types, either `snapshot' (where the whole 
@@ -127,4 +178,32 @@ means data is output every 10 iterations, so if we start with iteration number
 0 the data will be output in iterations 10, 20, 30\ldots. A phase can also be
 applied to the output timing. A phase of 2 when used with a period of 10 means
 data is output 2 iterations after it usually would, for example it would now be
-2, 12, 22, 32\ldots. 
+2, 12, 22, 32\ldots. The following example outputs a snapshot every 10
+iterations and the agent `agent\_type\_a' every 10 iterations starting at the
+second iteration:
+
+\clearpage
+
+\begin{verbatim}
+  <outputs>
+    <output>
+      <type>snapshot</type>
+      <format>xml</format>
+      <location></location>
+      <time>
+        <period>10</period>
+        <phase>0</phase>	
+        </time>
+    </output>
+    <output>
+      <type>agent</type>
+      <name>agent_type_a</name>
+      <format>xml</format>
+      <location></location>
+      <time>
+        <period>10</period>
+        <phase>2</phase>	
+      </time>
+    </output>
+  </outputs>
+\end{verbatim}

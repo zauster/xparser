@@ -43,7 +43,7 @@ overview:
 	dvipdf overview.dvi overview.pdf
 
 clean:
-	rm -f *.aux user_manual.bbl user_manual.blg *.dvi *.log user_manual.lof user_manual.lot user_manual.toc *.ps *.pdf *.eps
+	rm -f *.aux user_manual.bbl user_manual.blg *.dvi *.log user_manual.lof user_manual.lot user_manual.toc *.ps *.pdf swarm_1.eps swarm_2.eps swarm_3.eps iteration_1.eps
 	rm -R user_manual
 
 vclean: clean
