@@ -165,6 +165,7 @@
     <xs:complexType>
       <xs:all>
         <xs:element name="messageName" type="xs:string" />
+        <xs:element name="random" type="trueFalseString" minOccurs="0"/>
         <xs:element name="filter" minOccurs="0">
           <xs:complexType>
             <xs:group ref="filterParamGroup" />
