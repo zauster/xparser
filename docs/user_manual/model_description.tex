@@ -612,6 +612,15 @@ via the order tag.
 Using filters in the model description enables FLAME to make message
 communication more efficient by pre-sorting messages and using other techniques.
 
+Messages can also be randomised using the random tag:
+
+\begin{verbatim}
+  <input>
+    <messageName>firing</messageName>
+    <random>true</random>
+  </input>
+\end{verbatim}
+
 % Thus in the above example messages will be filtered according to the
 % message variable \emph{worker\_id} (defined as m.<varname>) to be EQ
 % (equal) to the agent \emph{id} (defined as a.<varname>).
