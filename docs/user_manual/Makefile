@@ -38,9 +38,10 @@ pdf: dvi
 html:
 	latex2html -nonavigation -noinfo -split 0 user_manual.tex
 
-overview:
+overview: images
 	latex overview
 	dvipdf overview.dvi overview.pdf
+	latex2html -nonavigation -noinfo -split 0 overview.tex
 
 clean:
 	rm -f *.aux user_manual.bbl user_manual.blg *.dvi *.log user_manual.lof user_manual.lot user_manual.toc *.ps *.pdf swarm_1.eps swarm_2.eps swarm_3.eps iteration_1.eps

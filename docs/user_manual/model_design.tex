@@ -7,7 +7,7 @@ The behaviour model is based upon state machines which are composed of a number
 of states with transition functions between those states. There is a single
 start state and by traversing states using the transition functions the machine
 executes the functions until it reaches an end state. This happens to each
-machine as one time step or iteration is completed. Figure
+agent/machine as one time step or iteration is completed. Figure
 \ref{fig:iteration_1} shows a model consisting of two agents each with two
 functions run one after the other. A time step or iteration of the model is when
 each agent goes from their start state to an end state.
@@ -23,10 +23,26 @@ each agent goes from their start state to an end state.
 Each agent has a memory that holds variables. Transition functions can read and
 write to variables in the agent's memory. Communication between agents is
 achieved via messages. Transition functions can also read incoming messages and write
-outgoing messages. Figure \ref{fig:xmachine} shows an agent machine with a start state, 
+outgoing messages. 
+
+Because FLAME can execute agent models in parallel and on different processors
+the coordination of agent function execution depends on the communication
+between agents. Communication is synchronous to the agent model which means it
+happens at the same time. For agents this means that if an agent function
+receives a certain type of message, it cannot be executed until all the messages
+of that type have been sent and that they are all ready to be read. This means
+that no agent is given priority over reading any input and all agents have
+access to the same messages at the same time. This also means that the order
+that agents are executed does not matter.
+
+Because agents can be executed anywhere on a super computer cluster FLAME uses a
+broadcast communication method. This means that agents cannot directly send
+messages to another agent. Instead the receiving agent must filter messages that
+it only needs to read.
+
+Figure \ref{fig:xmachine} shows an agent machine with a start state, 
 an end state and one transition function from one to the other which has access to the 
-agent memory and recieves inputs
-and produces outputs.
+agent memory and recieves input messages and produces output messages.
 
 \begin{figure}[ht]
 \begin{center}
@@ -35,6 +51,8 @@ and produces outputs.
 \label{fig:xmachine}
 \end{center}
 \end{figure}
+
+
 
 \clearpage
 
@@ -205,13 +223,13 @@ start&&&signal&&signal&1\\
 \label{tab:swarmtransition}
 \end{table}
 %\end{landscape}
-
-Section \ref{sec:model_description} on model description describes how to write
-a model description into an XML file that FLAME can understand. Section
-\ref{sec:model_implementation} on model implementation describes how to
-implement the individual agent functions, i.e. $M_{post}$ from the transition table.
-Section \ref{sec:model_execution} on model execution describes how to use the
-tools in FLAME to generate a simulation program, compile it, and run it.
+% 
+% Section \ref{sec:model_description} on model description describes how to write
+% a model description into an XML file that FLAME can understand. Section
+% \ref{sec:model_implementation} on model implementation describes how to
+% implement the individual agent functions, i.e. $M_{post}$ from the transition table.
+% Section \ref{sec:model_execution} on model execution describes how to use the
+% tools in FLAME to generate a simulation program, compile it, and run it.
 
 % \begin{equation}\label{streamxmachine}
 %     X = (\Sigma, \Gamma, Q, M, \Phi, F, q_{0}, m_{0})
