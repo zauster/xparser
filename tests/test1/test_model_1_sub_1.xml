@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE xmodel SYSTEM "http://eurace.cs.bilgi.edu.tr/XMML.dtd">
-<xmodel version="2">
+<xmodel version="2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation='http://www.flame.ac.uk/schema/xmml_v2.xsd'>
 
 <name>test_model_simple_everthing_sub_1</name>
 <version>01</version>
@@ -11,7 +11,7 @@
 <xagent>
 <name>agent_a</name>
 <description></description>
-
+<memory></memory>
 <functions>
 
 <function><name>agent_a_1</name>
@@ -38,6 +38,7 @@
 <xagent>
 <name>agent_b</name>
 <description></description>
+<memory></memory>
 
 <functions>
 <function><name>agent_b_1</name>
