@@ -3,7 +3,7 @@
  * \code
  *     Author:       		Simon Coakley (USFD)
  *     Added to and Modified: 	David Worth (STFC)
- *				Shawn Chin (STFC)
+ *				Lee Shawn Chin (STFC)
  *				Chris Greenough (STFC)
  *     Copyright (c) 2006 Simon Coakley
  *     License:      n/a
