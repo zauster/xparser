@@ -37,7 +37,13 @@ auto-generate source code documentation. The function name should coordinate
 with the agent function name and the function should return an integer. The
 functions have no parameters. Returning zero means the agent is not removed from
 the simulation, and returning the number one removes the agent immediately from
-the simulation.
+the simulation. Agents of type `agentname' are added to a simulation by:
+
+%\begin{mylisting}
+\begin{verbatim}
+  add_agentname_agent(var1, .. varN);
+\end{verbatim}
+%\end{mylisting}
 
 \subsection{Accessing Agent Memory Variables}
 
@@ -159,7 +165,8 @@ name. Message variables can be accessed using an arrow `->':
 \end{verbatim}
 %\end{mylisting}
 
-Messages are sent or added to the message list by
+Messages are sent or added to the message list by:
+
 %\begin{mylisting}
 \begin{verbatim}
   add_messagename_message(var1, .. varN);
