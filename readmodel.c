@@ -266,7 +266,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	int header, iteration_end_code, depends, datatype, desc, cur_state, next_state;
 	int input, output, messagetype, timetag, unit, period, lhs, op, rhs, condition;
 	int model, filter, phase, enabled, not, time, random, sort, constant, order, key;
-	int not_value;
+	//int not_value;
 	/* Pointer to new structs */
 	xmachine_message * current_message;
 	/* xmachine_state * current_state; */
@@ -771,7 +771,10 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				}
 
 				current_rule_data->time_rule = 1;
-				if(not == 1) current_rule_data->not = 1;
+				if(not == 1) {
+				    current_rule_data->not = 1;
+				    not = 0;
+				}
 			}
 			if(strcmp(current_string->array, "/time") == 0)
 			{
@@ -802,7 +805,10 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					current_rule_data->parent_rule = last_rule_data;
 				}
 
-				if(not == 1) current_rule_data->not = 1;
+				if(not == 1) {
+				    current_rule_data->not = 1;
+				    not = 0;
+				}
 
 				lhs_last = 1;
 			}
@@ -823,12 +829,12 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			{
 				condition = 1;
 				current_rule_data = NULL;
-				not_value = 0;
+				// not_value = 0;
 			}
 			if(strcmp(current_string->array, "/condition") == 0)
 			{
 				condition = 0;
-				if(not_value == 1) { current_rule_data->not = 1; printf("*********** condition is not\n"); }
+				// if(not_value == 1) { current_rule_data->not = 1; printf("*********** condition is not\n"); }
 			}
 			if(strcmp(current_string->array, "model") == 0)
 			{
