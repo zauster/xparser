@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xmodel version="2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation='http://www.flame.ac.uk/schema/xmml_v2.xsd'>
+
+<name>test_model_4</name>
+<version>01</version>
+<description>Test filters</description>
+<models>
+</models>
+
+<environment>
+
+<constants>
+  <variable><type>int</type><name>env_int</name><description>int value read in from 0.xml</description></variable>
+  <variable><type>float</type><name>env_float</name><description>float value read in from 0.xml</description></variable>
+  <variable><type>double</type><name>env_double</name><description>double value read in from 0.xml</description></variable>
+  <variable><type>char</type><name>env_char</name><description>char value read in from 0.xml</description></variable>
+</constants>
+
+<functionFiles>
+  <file>agent_a_functions.c</file>
+</functionFiles>
+
+<timeUnits>
+<timeUnit>
+ <name>daily</name>
+ <unit>iteration</unit>
+ <period>1</period>
+</timeUnit>
+<timeUnit>
+ <name>weekly</name>
+ <unit>iteration</unit>
+ <period>5</period>
+</timeUnit>
+<timeUnit>
+ <name>monthly</name>
+ <unit>weekly</unit>
+ <period>4</period>
+</timeUnit>
+</timeUnits>
+
+</environment>
+
+<agents>
+
+<xagent>
+<name>agent_a</name>
+<description></description>
+<memory>
+  <variable><type>int</type><name>int_single</name><description></description></variable>
+  <variable><type>int</type><name>int_single_2</name><description></description></variable>
+</memory>
+
+<functions>
+
+<function><name>agent_a_1</name>
+<description></description>
+<currentState>start</currentState>
+<nextState>middle1</nextState>
+</function>
+
+<function><name>agent_a_2</name>
+<description></description>
+<currentState>middle1</currentState>
+<nextState>middle2</nextState>
+<condition>
+<not>
+<lhs>
+<not>
+<lhs><value>a.int_single</value></lhs><op>EQ</op><rhs><value>a.int_single_2</value></rhs>
+</not>
+</lhs>
+<op>AND</op>
+<rhs>
+<lhs><value>a.int_single</value></lhs><op>EQ</op><rhs><value>a.int_single_2</value></rhs>
+</rhs>
+</not>
+</condition>
+</function>
+
+</functions>
+</xagent>
+
+</agents>
+
+<messages>
+<message>
+<name>m_sub_1</name>
+<description></description>
+<variables>
+<variable><type>int</type><name>int_single</name><description></description></variable>
+</variables>
+</message>
+</messages>
+
+</xmodel>
