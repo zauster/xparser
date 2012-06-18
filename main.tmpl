@@ -771,10 +771,6 @@ if(FLAME_$name_message_board_read == 0)
     #endif
 <?end foreach?>
 <?end foreach?>
-	if(iteration_loop%output_frequency == output_offset)
-	{
-		saveiterationdata(iteration_loop);
-	}
 <?foreach xagent?><?foreach state?>
 	/*printf("$agent_name_$name_state->count = %d\n", $agent_name_$name_state->count);*/
 	$agent_name_$name_state->count = 0;
@@ -790,6 +786,10 @@ if(FLAME_$name_message_board_read == 0)
 		current_xmachine_$agent_name_holder = temp_xmachine_$agent_name_holder;
 	}
 <?end foreach?><?end foreach?>
+    if(iteration_loop%output_frequency == output_offset)
+    {
+        saveiterationdata(iteration_loop);
+    }
 <?foreach enditfunc?>
 		/* End of iteration code */
 		$code<?end foreach?>

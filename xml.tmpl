@@ -1573,15 +1573,13 @@ void FLAME_write_xml(char * location, int iteration_number, int * output_types, 
 	<?foreach xagent?>
 	if(FLAME_integer_in_array(0, output_types, output_type_size) || FLAME_integer_in_array($xagentcountplusone, output_types, output_type_size))
 	{
-		<?foreach endstate?>
-		current_xmachine_$agent_name_holder = $agent_name_$name_state->agents;
-			while(current_xmachine_$agent_name_holder)
+		current_xmachine_$name_holder = $name_$start_state_state->agents;
+			while(current_xmachine_$name_holder)
 			{
-				write_$agent_name_agent(file, current_xmachine_$agent_name_holder->agent);
+				write_$name_agent(file, current_xmachine_$name_holder->agent);
 
-				current_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
+				current_xmachine_$name_holder = current_xmachine_$name_holder->next;
 			}
-		<?end foreach?>
 	}
 	<?end foreach?>
 	<?if parallel?>if(node_number == totalnodes-1) <?end if?>fputs("</states>\n" , file);
