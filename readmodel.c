@@ -238,8 +238,6 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	int xmlcomment = 0;
 	/* Variables for handling files for function code */
 	int j, k;
-	/* Variable to see if function defined, if not look in functions file */
-	int foundfunctioncode;
 	/* Char and char buffer for reading file to */
 	char c = ' ';
 	int numtag = 0;
@@ -260,12 +258,12 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	/* Variable for if in a tag */
 	int intag;
 	/* Variables for checking tags */
-	int xagentmodel, date, author, name, xmachine, memory, var, type, notes;
-	int states, state, /* attribute, transition,*/ func, dest, functions, function;
-	int note, messages, message, code, cdata, environment, define, value, codefile;
+	int name, xmachine, memory, var, type;
+	int state, functions, function;
+	int note, message, code, cdata, environment, define, value, codefile;
 	int header, iteration_end_code, depends, datatype, desc, cur_state, next_state;
 	int input, output, messagetype, timetag, unit, period, lhs, op, rhs, condition;
-	int model, filter, phase, enabled, not, time, random, sort, constant, order, key;
+	int model, filter, phase, enabled, not, random, sort, constant, order, key;
 	//int not_value;
 	/* Pointer to new structs */
 	xmachine_message * current_message;
@@ -325,23 +323,15 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	xmlcode = 0;
 	reading = 1;
 	intag = 0;
-	xagentmodel = 0;
-	date = 0;
-	author = 0;
-	notes = 0;
 	name = 0;
 	xmachine = 0;
 	memory = 0;
 	var = 0;
 	type = 0;
-	states = 0;
 	state = 0;
-	func = 0;
-	dest = 0;
 	functions = 0;
 	function = 0;
 	note = 0;
-	messages = 0;
 	message = 0;
 	code = 0;
 	cdata = 0;
@@ -372,7 +362,6 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	phase = 0;
 	enabled = 0;
 	not = 0;
-	time = 0;
 	random = 0;
 	sort = 0;
 	constant = 0;
@@ -510,14 +499,8 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				}
 			}
 
-			if(strcmp(current_string->array, "xmachine_agent_model") == 0 || strcmp(current_string->array, "xmodel") == 0) { xagentmodel = 1; }
-			if(strcmp(current_string->array, "/xmachine_agent_model") == 0 || strcmp(current_string->array, "/xmodel") == 0) { xagentmodel = 0; reading = 0; printf("End of XMML file\n\n"); }
-			if(strcmp(current_string->array, "date") == 0) { date = 1; }
-			if(strcmp(current_string->array, "/date") == 0) { date = 0; }
-			if(strcmp(current_string->array, "author") == 0) { author = 1; }
-			if(strcmp(current_string->array, "/author") == 0) { author = 0; }
-			if(strcmp(current_string->array, "notes") == 0) { notes = 1; cdata = 1;}
-			if(strcmp(current_string->array, "/notes") == 0) { notes = 0; }
+			if(strcmp(current_string->array, "xmachine_agent_model") == 0 || strcmp(current_string->array, "xmodel") == 0) { }
+			if(strcmp(current_string->array, "/xmachine_agent_model") == 0 || strcmp(current_string->array, "/xmodel") == 0) { reading = 0; printf("End of XMML file\n\n"); }
 			if(strcmp(current_string->array, "name") == 0) { name = 1; }/*reset_char_array(current_string); */
 			if(strcmp(current_string->array, "/name") == 0) { name = 0; }
 			if(strcmp(current_string->array, "environment") == 0) { environment = 1; }
@@ -562,25 +545,6 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/var") == 0 || strcmp(current_string->array, "/variable") == 0) { var = 0; }
 			if(strcmp(current_string->array, "type") == 0) { type = 1; }/*charlist = NULL; */
 			if(strcmp(current_string->array, "/type") == 0) { type = 0; }
-			if(strcmp(current_string->array, "states") == 0) { states = 1; }
-			if(strcmp(current_string->array, "/states") == 0) { states = 0; }
-			/*if(strcmp(current_string->array, "state") == 0)
-			{
-				state = 1;
-				current_state = addxstate(&current_xmachine->states);
-				attrib = NULL;
-				trans = NULL;
-			}
-			if(strcmp(current_string->array, "/state") == 0)
-			{
-				state = 0;
-				current_state->attributes = *p_attrib;
-				current_state->transitions = *p_trans;
-			}*/
-			if(strcmp(current_string->array, "func") == 0) { func = 1; }/*charlist = NULL; */
-			if(strcmp(current_string->array, "/func") == 0) { func = 0; }
-			if(strcmp(current_string->array, "dest") == 0 || strcmp(current_string->array, "description") == 0) { dest = 1; }/*charlist = NULL; */
-			if(strcmp(current_string->array, "/dest") == 0 || strcmp(current_string->array, "description") == 0) { dest = 0; }
 			if(strcmp(current_string->array, "datatype") == 0 || strcmp(current_string->array, "dataType") == 0)
 			{
 				datatype = 1;
@@ -654,8 +618,6 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "function") == 0)
 			{
 				function = 1;
-				/* Flag to see if function defined in tags, if not look in functions file */
-				foundfunctioncode = 0;
 
 				if(environment == 1)
 				{
@@ -685,8 +647,6 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/note") == 0) { note = 0; }
 			if(strcmp(current_string->array, "desc") == 0 || strcmp(current_string->array, "description") == 0) { desc = 1; }
 			if(strcmp(current_string->array, "/desc") == 0 || strcmp(current_string->array, "/description") == 0) { desc = 0; }
-			if(strcmp(current_string->array, "messages") == 0) { messages = 1; }
-			if(strcmp(current_string->array, "/messages") == 0) { messages = 0; }
 			if(strcmp(current_string->array, "message") == 0)
 			{
 				message = 1;
@@ -758,7 +718,6 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/unit") == 0) { unit = 0; }
 			if(strcmp(current_string->array, "time") == 0)
 			{
-				time = 1;
 				if(lhs || rhs)
 				{
 					last_rule_data = current_rule_data;
@@ -778,7 +737,6 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			}
 			if(strcmp(current_string->array, "/time") == 0)
 			{
-				time = 0;
 				current_rule_data = last_rule_data;
 			}
 			if(strcmp(current_string->array, "period") == 0) { period = 1; }
@@ -1274,7 +1232,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 
 				if(name && depends == 0) current_function->name = copy_array_to_str(current_string);
 				if(note) current_function->note = copy_array_to_str(current_string);
-				if(code) { current_fcode->code = copy_array_to_str(current_string); foundfunctioncode = 1; }
+				if(code) { current_fcode->code = copy_array_to_str(current_string); }
 				if(cur_state) current_function->current_state = copy_array_to_str(current_string);
 				if(next_state) current_function->next_state = copy_array_to_str(current_string);
 				if(input)
@@ -1684,7 +1642,6 @@ int checkmodel(model_data * modeldata)
 	xmachine_function * current_function2;
 	adj_function * current_adj_function;
 	xmachine_ioput * current_ioput;
-	rule_data * current_rule_data;
 	xmachine_message * current_message;
 	xmachine_message * current_message2;
 	variable * allvar;
@@ -2222,7 +2179,6 @@ int checkmodel(model_data * modeldata)
 				/* If input message has a filter */
 				if(current_ioput->filter_rule != NULL)
 				{
-					current_rule_data = current_ioput->filter_rule;
 					strcpy(buffer, "FLAME_filter_");
 					strcat(buffer, current_xmachine->name);
 					strcat(buffer, "_");

@@ -2784,7 +2784,6 @@ void calculate_communication_syncs(model_data * modeldata)
 	layer * current_layer;
 	sync * current_sync = NULL;
 	sync * previous_sync = NULL;
-	int current_start_layer;
 	function_pointer * temp_function_pointer = NULL;
 	char buffer[1000];
 	char buffer2[1000];
@@ -2793,7 +2792,6 @@ void calculate_communication_syncs(model_data * modeldata)
 	/* For each message type find:
 	 * 1) outputting functions
 	 * 2) inputting functions */
-	current_start_layer = -1;
 	current_message = * modeldata->p_xmessages;
 	while(current_message)
 	{
@@ -2816,9 +2814,6 @@ void calculate_communication_syncs(model_data * modeldata)
 				{
 						if( strcmp(current_message->name, current_output->messagetype) == 0 )
 						{
-							current_start_layer = current_layer->number;
-							//last_output_function = current_function;
-
 							/* Create list of outputting functions of this message type */
 							addfunction_pointer(&temp_function_pointer, current_function);
 						}
@@ -2888,8 +2883,6 @@ void calculate_communication_syncs(model_data * modeldata)
 								/* Next function pointers are place holders */
 								addfunction_pointer(&current_sync->firstdependent, NULL); //current_function);
 								addfunction_pointer(&current_sync->lastdepend, NULL); //last_output_function);
-								/* Update current start layer */
-								current_start_layer = current_layer->number;
 
 								/* Copy list of outputting functions to this sync */
 								current_function_pointer2 = temp_function_pointer;
@@ -3134,7 +3127,6 @@ void order_functions_in_process_layers(model_data * modeldata)
 	function_pointer * current_function_pointer;
 	function_pointer * current_function_pointer2;
 	function_pointer * temp_function_pointer;
-	function_pointer * temp_function_pointer2;
 	function_pointer * next_function_pointer;
 	function_pointer * previous_function_pointer;
 	//xmachine_ioput * current_input;
@@ -3263,8 +3255,6 @@ void order_functions_in_process_layers(model_data * modeldata)
 				previous_function_pointer = NULL;
 				while(current_function_pointer2)
 				{
-					temp_function_pointer2 = current_function_pointer2;
-
 					/* Order functions with least distance outputting functions first
 					 * going to
 					 * least distance inputting functions last */
