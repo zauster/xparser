@@ -486,7 +486,6 @@ int readAgentXML(char * location,
 	/* Things for round-robin partitioning */
 	int geometric = 1;
 	int other = 2;
-	double 	xmax=0, xmin=0, ymax=0, ymin=0;
 	double posx=0.0, posy=0.0, posz=0.0;
 
 	j = 0;
@@ -561,12 +560,6 @@ int readAgentXML(char * location,
 						{
 							if (agent_count % number_partitions == 0)
 							{
-								/* Compute centre of partition */
-								xmin=current_node->partition_data[0];
-								xmax=current_node->partition_data[1];
-								ymin=current_node->partition_data[2];
-								ymax=current_node->partition_data[3];
-
 								add_$name_agent_internal(current_$name_agent, $name_$start_state_state);
 							}
 							++agent_count;
