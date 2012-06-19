@@ -120,7 +120,10 @@ int main(int argc, char * argv[])
 	}
 <?end if?>
 <?if debug?>	printf("Debug mode enabled \n");
-FLAME_debug_count = 0;<?end if?>
+FLAME_debug_count = 0;
+/* Use to stop compiler warnings if not used */
+if(FLAME_debug_count == 0) {}
+<?end if?>
 
 
 

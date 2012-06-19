@@ -490,6 +490,10 @@ int readAgentXML(char * location,
 
 	j = 0;
 	rc = 0;
+	
+	/* Use j and rc to stop compiler warnings if not used */
+	if(j == 0 && rc == 0) {}
+	
 	agentname[0] = '\0';
 	buffer[0] = '\0';
 
