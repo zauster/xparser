@@ -497,6 +497,8 @@ void output_dgraph(char * filename, char * filepath, model_data * modeldata)
  */
 void printRule(rule_data * current_rule_data, FILE *file)
 {
+    char buffer[1000];
+
 	/* If current_rule_data is NULL */
 	if(current_rule_data != NULL)
 	{
@@ -509,6 +511,15 @@ void printRule(rule_data * current_rule_data, FILE *file)
 			fputs("\\nPhase: ", file);
 			fputs(current_rule_data->rhs, file);
 		}
+		/* If interaction radius */
+        else if(current_rule_data->box > 0)
+        {
+            fputs("Box", file);
+            sprintf(buffer, "%d", current_rule_data->box);
+            fputs(buffer, file);
+            fputs("d: ", file);
+            fputs(current_rule_data->lhs_print, file);
+        }
 		else
 		{
 			/* Handle values */
@@ -2959,73 +2970,81 @@ void calculate_communication_syncs(model_data * modeldata)
 								/* If input message has a filter */
 								if(current_input->filter_rule != NULL)
 								{
-									/* If agent variables exist */
-									//if(handle_rule_for_agent_variable(current_input->filter_rule, current_xmachine, 0))
-									/* If filter has the form a.var == m.var/# */
-									if(strcmp(current_input->filter_rule->op, "==") == 0)
-									{
-										flag = 0;
-										if(current_input->filter_rule->lhs_variable != NULL)
-										{
-											if(current_input->filter_rule->lhs_variable->agent != NULL &&
-												current_input->filter_rule->lhs_variable->constant == 1) flag = 1;
-										}
-										if(current_input->filter_rule->rhs_variable != NULL)
-										{
-											if(current_input->filter_rule->rhs_variable->agent != NULL &&
-												current_input->filter_rule->rhs_variable->constant == 1) flag = 1;
-										}
-										if(flag == 1)		
-										{
-											/* Add agent and agent variables to the sync */
-											current_xmachine = addxmachine(&current_sync->inputting_agents, current_function->agent_name);
-											current_sync->filter_agent_count++;
-											/* Add agent filter variables to sync agent */
-											handle_rule_for_agent_variable(current_input->filter_rule, current_xmachine, 1);
-											/* If filter has message vars update sync flag */
-											if(handle_rule_for_message_variable(current_input->filter_rule)) current_sync->has_agent_and_message_vars = 1;
-			
-											/* Add filter functions to sync agent */
-											current_function2 = addxfunction(&current_xmachine->functions);
-											current_function2->name = copystr(current_input->filter_function);
-											current_function2->agent_name = copystr(current_function->agent_name);
-											(void) add_rule_data(&current_function2->filter_rule);
-											copy_rule_data(current_function2->filter_rule, current_input->filter_rule);
-											current_function2->has_message_var = current_input->filter_rule->has_message_var;
-											current_function2->has_agent_var = current_input->filter_rule->has_agent_var;
-									
-											/* Add possible states that hold the agents for the filter inputting function */
-											addxstate(current_function->current_state, current_function->agent_name, &current_xmachine->states);
-			
-											/* Find functions that can change the filter variables */
-											/* If filter variables are constant no functions can change them */
-											if(handle_rule_for_agent_variable(current_input->filter_rule, current_xmachine, 2))
-											{
-												current_adj_function = current_function_pointer->function->dependson;
-												while(current_adj_function)
-												{
-													if(strcmp(current_function_pointer->function->agent_name, current_adj_function->function->agent_name) == 0)
-													{
-														/* Add functions that can change the filter variables */
-														addfunction_pointer(&current_sync->filter_variable_changing_functions, current_adj_function->function);
-				
-														/*if(current_sync->lastdepend->function->rank_in < current_adj_function->function->rank_in)
-														{
-															//current_sync->start_layer = current_adj_function->function->rank_in;
-															current_sync->lastdepend->function = current_adj_function->function;
-														}*/
-													}
-				
-													current_adj_function = current_adj_function->next;
-												}
-											}
-											else
-											{
-												current_input->non_constant_vars = 0;
-												/*printf("*** constant vars %s\n", current_input->filter_function);*/
-											}
-										}
-									}
+								    /* If interaction radius */
+								    if(current_input->filter_rule->box > 0)
+								    {
+
+								    }
+								    else
+								    {
+                                        /* If agent variables exist */
+                                        //if(handle_rule_for_agent_variable(current_input->filter_rule, current_xmachine, 0))
+                                        /* If filter has the form a.var == m.var/# */
+                                        if(strcmp(current_input->filter_rule->op, "==") == 0)
+                                        {
+                                            flag = 0;
+                                            if(current_input->filter_rule->lhs_variable != NULL)
+                                            {
+                                                if(current_input->filter_rule->lhs_variable->agent != NULL &&
+                                                    current_input->filter_rule->lhs_variable->constant == 1) flag = 1;
+                                            }
+                                            if(current_input->filter_rule->rhs_variable != NULL)
+                                            {
+                                                if(current_input->filter_rule->rhs_variable->agent != NULL &&
+                                                    current_input->filter_rule->rhs_variable->constant == 1) flag = 1;
+                                            }
+                                            if(flag == 1)
+                                            {
+                                                /* Add agent and agent variables to the sync */
+                                                current_xmachine = addxmachine(&current_sync->inputting_agents, current_function->agent_name);
+                                                current_sync->filter_agent_count++;
+                                                /* Add agent filter variables to sync agent */
+                                                handle_rule_for_agent_variable(current_input->filter_rule, current_xmachine, 1);
+                                                /* If filter has message vars update sync flag */
+                                                if(handle_rule_for_message_variable(current_input->filter_rule)) current_sync->has_agent_and_message_vars = 1;
+
+                                                /* Add filter functions to sync agent */
+                                                current_function2 = addxfunction(&current_xmachine->functions);
+                                                current_function2->name = copystr(current_input->filter_function);
+                                                current_function2->agent_name = copystr(current_function->agent_name);
+                                                (void) add_rule_data(&current_function2->filter_rule);
+                                                copy_rule_data(current_function2->filter_rule, current_input->filter_rule);
+                                                current_function2->has_message_var = current_input->filter_rule->has_message_var;
+                                                current_function2->has_agent_var = current_input->filter_rule->has_agent_var;
+
+                                                /* Add possible states that hold the agents for the filter inputting function */
+                                                addxstate(current_function->current_state, current_function->agent_name, &current_xmachine->states);
+
+                                                /* Find functions that can change the filter variables */
+                                                /* If filter variables are constant no functions can change them */
+                                                if(handle_rule_for_agent_variable(current_input->filter_rule, current_xmachine, 2))
+                                                {
+                                                    current_adj_function = current_function_pointer->function->dependson;
+                                                    while(current_adj_function)
+                                                    {
+                                                        if(strcmp(current_function_pointer->function->agent_name, current_adj_function->function->agent_name) == 0)
+                                                        {
+                                                            /* Add functions that can change the filter variables */
+                                                            addfunction_pointer(&current_sync->filter_variable_changing_functions, current_adj_function->function);
+
+                                                            /*if(current_sync->lastdepend->function->rank_in < current_adj_function->function->rank_in)
+                                                            {
+                                                                //current_sync->start_layer = current_adj_function->function->rank_in;
+                                                                current_sync->lastdepend->function = current_adj_function->function;
+                                                            }*/
+                                                        }
+
+                                                        current_adj_function = current_adj_function->next;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    current_input->non_constant_vars = 0;
+                                                    /*printf("*** constant vars %s\n", current_input->filter_function);*/
+                                                }
+                                            }
+                                        }
+								    }
 								}
 							}
 	
@@ -3799,6 +3818,8 @@ void calculate_last_read_layer_of_message_types(model_data * modeldata)
 		
 		new_message = addxmessage(&saved_layer->finished_messages);
 		new_message->name = copystr(current_message->name);
+		new_message->has_box2d = current_message->has_box2d;
+		new_message->has_box3d = current_message->has_box3d;
 		//printf("Last layer read of %s - %d\n", current_message->name, saved_layer->number);
 	}
 }

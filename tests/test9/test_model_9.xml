@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xmodel version="2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation='http://www.flame.ac.uk/schema/xmml_v2.xsd'>
+
+<name>test_model_9</name>
+<version>01</version>
+<description>Test box filters</description>
+<models>
+</models>
+
+<environment>
+
+<functionFiles>
+  <file>agent_a_functions.c</file>
+</functionFiles>
+
+</environment>
+
+<agents>
+
+<xagent>
+<name>agent_a</name>
+<description></description>
+<memory>
+  <variable><type>int</type><name>x</name><description></description></variable>
+  <variable><type>int</type><name>y</name><description></description></variable>
+  <variable><type>int</type><name>z</name><description></description></variable>
+  <variable><type>int</type><name>box</name><description></description></variable>
+  <variable><type>int</type><name>box2d_good</name><description></description></variable>
+  <variable><type>int</type><name>box2d_bad</name><description></description></variable>
+  <variable><type>int</type><name>box3d_good</name><description></description></variable>
+  <variable><type>int</type><name>box3d_bad</name><description></description></variable>
+</memory>
+
+<functions>
+
+<function><name>agent_a_1</name>
+<description></description>
+<currentState>start</currentState>
+<nextState>1</nextState>
+<outputs>
+<output>
+<messageName>m_sub_1</messageName>
+</output>
+<output>
+<messageName>m_sub_2</messageName>
+</output>
+<output>
+<messageName>m_sub_3</messageName>
+</output>
+</outputs>
+</function>
+
+<function><name>agent_a_2</name>
+<description></description>
+<currentState>1</currentState>
+<nextState>2</nextState>
+<inputs>
+<input>
+<messageName>m_sub_1</messageName>
+<filter>
+<box3d>a.box</box3d>
+</filter>
+</input>
+</inputs>
+</function>
+
+<function><name>agent_a_3</name>
+<description></description>
+<currentState>2</currentState>
+<nextState>3</nextState>
+<inputs>
+<input>
+<messageName>m_sub_1</messageName>
+<filter>
+<box2d>2.0</box2d>
+</filter>
+</input>
+</inputs>
+</function>
+
+<function><name>agent_a_4</name>
+<description></description>
+<currentState>3</currentState>
+<nextState>4</nextState>
+<inputs>
+<input>
+<messageName>m_sub_2</messageName>
+<filter>
+<box2d>3.0</box2d>
+</filter>
+</input>
+</inputs>
+</function>
+
+<function><name>agent_a_5</name>
+<description></description>
+<currentState>4</currentState>
+<nextState>5</nextState>
+<inputs>
+<input>
+<messageName>m_sub_3</messageName>
+<filter>
+<box3d>4.0</box3d>
+</filter>
+</input>
+</inputs>
+</function>
+
+</functions>
+</xagent>
+
+</agents>
+
+<messages>
+<message>
+<name>m_sub_1</name>
+<description></description>
+<variables>
+<variable><type>int</type><name>x</name><description></description></variable>
+<variable><type>int</type><name>y</name><description></description></variable>
+<variable><type>int</type><name>z</name><description></description></variable>
+</variables>
+</message>
+<message>
+<name>m_sub_2</name>
+<description></description>
+<variables>
+<variable><type>double</type><name>x</name><description></description></variable>
+<variable><type>double</type><name>y</name><description></description></variable>
+</variables>
+</message>
+<message>
+<name>m_sub_3</name>
+<description></description>
+<variables>
+<variable><type>double</type><name>x</name><description></description></variable>
+<variable><type>double</type><name>y</name><description></description></variable>
+<variable><type>double</type><name>z</name><description></description></variable>
+</variables>
+</message>
+</messages>
+
+</xmodel>

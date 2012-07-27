@@ -264,6 +264,7 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	int header, iteration_end_code, depends, datatype, desc, cur_state, next_state;
 	int input, output, messagetype, timetag, unit, period, lhs, op, rhs, condition;
 	int model, filter, phase, enabled, not, random, sort, constant, order, key;
+	int box2d, box3d;
 	//int not_value;
 	/* Pointer to new structs */
 	xmachine_message * current_message;
@@ -367,6 +368,8 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 	constant = 0;
 	order = 0;
 	key = 0;
+	box2d = 0;
+	box3d = 0;
 
 	/*printf("%i> ", linenumber);*/
 
@@ -640,6 +643,13 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 
 				if(current_function->current_state != NULL) addxstate(current_function->current_state, current_function->agent_name, &current_xmachine->states);
 				if(current_function->next_state != NULL) addxstate(current_function->next_state, current_function->agent_name, &current_xmachine->states);
+
+				/*if(current_function->has_radius1d) printf("%s has radius1d\n", current_function->name);
+                if(current_function->has_radius2d) printf("%s has radius2d\n", current_function->name);
+                if(current_function->has_radius3d) printf("%s has radius3d\n", current_function->name);
+                if(current_function->has_apothem1d) printf("%s has apothem1d\n", current_function->name);
+                if(current_function->has_apothem2d) printf("%s has apothem2d\n", current_function->name);
+                if(current_function->has_apothem3d) printf("%s has apothem3d\n", current_function->name);*/
 			}
 			if(strcmp(current_string->array, "header") == 0) { header = 1; current_envfunc = addenvfunc(modeldata->p_envfuncs); }
 			if(strcmp(current_string->array, "/header") == 0) { header = 0; }
@@ -842,6 +852,26 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 				/* Check if filter rule contains agent/message variables */
 				current_ioput->filter_rule->has_agent_var = checkRuleAgentVar(current_ioput->filter_rule);
 				current_ioput->filter_rule->has_message_var = checkRuleMessageVar(current_ioput->filter_rule);
+
+				/* Update function is say certain filters are being used */
+				/*if(current_ioput->filter_rule->radius == 1) current_function->has_radius1d = 1;
+				if(current_ioput->filter_rule->radius == 2) current_function->has_radius2d = 1;
+				if(current_ioput->filter_rule->radius == 3) current_function->has_radius3d = 1;
+				if(current_ioput->filter_rule->apothem == 1) current_function->has_apothem1d = 1;
+				if(current_ioput->filter_rule->apothem == 2) current_function->has_apothem2d = 1;
+				if(current_ioput->filter_rule->apothem == 3) current_function->has_apothem3d = 1;*/
+
+				/* Test code */
+				/*if(current_ioput->filter_rule->radius > 0)
+				    printf("%s input filter radius%dd = '%s'\n",
+				            current_ioput->messagetype,
+				            current_ioput->filter_rule->radius,
+				            current_ioput->filter_rule->lhs);
+				if(current_ioput->filter_rule->apothem > 0)
+                    printf("%s input filter apothem%dd = '%s'\n",
+                            current_ioput->messagetype,
+                            current_ioput->filter_rule->apothem,
+                            current_ioput->filter_rule->lhs);*/
 			}
 			if(strcmp(current_string->array, "value") == 0) { value = 1; }
 			if(strcmp(current_string->array, "/value") == 0) { value = 0; }
@@ -857,6 +887,30 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 			if(strcmp(current_string->array, "/order") == 0) { order = 0; }
 			if(strcmp(current_string->array, "key") == 0) { key = 1; }
 			if(strcmp(current_string->array, "/key") == 0) { key = 0; }
+            if(strcmp(current_string->array, "box2d") == 0) {
+                /* Check last tag before this one was filter */
+                if(strcmp("filter", &chartag[numtag-2][0]) != 0)
+                {
+                    fprintf(stderr, "ERROR: The tag box2d must be used after a filter tag only\n");
+                    exit(1);
+                }
+                box2d = 1;
+                current_rule_data = add_rule_data(&current_ioput->filter_rule);
+                current_rule_data->box = 2;
+            }
+            if(strcmp(current_string->array, "/box2d") == 0) { box2d = 0; }
+            if(strcmp(current_string->array, "box3d") == 0) {
+                /* Check last tag before this one was filter */
+                if(strcmp("filter", &chartag[numtag-2][0]) != 0)
+                {
+                    fprintf(stderr, "ERROR: The tag box3d must be used after a filter tag only\n");
+                    exit(1);
+                }
+                box3d = 1;
+                current_rule_data = add_rule_data(&current_ioput->filter_rule);
+                current_rule_data->box = 3;
+            }
+            if(strcmp(current_string->array, "/box3d") == 0) { box3d = 0; }
 
 			/* End of tag and reset buffer */
 			intag = 0;
@@ -1269,7 +1323,14 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 							current_rule_data->rhs = copy_array_to_str(current_string);
 							current_rule_data->rhs_print = copy_array_to_str(current_string);
 						}
-						//else current_ioput->filter_function = copy_array_to_str(current_string);
+						else if(box2d || box3d)
+						{
+						    /* Copy to both lhs and rhs so checkRule* still works */
+						    current_rule_data->lhs = copy_array_to_str(current_string);
+                            current_rule_data->lhs_print = copy_array_to_str(current_string);
+                            current_rule_data->rhs = copy_array_to_str(current_string);
+                            current_rule_data->rhs_print = copy_array_to_str(current_string);
+						}
 					}
 				}
 				if(output)
@@ -1367,7 +1428,9 @@ void readModel(input_file * inputfile, char * directory, model_data * modeldata)
 					(message && (name || (var && (type || name))))
                     /* (lsc) rule trimmed as "attribute" and "transition" never set! */
 					|| (state && (name /* attribute || (transition && (func || dest))*/ ))
-						|| (function && (not || name || note || code || depends || type || cur_state || next_state || input || output || messagetype || value || period || phase || var || order))
+						|| (function && (not || name || note || code || depends || type || cur_state ||
+						        next_state || input || output || messagetype || value || period ||
+						        phase || var || order || box2d || box3d))
 							|| (define && (name || value)) || (timetag && (name || unit || period)) || condition )
 		{
 			/*current_charlist = addchar(p_charlist);*/
@@ -1392,6 +1455,14 @@ void handleRuleValue(char ** p_value, variable ** p_variable, rule_data * curren
 	//xmachine * current_xmachine2;
 	char buffer[1000];
 	int found, i, j;
+
+	/* Check if the value is empty */
+	if(strcmp(*p_value, "") == 0) {
+	    fprintf(stderr, "ERROR: value missing in filter rule\n");
+        fprintf(stderr, "       in function '%s' %s->%s in agent '%s'\n", current_function->name, current_function->current_state, current_function->next_state, current_xmachine->name);
+        fprintf(stderr, "       in file: '%s'\n", current_function->file);
+        exit(0);
+	}
 
 	/* If starts with 'a.' change to 'a->' and check rest is a valid agent memory variable */
 	if(strncmp(*p_value, "a.", 2) == 0)
@@ -1571,6 +1642,14 @@ void handleRule(rule_data * current_rule_data, xmachine_function * current_funct
 
 			handleRuleValue(&current_rule_data->rhs, &current_rule_data->rhs_variable, current_rule_data, current_function, current_xmachine, messagetype, modeldata);
 		}
+		else if(current_rule_data->box > 0)
+		{
+		    if(current_rule_data->lhs != NULL)  handleRuleValue(&current_rule_data->lhs, &current_rule_data->lhs_variable, current_rule_data, current_function, current_xmachine, messagetype, modeldata);
+		    else {
+		        fprintf(stderr, "ERROR: The value of a box filter is missing\n");
+                exit(0);
+            }
+        }
 		else
 		{
 			/* Handle values */
@@ -1653,6 +1732,9 @@ int checkmodel(model_data * modeldata)
 	int totallayers = 0;
 	int m = 0;
 	int k;
+	int has_x = 0;
+    int has_y = 0;
+    int has_z = 0;
 
 	/* Check model for:
 	 * agent/message variables are only known data types
@@ -2132,7 +2214,6 @@ int checkmodel(model_data * modeldata)
 	current_xmachine = *modeldata->p_xmachines;
 	while(current_xmachine)
 	{
-		// TODO
 		/* Message filters */
 		current_function = current_xmachine->functions;
 		while(current_function)
@@ -2192,6 +2273,59 @@ int checkmodel(model_data * modeldata)
 					current_ioput->filter_function = copystr(buffer);
 
 					handleRule(current_ioput->filter_rule, current_function, current_xmachine, current_ioput->messagetype, modeldata);
+
+					/* Check if agent has x, y and z variables */
+					has_x = 0;
+                    has_y = 0;
+                    has_z = 0;
+                    current_variable = current_xmachine->variables;
+                    while(current_variable) {
+                        if (strcmp(current_variable->name, "x") == 0) has_x = 1;
+                        if (strcmp(current_variable->name, "y") == 0) has_y = 1;
+                        if (strcmp(current_variable->name, "z") == 0) has_z = 1;
+                        current_variable = current_variable->next;
+                    }
+
+					/* If function has box2/3d filter then tell message board */
+					if(current_ioput->filter_rule->box == 2) {
+					    current_ioput->message->has_box2d = 1;
+					    /* Check agent has x and y variables */
+					    if(has_x == 0 || has_y == 0) {
+					        fprintf(stderr, "ERROR: agent '%s' contains a box2d filter but does not contain memory variables called x and y\n",
+                                    current_xmachine->name);
+                            return -1;
+					    }
+					}
+					if(current_ioput->filter_rule->box == 3) {
+					    current_ioput->message->has_box3d = 1;
+					    /* Check agent has x, y and z variables */
+					    if(has_x == 0 || has_y == 0 || has_z == 0) {
+                            fprintf(stderr, "ERROR: agent '%s' contains a box3d filter but does not contain memory variables called x, y and z\n",
+                                    current_xmachine->name);
+                            return -1;
+                        }
+					}
+
+					/* Save box apothem string to box_apothem */
+					if(current_ioput->filter_rule->box > 0)
+					{
+					    /* If use agent variable, remove first 'a' */
+					    if(strncmp(current_ioput->filter_rule->lhs, "a", 1) == 0) {
+					        current_ioput->box_apothem =
+					                (char *)malloc( (
+					                        strlen(current_ioput->filter_rule->lhs) +
+                                            strlen(current_xmachine->name) +
+                                            strlen("current_xmachine_") + 1) * sizeof(char));
+					        strcpy(current_ioput->box_apothem, "current_xmachine_");
+					        strcat(current_ioput->box_apothem, current_xmachine->name);
+					        strcat(current_ioput->box_apothem, current_ioput->filter_rule->lhs+1);
+					    } else {
+					        current_ioput->box_apothem =
+                                    (char *)malloc( (
+                                            strlen(current_ioput->filter_rule->lhs) + 1) * sizeof(char));
+					        strcpy(current_ioput->box_apothem, current_ioput->filter_rule->lhs);
+					    }
+					}
 				}
 
 				/*printf("%s - %d\n", current_ioput->filter_function, current_ioput->random);*/
@@ -2258,37 +2392,52 @@ int checkmodel(model_data * modeldata)
 				current_ioput = current_ioput->next;
 			}
 
-			current_ioput = current_function->outputs;
-			while(current_ioput)
-			{
-				/* Check if message type exists */
-				found = 0;
-				current_message = * modeldata->p_xmessages;
-				while(current_message)
-				{
-					if(strcmp(current_ioput->messagetype, current_message->name) == 0)
-					{
-						found = 1;
-					}
-
-					current_message = current_message->next;
-				}
-				if(found == 0)
-				{
-					fprintf(stderr, "ERROR: output message type '%s' in function '%s' in agent '%s' in file '%s' doesn't exist\n",
-								current_ioput->messagetype, current_function->name, current_xmachine->name, current_function->file);
-					return -1;
-				}
-
-				current_ioput = current_ioput->next;
-			}
-
-
 			current_function = current_function->next;
 		}
 
 		current_xmachine = current_xmachine->next;
 	}
+
+	/* Check messages that have box2/3d input filters contain x,y,(z) */
+    current_message = * modeldata->p_xmessages;
+    while(current_message)
+    {
+        int has_x = 0;
+        int has_y = 0;
+        int has_z = 0;
+        for(current_variable = current_message->vars;
+        current_variable != NULL; current_variable = current_variable->next)
+        {
+            if(strcmp(current_variable->name, "x") == 0) has_x = 1;
+            if(strcmp(current_variable->name, "y") == 0) has_y = 1;
+            if(strcmp(current_variable->name, "z") == 0) has_z = 1;
+        }
+
+        printf("%s\n", current_message->name);
+        if(current_message->has_box2d) {
+            /*printf("\thas box2d\n");*/
+            if(has_x == 0 || has_y == 0) {
+                fprintf(stderr, "ERROR: message '%s' is involved in a box2d filter but does not contain variables called x and y\n",
+                        current_message->name);
+                return -1;
+            }
+            current_message->make_x_function = 1;
+            current_message->make_y_function = 1;
+        }
+        if(current_message->has_box3d) {
+            /*printf("\thas box3d\n");*/
+            if(has_x == 0 || has_y == 0 || has_z == 0) {
+                fprintf(stderr, "ERROR: message '%s' is involved in a box3d filter but does not contain variables called x, y and z\n",
+                        current_message->name);
+                return -1;
+            }
+            current_message->make_x_function = 1;
+            current_message->make_y_function = 1;
+            current_message->make_z_function = 1;
+        }
+
+        current_message = current_message->next;
+    }
 
 	return 0;
 }

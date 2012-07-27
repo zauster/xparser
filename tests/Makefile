@@ -9,13 +9,13 @@ EXECUTABLE = run_test
 DEPS       = Makefile
 RM         = rm -f
 
-LIBMBOARD  = /Users/stc/workspace/libmboard/
+LIBMBOARD  = LIBMBOARD_DIR=/Users/stc/workspace/libmboard/
 
 all: build run
 
 #run: test1/libmboard build
 run: build
-	./run_test
+	./run_test $(LIBMBOARD)
 
 test1/libmboard:
 	cd $(LIBMBOARD); ./autogen.sh; ./configure --prefix=`pwd`/../../../trunk/xparser/tests/test1/libmboard; make; make install; cd ../../../trunk/xparser/tests

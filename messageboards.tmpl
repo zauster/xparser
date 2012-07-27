@@ -7,6 +7,11 @@
 
 <?foreach message?>
 
+/* Box filtering functions */
+<?if make_x_func?>double $name_message_extract_x(void *msg_ptr) { return (double)((m_$name*)msg_ptr)->x; }<?end if?>
+<?if make_y_func?>double $name_message_extract_y(void *msg_ptr) { return (double)((m_$name*)msg_ptr)->y; }<?end if?>
+<?if make_z_func?>double $name_message_extract_z(void *msg_ptr) { return (double)((m_$name*)msg_ptr)->z; }<?end if?>
+
 union pu_$name 
 {
     m_$name *ptr;

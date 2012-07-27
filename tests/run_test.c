@@ -28,6 +28,7 @@ void test_input(void);
 void test_debug(void);
 void test_imports(void);
 void test_outputs(void);
+void test_box_filter(void);
 void test_model_code_standard(int n);
 void test_model_code_standard_1(void) { test_model_code_standard(1); }
 void test_model_code_standard_2(void) { test_model_code_standard(2); }
@@ -36,6 +37,7 @@ void test_model_code_standard_4(void) { test_model_code_standard(4); }
 void test_model_code_standard_5(void) { test_model_code_standard(5); }
 void test_model_code_standard_6(void) { test_model_code_standard(6); }
 void test_model_code_standard_7(void) { test_model_code_standard(7); }
+void test_model_code_standard_9(void) { test_model_code_standard(9); }
 
 /* Define tests within this suite */
 CU_TestInfo test_array_1[] =
@@ -97,7 +99,15 @@ CU_TestInfo test_array_7[] =
     CU_TEST_INFO_NULL,
 };
 
+CU_TestInfo test_array_9[] =
+{
+    {"test input box2/3d filter                       ", test_box_filter },
+    {"test model code standard                        ", test_model_code_standard_9 },
+    CU_TEST_INFO_NULL,
+};
+
 char * xparser_path;
+char * libmboard_dir;
 
 int call_external(char * command)
 {
@@ -140,6 +150,19 @@ int call_external(char * command)
 	close(fderr);
 	clearerr(stderr);
 	fsetpos(stderr, &poserr);
+
+	/* If error then print command and stderr output */
+	if(rc != 0) {
+	    printf("\nError running command: %s\nReturns error code: %d\n", command, rc);
+	    FILE * err;
+	    err = fopen("stderr.out", "r");
+	    char c = fgetc(err);
+	    while(c != EOF) {
+	        printf("%c", c);
+	        c = fgetc(err);
+	    }
+	}
+
 
 	return rc;
 }
@@ -386,6 +409,17 @@ void test_reading_and_writing_model_data(void)
 	CU_ASSERT_EQUAL(rc, 1);
 }
 
+void test_box_filter(void)
+{
+    int rc;
+
+    rc = call_external("test9/main 1 test9/0.xml");
+    CU_ASSERT_EQUAL(rc, 0);
+
+    rc = compare_chars_in_files("test9/1.xml", "test9/1.xml.saved");
+    CU_ASSERT_EQUAL(rc, 0);
+}
+
 void test_input(void)
 {
 	int rc;
@@ -507,7 +541,7 @@ void test_model_code_standard(int n)
 	int rc;
 	char buffer[1000];
 	
-	sprintf(buffer, "splint -I/Users/stc/workspace/libmboard/include -weak -namechecks -bufferoverflowhigh test%d/*.c", n);
+	sprintf(buffer, "splint -I/usr/local/Cellar/mpich2/1.4.1p1/include -I/Users/stc/workspace/libmboard/include -D_DEBUG_MODE -weak -namechecks -bufferoverflowhigh test%d/*.c", n);
 	
 	/* Test if splint is available */
 	rc = call_external(buffer);
@@ -577,7 +611,6 @@ int init_test_model(int index, int option)
 	FILE *out;
 	int rc, rc2;
 	char buffer[1000];
-	//printf("init_test_model_1\n");
 
 	sprintf(buffer, " test%d/test_model_%d.xml", index, index);
 	if(option == 1) strcat(buffer, " -p");
@@ -589,6 +622,8 @@ int init_test_model(int index, int option)
 		return -1;
 	}
 	sprintf(buffer, "make --directory=test%d/", index);
+	strncat(buffer, " ", 1);
+	strncat(buffer, libmboard_dir, strlen(libmboard_dir));
 	rc = call_external(buffer);
 	if(rc != 0)
 	{
@@ -658,6 +693,8 @@ int  init_test_model_6(void) { return init_test_model(6, 0);  }
 int clean_test_model_6(void) { return clean_test_model(6); }
 int  init_test_model_7(void) { return init_test_model(7, 0);  }
 int clean_test_model_7(void) { return clean_test_model(7); }
+int  init_test_model_9(void) { return init_test_model(9, 0);  }
+int clean_test_model_9(void) { return clean_test_model(9); }
 
 static int clean_quit(void)
 {
@@ -665,31 +702,48 @@ static int clean_quit(void)
     remove("stderr.out");
 
     free(xparser_path);
+    free(libmboard_dir);
 
     CU_cleanup_registry();
     return CU_get_error();
+
+    exit(0);
 }
 
 int main(int argc, char ** argv)
 {
 	FILE * file;
 
-    /*  */
+	/* Set xparser path */
+	xparser_path = (char *)malloc(11);
+	strcpy(xparser_path,"../xparser");
+
+    /* Set libmboard dir */
     if(argc < 2)
     {
-    	xparser_path = (char *)malloc(11);
-    	strcpy(xparser_path,"../xparser");
+    	libmboard_dir = (char *)malloc(11);
+    	strcpy(xparser_path,"");
     }
     else
     {
-    	xparser_path = (char *)malloc(strlen(argv[1]) + 1);
-    	strcpy(xparser_path,argv[1]);
+        libmboard_dir = (char *)malloc(strlen(argv[1]) + 1);
+    	strcpy(libmboard_dir,argv[1]);
     }
 
+    /* Test for xparser */
     if((file = fopen(xparser_path, "r"))==NULL)
     {
     	printf("ERROR: xparser not found\n");
     	return clean_quit();
+    }
+    else fclose(file);
+
+    /* Test for libmboard header */
+    char * libmboard_path = strstr(libmboard_dir, "=");
+    if((file = fopen(libmboard_path+1, "r"))==NULL)
+    {
+        printf("ERROR: libmboard header not found\n");
+        return clean_quit();
     }
     else fclose(file);
 
@@ -707,6 +761,7 @@ int main(int argc, char ** argv)
 			{"Test debug mode", init_test_model_6, clean_test_model_6, test_array_6},
 			{"Test parallel syncs", init_test_model_4, clean_test_model_4, test_array_4},
 			{"Test imports and outputs", init_test_model_7, clean_test_model_7, test_array_7},
+			{"Test box filters", init_test_model_9, clean_test_model_9, test_array_9},
 			CU_SUITE_INFO_NULL,
     };
 

@@ -10,10 +10,10 @@
 #define VERSIONMAJOR 0
 /** \def VERSIONMINOR
  * \brief New features. */
-#define VERSIONMINOR 16
+#define VERSIONMINOR 17
 /** \def VERSIONMICRO
  * \brief Bug fixes. */
-#define VERSIONMICRO 2
+#define VERSIONMICRO 0
 /** \def DEBUG
  * \brief Debug output. */
 #define DEBUG 0
@@ -32,7 +32,7 @@
 #define ARRAY_GROWTH_RATE 1.618034
 /** \def LIBMBOARD_MINVER_STR
  * \brief Minimum version of libmboard needed to compile/run generated code */
-#define LIBMBOARD_MINVER_STR "0.2.1"
+#define LIBMBOARD_MINVER_STR "0.3.0"
 
 /*****************************************************************
 * NAME:    struct datatype definitions                           *
@@ -195,6 +195,7 @@ struct rule_data
 	struct rule_data * lhs_rule; /* If rule==NULL then use lhs,op,rhs data */
 	struct rule_data * rhs_rule; /* If rule==NULL then use lhs,op,rhs data */
 	int time_rule;
+	int box;  /* 0 = no, 2 = 2d, 3 = 3d */
 	int not;
 	int has_agent_var;
 	int has_message_var;
@@ -220,6 +221,7 @@ struct xmachine_ioput
 	char * sort_key;			/**< The sort message variable. */
 	char * sort_order;			/**< The sort order, ascend/descend. */
 	int non_constant_vars;		/**< Flag if filter includes non-constant vars. */
+	char * box_apothem;         /**< The box apothem value/variable. */
 
 	struct xmachine_ioput * next;
 };
@@ -363,6 +365,12 @@ struct xmachine_message
 	struct xmachine * outputting_agents;	/**< Agents that output this message type */
 	struct xmachine * inputting_agents;		/**< Agents that input this message type */
 	char * description;						/**< Description of the message. */
+	/* Catalogue use of radius/apothem to build trees for function input */
+    int has_box2d;
+    int has_box3d;
+    int make_x_function;
+    int make_y_function;
+    int make_z_function;
 
 	struct xmachine_message * next;	/**< Pointer to next message in list.*/
 };

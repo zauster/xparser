@@ -525,9 +525,9 @@ int readAgentXML(char * location,
 				{
 					if(current_$name_agent == NULL) { printf("Memory error reading $name agent\n"); exit(0); }
 					
-					posx = <?if use_xvar?>current_$name_agent->$xvar<?end if?><?if no_xvar?>0.0<?end if?>;
-					posy = <?if use_yvar?>current_$name_agent->$yvar<?end if?><?if no_yvar?>0.0<?end if?>;
-					posz = <?if use_zvar?>current_$name_agent->$zvar<?end if?><?if no_zvar?>0.0<?end if?>;
+					posx = (double)<?if use_xvar?>current_$name_agent->$xvar<?end if?><?if no_xvar?>0.0<?end if?>;
+					posy = (double)<?if use_yvar?>current_$name_agent->$yvar<?end if?><?if no_yvar?>0.0<?end if?>;
+					posz = (double)<?if use_zvar?>current_$name_agent->$zvar<?end if?><?if no_zvar?>0.0<?end if?>;
 					
 					/* If flag is zero just read the data. We'll partition later.
 					 * If flag is not zero we aleady have partition data so can read and distribute to the current node.*/

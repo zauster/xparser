@@ -77,7 +77,7 @@ int $condition(xmachine_memory_$agent_name *a)
 }
 
 <?end if?><?end foreach?><?end foreach?>
-<?foreach xagent?><?foreach function?><?foreach function_input?><?if filter?>
+<?foreach xagent?><?foreach function?><?foreach function_input?><?if filter?><?if nottree?>
 /** \fn int $filter(const void *msg, const void *params)
  * \brief The filter function for a message input used in serial for each agent.
  * \param msg The pointer to the message to be filtered.
@@ -97,7 +97,7 @@ int $filter(const void *msg, const void *params)
 	if($rule) return 1;
 	else return 0;
 }
-<?end if?><?end foreach?><?end foreach?><?end foreach?>
+<?end if?><?end if?><?end foreach?><?end foreach?><?end foreach?>
 <?foreach message?><?foreach sync?><?if sync_filter?>/* Filter handling functions for message type $messagename for input layer $layer */
 <?foreach xagent?><?foreach function?>
 /** \fn int $name_sync(const void *msg, int pid)

@@ -15,6 +15,12 @@ void writeRule(rule_data * current_rule_data, FILE *file, int flag)
 		fputs(current_rule_data->rhs, file);
 		fputs(")", file);
 	}
+	/* If interaction radius */
+	else if(current_rule_data->box > 0)
+    {
+	    //Todo
+	    fputs("( /* interaction radius rule goes here */ )", file);
+    }
 	else
 	{
 		if(current_rule_data->not == 1) fputs("!", file);
@@ -820,6 +826,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if(current_ioput != NULL)
 					{
 						if (current_ioput->filter_rule == NULL) write = 0;
+						//else if (current_ioput->filter_rule->box != 0) write = 0;
 					}
 					else write = 0;
 					writetag[numtag] = write;
@@ -834,6 +841,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if(current_ioput != NULL)
 					{
 						if (current_ioput->filter_function != NULL) write = 0;
+						//    if (current_ioput->filter_rule->box == 0)
+						//        write = 0;
 					}
 					writetag[numtag] = write;
 				}
@@ -1014,6 +1023,97 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 					if (current_variable->constant == 0) write = 0;
 					writetag[numtag] = write;
 				}
+				else if (strcmp(buffer->array, "<?if tree2d?>") == 0)
+                {
+                    strcpy(&chartag[numtag][0], "if");
+                    if(write == 1) lastiftag = numtag;
+                    numtag++;
+                    if(current_message != NULL)
+                    {
+                        if(current_message->has_box2d == 0) write = 0;
+                    }
+                    if(current_sync != NULL)
+                    {
+                        if(current_sync->message->has_box2d == 0) write = 0;
+                    }
+                    if(current_ioput != NULL)
+                    {
+                        if(current_ioput->filter_rule != NULL)
+                        {
+                            if (current_ioput->filter_rule->box != 2) write = 0;
+                        }
+                    }
+                    writetag[numtag] = write;
+                }
+				else if (strcmp(buffer->array, "<?if tree3d?>") == 0)
+                {
+                    strcpy(&chartag[numtag][0], "if");
+                    if(write == 1) lastiftag = numtag;
+                    numtag++;
+                    if(current_message != NULL)
+                    {
+                        if(current_message->has_box3d == 0) write = 0;
+                    }
+                    if(current_sync != NULL)
+                    {
+                        if(current_sync->message->has_box3d == 0) write = 0;
+                    }
+                    if(current_ioput != NULL)
+                    {
+                        if(current_ioput->filter_rule != NULL)
+                        {
+                            if (current_ioput->filter_rule->box != 3) write = 0;
+                        }
+                    }
+                    writetag[numtag] = write;
+                }
+				else if (strcmp(buffer->array, "<?if nottree?>") == 0)
+                {
+                    strcpy(&chartag[numtag][0], "if");
+                    if(write == 1) lastiftag = numtag;
+                    numtag++;
+                    if(current_ioput != NULL)
+                    {
+                        if(current_ioput->filter_rule != NULL)
+                        {
+                            if (current_ioput->filter_rule->box != 0) write = 0;
+                        }
+                    }
+                    writetag[numtag] = write;
+                }
+				else if (strcmp(buffer->array, "<?if make_x_func?>") == 0)
+                {
+                    strcpy(&chartag[numtag][0], "if");
+                    if(write == 1) lastiftag = numtag;
+                    numtag++;
+                    if(current_message != NULL)
+                    {
+                        if (current_message->make_x_function == 0) write = 0;
+                    }
+                    writetag[numtag] = write;
+                }
+				else if (strcmp(buffer->array, "<?if make_y_func?>") == 0)
+                {
+                    strcpy(&chartag[numtag][0], "if");
+                    if(write == 1) lastiftag = numtag;
+                    numtag++;
+                    if(current_message != NULL)
+                    {
+                        if (current_message->make_y_function == 0) write = 0;
+                    }
+                    writetag[numtag] = write;
+                }
+				else if (strcmp(buffer->array, "<?if make_z_func?>") == 0)
+                {
+                    strcpy(&chartag[numtag][0], "if");
+                    if(write == 1) lastiftag = numtag;
+                    numtag++;
+                    if(current_message != NULL)
+                    {
+                        if (current_message->make_z_function == 0) write = 0;
+                    }
+                    writetag[numtag] = write;
+                }
 				else if (strcmp(buffer->array, "<?end if?>") == 0)
 				{
 					/* Look at last tag */
@@ -2375,6 +2475,7 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 						while (strcmp(buffer3->array, "$name") != 0 && strcmp(buffer3->array, "$agent_name") != 0 &&
 								strcmp(buffer3->array, "$filter") != 0 && strcmp(buffer3->array, "$rule") != 0 &&
 								strcmp(buffer3->array, "$sort") != 0 &&
+								strcmp(buffer3->array, "$box") != 0 &&
 								strcmp(buffer3->array, "$key") != 0 && pos <= (pos1 + 15))
 						{
 							add_char(buffer3, c);
@@ -2392,6 +2493,8 @@ void parseTemplate(char * filename, char * templatename, model_data * modeldata)
 							fputs(current_ioput->sort_function, file);
 						else if (strcmp(buffer3->array, "$key") == 0)
 							fputs(current_ioput->sort_key, file);
+						else if (strcmp(buffer3->array, "$box") == 0)
+                            fputs(current_ioput->box_apothem, file);
 						else if (strcmp(buffer3->array, "$rule") == 0)
 							writeRule(current_ioput->filter_rule, file, 0);
 						else

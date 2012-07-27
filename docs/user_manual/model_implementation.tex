@@ -45,6 +45,10 @@ the simulation. Agents of type `agentname' are added to a simulation by:
 \end{verbatim}
 %\end{mylisting}
 
+New agents are only added at the start of the next iteration. This is because
+new agents start in their start state and are only picked up by the 
+simulation engine when all other agents are also in their start states.
+
 \subsection{Accessing Agent Memory Variables}
 
 After including the specific agent header, the variables in the

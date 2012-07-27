@@ -29,7 +29,9 @@ int main(int argc, char * argv[])
 <?foreach xagent?>	//xmachine_memory_$name * temp_xmachine_$name;
 <?end foreach?>
 <?foreach message?>	int FLAME_$name_message_board_write;
-	int FLAME_$name_message_board_read;
+	int FLAME_$name_message_board_read;<?if tree2d?>
+	MBt_SearchTree tree_ptr_2d_$name;<?end if?><?if tree3d?>
+	MBt_SearchTree tree_ptr_3d_$name;<?end if?>
 <?end foreach?>
 	/* Particle cloud data */
 	double cloud_data[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
@@ -557,6 +559,31 @@ if(argc < 2)
 		   exit(rc);
 		}
 		#endif
+    <?if tree2d?>/* Built 2d tree */
+    rc = MB_SearchTree_Create2D(b_$message_name, &tree_ptr_2d_$message_name,
+                           &$message_name_message_extract_x,
+                           &$message_name_message_extract_y);
+    #ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not create MB_SearchTree_Create2D for '$message_name'\n");
+       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       exit(rc);
+    }
+    #endif<?end if?>
+    <?if tree3d?>/* Built 3d tree */
+    rc = MB_SearchTree_Create3D(b_$message_name, &tree_ptr_3d_$message_name,
+                           &$message_name_message_extract_x,
+                           &$message_name_message_extract_y,
+                           &$message_name_message_extract_z);
+    #ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not create MB_SearchTree_Create3D for '$message_name'\n");
+       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       exit(rc);
+    }
+    #endif<?end if?>
     <?if sync_filter?>
     if(FLAME_USE_FILTERS_IN_SYNC) {
     if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_Filter_Delete(&$filter_name_filter);\n");
@@ -591,8 +618,29 @@ if(argc < 2)
 		{<?end if?>
 
 		<?foreach function_input?>
-		<?if filter?><?if no_sort?>rc = MB_Iterator_CreateFiltered(b_$name, &i_$name, &$filter, current_xmachine_$agent_name);<?end if?><?if sort?>MB_Iterator_CreateFilteredSorted(b_$name, &i_$name, &$filter, current_xmachine_$agent_name, &$sort);<?end if?><?end if?>
-		<?if no_filter?><?if no_sort?>rc = MB_Iterator_Create(b_$name, &i_$name);<?end if?><?if sort?>MB_Iterator_CreateSorted(b_$name, &i_$name, &$sort);<?end if?><?end if?>
+		<?if filter?>
+          <?if tree2d?>/* MB_Iterator 2d tree */
+          rc = MB_SearchTree_Search2D(tree_ptr_2d_$name, &i_$name,
+                           (double)current_xmachine_$agent_name->x - (double)$box,
+                           (double)current_xmachine_$agent_name->x + (double)$box,
+                           (double)current_xmachine_$agent_name->y - (double)$box,
+                           (double)current_xmachine_$agent_name->y + (double)$box);<?end if?>
+          <?if tree3d?>/* MB_Iterator 3d tree */
+          rc = MB_SearchTree_Search3D(tree_ptr_3d_$name, &i_$name,
+                           (double)current_xmachine_$agent_name->x - (double)$box,
+                           (double)current_xmachine_$agent_name->x + (double)$box,
+                           (double)current_xmachine_$agent_name->y - (double)$box,
+                           (double)current_xmachine_$agent_name->y + (double)$box,
+                           (double)current_xmachine_$agent_name->z - (double)$box,
+                           (double)current_xmachine_$agent_name->z + (double)$box);<?end if?>        
+          <?if nottree?>
+		    <?if no_sort?>rc = MB_Iterator_CreateFiltered(b_$name, &i_$name, &$filter, current_xmachine_$agent_name);<?end if?>
+		    <?if sort?>rc = MB_Iterator_CreateFilteredSorted(b_$name, &i_$name, &$filter, current_xmachine_$agent_name, &$sort);<?end if?><?end if?>
+		  <?end if?>
+		<?if no_filter?>
+		  <?if no_sort?>rc = MB_Iterator_Create(b_$name, &i_$name);<?end if?>
+		  <?if sort?>rc = MB_Iterator_CreateSorted(b_$name, &i_$name, &$sort);<?end if?>
+		<?end if?>
 		#ifdef ERRCHECK
 		if (rc != MB_SUCCESS)
 		{
@@ -746,6 +794,10 @@ if(FLAME_$name_message_board_read == 0)
 	}
 	#endif
 }
+
+    /* Delete any search trees */<?if tree2d?>
+    rc = MB_SearchTree_Delete(&tree_ptr_2d_$name);<?end if?><?if tree3d?>
+    rc = MB_SearchTree_Delete(&tree_ptr_3d_$name);<?end if?>
 
     rc = MB_Clear(b_$name);
     #ifdef ERRCHECK

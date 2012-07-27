@@ -10,7 +10,7 @@ void unittest_$name_$current_state_$next_state()
 {
 	<?if function_input?>int rc;<?end if?>
 	<?foreach function_input?>
-	<?if filter?>rc = MB_Iterator_CreateFiltered(b_$name, &i_$name, &$filter, current_xmachine_$agent_name);<?end if?>
+	<?if filter?><?if nottree?>rc = MB_Iterator_CreateFiltered(b_$name, &i_$name, &$filter, current_xmachine_$agent_name);<?end if?><?end if?>
 	<?if no_filter?>rc = MB_Iterator_Create(b_$name, &i_$name);<?end if?>
 	#ifdef ERRCHECK
 	if (rc != MB_SUCCESS)

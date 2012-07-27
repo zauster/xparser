@@ -127,6 +127,8 @@ void freesync(sync ** p_sync)
 		freefunction_pointers(&head->filter_variable_changing_functions);
 		//freesync(&head->previous_sync);
 		freefunction_pointers(&head->inputting_functions);
+		freefunction_pointers(&head->lastdepend);
+		freefunction_pointers(&head->firstdependent);
 		free_ioput(&head->filters);
 		free(head);
 		head = temp;
@@ -194,6 +196,7 @@ xmachine_ioput * addioput(xmachine_ioput ** p_ioput)
 	current->sort_key = NULL;
 	current->sort_order = NULL;
 	current->non_constant_vars = 1;
+	current->box_apothem = NULL;
 
 	/* Return new element */
 	return current;
@@ -213,6 +216,7 @@ void free_ioput(xmachine_ioput ** p_ioput)
 		free(head->sort_function);
 		free(head->sort_key);
 		free(head->sort_order);
+		free(head->box_apothem);
 		free(head);
 		head = temp;
 	}
@@ -442,6 +446,11 @@ xmachine_message * addxmessage(xmachine_message ** p_xmessage)
 	//current->last = NULL;
 	current->file = NULL;
 	current->description = NULL;
+	current->has_box2d = 0;
+    current->has_box3d = 0;
+    current->make_x_function = 0;
+    current->make_y_function = 0;
+    current->make_z_function = 0;
 
 	/* Return new element */
 	return current;
@@ -462,6 +471,7 @@ void freexmessage(xmachine_message ** p_xmessage, xmachine_message * message)
 		{
 			/* Free the cell memory */
 			free(head->name);
+			free(head->description);
 			freevariables(&head->vars);
 			//free_ioput(&head->filters);
 			//freexmachines(&head->agents);
@@ -506,6 +516,7 @@ void freexmessages(xmachine_message ** p_xmessage)
 		//freexmachines(&head->agents);
 		//freexstates(&head->states);
 		freesync(&head->syncs);
+		freexmachines(&head->inputting_agents);
 		freexmachines(&head->outputting_agents);
 		free(head->file);
 		free(head->description);
@@ -862,11 +873,12 @@ rule_data * add_rule_data(rule_data ** p_data)
 	current->rhs_print = NULL;
 	current->op_print = NULL;
 	current->lhs_variable = NULL;
-	current->lhs_variable = NULL;
+	current->rhs_variable = NULL;
 	current->lhs_rule = NULL;
 	current->rhs_rule = NULL;
 	current->next = NULL;
 	current->time_rule = 0;
+	current->box = 0;
 	current->not = 0;
 	current->has_agent_var = 0;
 	current->has_message_var = 0;

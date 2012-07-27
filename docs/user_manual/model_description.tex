@@ -608,6 +608,32 @@ The previous example also includes the use of a sort tag. The sort tag uses a
 key, a message variable, to sort the list in `ascend'ing or `descend'ing order
 via the order tag.
 
+Other input filters available are called `box2d' and `box3d'. These filters 
+only allow messages that are within a Cartesian box around the current agent. The variables
+`x' and `y' must be used in agent and message memory for `2d' and additionally `z'
+for using `3d'. The value given to this filter is the distance from the agent to the
+side of the box. For example a value of `1' gives a box of size `2'. The value can
+be a number or an agent memory variable using the `a.' notation. The limits of the 
+box are inclusive which means messages with position on the edge of the box pass the
+filter.
+
+%\begin{mylisting}
+\begin{verbatim}
+  <input>
+    <messageName>2d_location</messageName>
+    <filter>
+      <box2d>1.0</box2d>
+    </filter>
+  </input>
+  <input>
+    <messageName>3d_location</messageName>
+    <filter>
+      <box3d>a.apothem</box3d>
+    </filter>
+  </input>
+\end{verbatim}
+%\end{mylisting}
+
 Using filters in the model description enables FLAME to make message
 communication more efficient by pre-sorting messages and using other techniques.
 

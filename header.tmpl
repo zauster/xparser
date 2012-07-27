@@ -515,6 +515,9 @@ void generate_partitions(double cloud_data[], int partitions, int partition_meth
 
 /* messageboard.c */
 <?foreach message?>m_$name * get_next_message_$name_in_range(m_$name * current);
+<?if make_x_func?>double $name_message_extract_x(void *msg_ptr);<?end if?>
+<?if make_y_func?>double $name_message_extract_y(void *msg_ptr);<?end if?>
+<?if make_z_func?>double $name_message_extract_z(void *msg_ptr);<?end if?>
 <?end foreach?>
 /* memory.c */
 xmachine * add_xmachine(void);
