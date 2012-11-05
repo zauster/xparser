@@ -394,56 +394,6 @@ if(argc < 2)
 
 	(void)fclose(file);
 <?if parallel?>	}<?end if?>
-
-	/* For each message check if their exists agents that input/output the message */
-	<?foreach message?>FLAME_$name_message_board_write = 0;
-	FLAME_$name_message_board_read = 0;
-	/* Sending agents */
-	<?foreach sendingxagent?>if($name_$start_state_state->agents != NULL) FLAME_$message_name_message_board_write = 1;
-	<?end foreach?>
-	/* Reading agents */
-	<?foreach readingxagent?>if($name_$start_state_state->agents != NULL) FLAME_$message_name_message_board_read = 1;
-	<?end foreach?>
-	/* Call message board library with details */
-	if(FLAME_$name_message_board_write == 0 &&
-		FLAME_$name_message_board_read == 0)
-			rc = MB_SetAccessMode(b_$name, MB_MODE_IDLE);
-	if(FLAME_$name_message_board_write == 1 &&
-		FLAME_$name_message_board_read == 0)
-			rc = MB_SetAccessMode(b_$name, MB_MODE_WRITEONLY);
-	if(FLAME_$name_message_board_write == 0 &&
-		FLAME_$name_message_board_read == 1)
-			rc = MB_SetAccessMode(b_$name, MB_MODE_READONLY);
-	if(FLAME_$name_message_board_write == 1 &&
-		FLAME_$name_message_board_read == 1)
-			rc = MB_SetAccessMode(b_$name, MB_MODE_READWRITE);
-	#ifdef ERRCHECK
-	if (rc != MB_SUCCESS)
-	{
-	   fprintf(stderr, "ERROR: Could not set access mode of '$name' board\n");
-	   switch(rc) {
-		   case MB_ERR_INVALID:
-			   fprintf(stderr, "\t reason: '$name' board is invalid\n");
-			   break;
-		   case MB_ERR_LOCKED:
-			   fprintf(stderr, "\t reason: '$name' board is locked\n");
-			   break;
-		   case MB_ERR_MEMALLOC:
-			   fprintf(stderr, "\t reason: out of memory\n");
-			   break;
-		   case MB_ERR_INTERNAL:
-			   fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
-			   break;
-		   default:
-			   fprintf(stderr, "\t MB_SyncStart returned error code: %d (see libmboard docs for details)\n", rc);
-			   break;
-	   }
-		   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
-		   exit(rc);
-	}
-	#endif
-	<?end foreach?>
-	
 	/* Start timing */
 	start = get_time();
 
@@ -470,6 +420,56 @@ if(argc < 2)
 		(void)fflush(stdout);
         
 		/* START OF ITERATION */
+		
+		/* For each message check if their exists agents that input/output the message */
+        <?foreach message?>FLAME_$name_message_board_write = 0;
+        FLAME_$name_message_board_read = 0;
+        /* Sending agents */
+        <?foreach sendingxagent?>if($name_$start_state_state->agents != NULL) FLAME_$message_name_message_board_write = 1;
+        <?end foreach?>
+        /* Reading agents */
+        <?foreach readingxagent?>if($name_$start_state_state->agents != NULL) FLAME_$message_name_message_board_read = 1;
+        <?end foreach?>
+        /* Call message board library with details */
+        if(FLAME_$name_message_board_write == 0 &&
+            FLAME_$name_message_board_read == 0)
+                rc = MB_SetAccessMode(b_$name, MB_MODE_IDLE);
+        if(FLAME_$name_message_board_write == 1 &&
+            FLAME_$name_message_board_read == 0)
+                rc = MB_SetAccessMode(b_$name, MB_MODE_WRITEONLY);
+        if(FLAME_$name_message_board_write == 0 &&
+            FLAME_$name_message_board_read == 1)
+                rc = MB_SetAccessMode(b_$name, MB_MODE_READONLY);
+        if(FLAME_$name_message_board_write == 1 &&
+            FLAME_$name_message_board_read == 1)
+                rc = MB_SetAccessMode(b_$name, MB_MODE_READWRITE);
+        #ifdef ERRCHECK
+        if (rc != MB_SUCCESS)
+        {
+           fprintf(stderr, "ERROR: Could not set access mode of '$name' board\n");
+           switch(rc) {
+               case MB_ERR_INVALID:
+                   fprintf(stderr, "\t reason: '$name' board is invalid\n");
+                   break;
+               case MB_ERR_LOCKED:
+                   fprintf(stderr, "\t reason: '$name' board is locked\n");
+                   break;
+               case MB_ERR_MEMALLOC:
+                   fprintf(stderr, "\t reason: out of memory\n");
+                   break;
+               case MB_ERR_INTERNAL:
+                   fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+                   break;
+               default:
+                   fprintf(stderr, "\t MB_SyncStart returned error code: %d (see libmboard docs for details)\n", rc);
+                   break;
+           }
+               <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+               exit(rc);
+        }
+        #endif
+        <?end foreach?>
+        
 		<?foreach message?>
 		/* Start sync message boards that don't write */
 		if(FLAME_$name_message_board_write == 0)
