@@ -502,7 +502,7 @@ void test_4_parallel(int n)
 	int i;
 	char buffer[1000];
 	
-	sprintf(buffer, "mpiexec -n %d test4/main 1 test4/0.xml -r", n);
+	sprintf(buffer, "mpirun -n %d test4/main 1 test4/0.xml -r", n);
 	rc = call_external(buffer);
 	CU_ASSERT_EQUAL(rc, 0);
 	
