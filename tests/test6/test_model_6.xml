@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xmodel version="2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation='http://www.flame.ac.uk/schema/xmml_v2.xsd'>
+
+<name>test_model_6</name>
+<version>01</version>
+<description>Test debug mode</description>
+<models>
+</models>
+
+<environment>
+
+<constants>
+  <variable><type>int</type><name>env_int</name><description>int value read in from 0.xml</description></variable>
+  <variable><type>float</type><name>env_float</name><description>float value read in from 0.xml</description></variable>
+  <variable><type>double</type><name>env_double</name><description>double value read in from 0.xml</description></variable>
+  <variable><type>char</type><name>env_char</name><description>char value read in from 0.xml</description></variable>
+</constants>
+
+<functionFiles>
+  <file>agent_a_functions.c</file>
+</functionFiles>
+
+<dataTypes>
+
+<dataType>
+<name>my_datatype_1</name>
+<description></description>
+<variables>
+  <variable><type>int</type><name>id</name><description></description></variable>
+  <variable><type>int</type><name>type</name><description></description></variable>
+</variables>
+</dataType>
+
+<dataType>
+<name>my_datatype_2</name>
+<description></description>
+<variables>
+  <variable><type>int</type><name>int_list[2]</name><description></description></variable>
+  <variable><type>my_datatype_1</type><name>var_my_datatype_1_list[2]</name><description></description></variable>
+  <variable><type>my_datatype_1</type><name>var_my_datatype_1</name><description></description></variable>
+</variables>
+</dataType>
+
+<dataType>
+<name>my_datatype_3</name>
+<description></description>
+<variables>
+  <variable><type>int</type><name>int_single</name><description></description></variable>
+  <variable><type>float</type><name>float_single</name><description></description></variable>
+  <variable><type>double</type><name>double_single</name><description></description></variable>
+  <variable><type>char</type><name>char_single</name><description></description></variable>
+  <variable><type>int</type><name>int_list[2]</name><description></description></variable>
+  <variable><type>float</type><name>float_list[2]</name><description></description></variable>
+  <variable><type>double</type><name>double_list[2]</name><description></description></variable>
+  <variable><type>char</type><name>char_list[2]</name><description></description></variable>
+  <variable><type>int_array</type><name>int_dynamic_list</name><description></description></variable>
+  <variable><type>float_array</type><name>float_dynamic_list</name><description></description></variable>
+  <variable><type>double_array</type><name>double_dynamic_list</name><description></description></variable>
+  <variable><type>char_array</type><name>char_dynamic_list</name><description></description></variable>
+</variables>
+</dataType>
+
+</dataTypes>
+
+</environment>
+
+<agents>
+
+<xagent>
+<name>agent_a</name>
+<description></description>
+<memory>
+  <variable><type>int</type><name>id</name><constant>true</constant><description></description></variable>
+  <variable><type>int</type><name>int_single</name><description></description></variable>
+  <variable><type>int</type><name>int_single_2</name><description></description></variable>
+  <variable><type>float</type><name>float_single</name><description></description></variable>
+  <variable><type>double</type><name>double_single</name><description></description></variable>
+  <variable><type>char</type><name>char_single</name><description></description></variable>
+  <variable><type>int</type><name>int_list[2]</name><description></description></variable>
+  <variable><type>float</type><name>float_list[2]</name><description></description></variable>
+  <variable><type>double</type><name>double_list[2]</name><description></description></variable>
+  <variable><type>char</type><name>char_list[2]</name><description></description></variable>
+  <variable><type>int_array</type><name>int_dyn_array</name><description></description></variable>
+</memory>
+
+<functions>
+
+<function><name>agent_a_1_option_1</name>
+<description></description>
+<currentState>start</currentState>
+<nextState>middle1</nextState>
+<condition>
+<lhs><value>a.int_single</value></lhs>
+<op>EQ</op>
+<rhs><value>1</value></rhs>
+</condition>
+</function>
+
+<function><name>agent_a_1_option_2</name>
+<description></description>
+<currentState>start</currentState>
+<nextState>middle1</nextState>
+<condition>
+<lhs><value>a.int_single</value></lhs>
+<op>EQ</op>
+<rhs><value>1</value></rhs>
+</condition>
+</function>
+
+<function><name>agent_a_2_option_1</name>
+<description></description>
+<currentState>middle1</currentState>
+<nextState>middle2</nextState>
+<condition>
+<lhs><value>a.int_single</value></lhs>
+<op>EQ</op>
+<rhs><value>1</value></rhs>
+</condition>
+</function>
+
+<function><name>agent_a_2_option_2</name>
+<description></description>
+<currentState>middle1</currentState>
+<nextState>middle2</nextState>
+<condition>
+<lhs><value>a.int_single</value></lhs>
+<op>EQ</op>
+<rhs><value>2</value></rhs>
+</condition>
+</function>
+
+<function><name>agent_a_3_option_1</name>
+<description></description>
+<currentState>middle2</currentState>
+<nextState>end</nextState>
+<condition>
+<lhs><value>a.int_single</value></lhs>
+<op>EQ</op>
+<rhs><value>2</value></rhs>
+</condition>
+</function>
+
+<function><name>agent_a_3_option_2</name>
+<description></description>
+<currentState>middle2</currentState>
+<nextState>end</nextState>
+<condition>
+<lhs><value>a.int_single</value></lhs>
+<op>EQ</op>
+<rhs><value>2</value></rhs>
+</condition>
+</function>
+
+</functions>
+
+</xagent>
+
+</agents>
+
+<messages>
+</messages>
+
+</xmodel>

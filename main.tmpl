@@ -1,0 +1,887 @@
+/**
+ * \file  main.c
+ * \brief Holds main function of the program.
+ */
+
+#include "header.h"
+#define COMPACT_PRINTOUT_P_THRESHOLD 8
+
+/** \fn int main(int argc, char * argv[])
+ * \brief Main program loop.
+ * \param argc Argument count.
+ * \param argv Pointer Pointer to Argument vector.
+ */
+int main(int argc, char * argv[])
+{
+	/* Timing variables */
+	double start, stop, interval;
+	FILE *file;
+	char data[100];
+	char logfilepath[1000];
+	char inputpath[1000];
+	char * c;
+	int lastd = 0;
+	int i;
+	int rc;
+	int iteration_number = 0;
+	int iteration_total;
+	int * p_iteration_number = &iteration_number;
+<?foreach xagent?>	//xmachine_memory_$name * temp_xmachine_$name;
+<?end foreach?>
+<?foreach message?>	int FLAME_$name_message_board_write;
+	int FLAME_$name_message_board_read;<?if tree2d?>
+	MBt_SearchTree tree_ptr_2d_$name;<?end if?><?if tree3d?>
+	MBt_SearchTree tree_ptr_3d_$name;<?end if?>
+<?end foreach?>
+	/* Particle cloud data */
+	double cloud_data[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+<?if debug?>	/* Count to debug function branches */
+	int FLAME_debug_count;<?end if?>
+
+/* For partition method. Makes geometric (-g flag) the default but may be overridden with -r for round-robin */
+	int partition_method=1;
+
+<?if parallel?>
+	int err; /* MPI errors */
+	char processor_name[MPI_MAX_PROCESSOR_NAME];
+	int processor_name_length;
+	MPI_Aint baseaddress;
+	/* Variables needed to construct spacePartitionType */
+	space_partition tmp_space_partition;
+	int array_of_block_lengths[2] = {1, 6};
+	MPI_Aint array_of_displacements[2];
+	MPI_Datatype array_of_types[2] = {MPI_INT, MPI_DOUBLE};
+	/* Variable to indicate if initial data is pre-partitioned. 0 = no, 1 = yes */
+	int is_prepartitioned = 0;
+<?end if?>
+
+	/* Output frequency is 1 as default */
+	output_frequency = 1;
+	/* Set random seed */
+/*	srand(time(NULL)); */
+
+	<?if parallel?>
+	/* MPI initialisation routine */
+        err = MPI_Init(&argc, &argv);
+        if (err != MPI_SUCCESS)
+        {
+            printf("MPI initialization failed!\n");
+            exit(1);
+        }
+
+        /* Get total number of nodes and own node number */
+        MPI_Comm_size(MPI_COMM_WORLD, &totalnodes);
+        MPI_Comm_rank(MPI_COMM_WORLD, &node_number);
+        /* Initialise spacePartitionType */
+        MPI_Address(&tmp_space_partition, &baseaddress);
+        MPI_Address(&tmp_space_partition.node_id, &array_of_displacements[0]);
+        array_of_displacements[0] -= baseaddress;
+        MPI_Address(&tmp_space_partition.partition_data[0], &array_of_displacements[1]);
+        array_of_displacements[1] -= baseaddress;
+        MPI_Type_struct(2, array_of_block_lengths, array_of_displacements, array_of_types, &spacePartitionType);
+        MPI_Type_commit(&spacePartitionType);
+    <?end if?>
+
+	rc = MB_Env_Init();
+	#ifdef ERRCHECK
+	if (rc != MB_SUCCESS)
+	{
+	   fprintf(stderr, "ERROR: Failed to initialise Message Board environment\n");
+	   switch(rc) {
+	       case MB_ERR_MPI:
+	           fprintf(stderr, "\t reason: MPI library not initialised\n");
+	           break;
+	       case MB_ERR_MEMALLOC:
+	           fprintf(stderr, "\t reason: out of memory\n");
+	           break;
+           default:
+               fprintf(stderr, "\t MB_Env_Init returned error code: %d (see libmboard docs for details)\n", rc);
+               break;
+	   }
+
+	   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       exit(rc);
+
+	}
+	#endif
+    
+	/* For backwards compatabilty allocate current_xmachine */
+	current_xmachine = (xmachine *)malloc(sizeof(xmachine));
+	if(current_xmachine == NULL) {printf("**** ERROR in Memory check current_xmachine\n");exit(EXIT_FAILURE);}
+	/*CHECK_POINTER(current_xmachine);*/
+
+	/* Initialise pointers */
+	initialise_pointers();
+
+<?if serial?>
+	printf("FLAME Application: $model_name \n");
+<?end if?>
+<?if parallel?>
+	if(node_number == 0) {
+		printf("MPI FLAME Application: $model_name \n");
+	}
+<?end if?>
+<?if debug?>	printf("Debug mode enabled \n");
+FLAME_debug_count = 0;
+/* Use to stop compiler warnings if not used */
+if(FLAME_debug_count == 0) {}
+<?end if?>
+
+
+
+if(argc < 2)
+	{
+<?if serial?>
+		printf("Usage: %s <number of iterations> [<states_directory>]/<init_state> <partitions> [-f # | -f #+#]\n",argv[0]);
+		printf("\t-f\tOutput frequency, 1st # is frequency, 2nd # is the offset if required\n");
+<?end if?>
+<?if parallel?>
+		if(node_number == 0) {
+			printf("Usage: mpirun -np <partitions> %s <number of iterations> [<states_directory>]/<init_state> [-r | -g] [-f # | -f #+#]\n",argv[0]);
+			printf("\t-r\tRound-robin partitioning\n");
+			printf("\t-g\tGeometric partitioning\n");
+			printf("\t-f\tOutput frequency, 1st # is frequency, 2nd # is the offset if required\n");
+		}
+<?end if?>
+
+		exit(0);
+	}
+	iteration_total = atoi(argv[1]);
+<?if parallel?>	if(node_number == 0) <?end if?>printf("Iterations: %i\n", iteration_total);
+
+	/* Read initial states of x-machines */
+	if(argc < 3)
+	{
+		printf("Need two parameters\n");
+		exit(0);
+	}
+	strcpy(inputpath, argv[2]);
+/*<?if parallel?>	if(node_number == 0) <?end if?>printf("Initial states: %s\n", inputpath);*/
+
+	i = 0;
+	lastd = -1;
+	while(inputpath[i] != '\0')
+	{
+		/* For windows directories */
+		if(inputpath[i] == '\\') lastd=i;
+		/* For unix directories */
+		if(inputpath[i] == '/') lastd=i;
+		i++;
+	}
+	strcpy(outputpath, inputpath);
+	outputpath[lastd+1] = '\0';
+<?if parallel?>
+    /* Need to check input path for .xml on the end. If so we read one input file if not */
+    /* it's the root for pre-partitioned input files */
+    if ( (i > 3) && (inputpath[i-1] == 'l') && (inputpath[i-2] == 'm') && (inputpath[i-3] == 'x') &&
+         (inputpath[i-4] == '.') ) {
+        is_prepartitioned = 0;
+    }
+    else {
+        is_prepartitioned = 1;
+    }
+<?end if?>
+/*<?if parallel?>	if(node_number == 0) <?end if?>printf("Ouput dir: %s\n", outputpath);*/
+
+<?if serial?>
+	/* Read number of space partitions (1 by default) */
+	totalnodes = 1;
+	if(argc > 3)
+	{
+		totalnodes = atoi(argv[3]);
+	}
+
+<?end if?>
+	i = 3;
+	while(argc > i)
+	{
+		if(strcmp(argv[i],"-f") == 0)
+		{
+			if(argc > (i+1))
+			{
+				output_offset = 0;
+				/* Find offset, separated by the char '+' */
+				c = strchr(argv[(i+1)], '+');
+				if(c == NULL)
+				{
+					output_frequency = atoi(argv[(i+1)]);
+					printf("Using output frequency of: %d\n", output_frequency);
+				}
+				else
+				{
+					output_offset = atoi(argv[(i+1)]+(c-argv[(i+1)])+1);
+					argv[(i+1)][c-argv[(i+1)]] = '\0';
+					output_frequency = atoi(argv[(i+1)]);
+					printf("Using output frequency of: %d with offset %d\n", output_frequency, output_offset);
+				}
+
+				if(output_frequency == 0)
+				{
+					printf("Output frequency cannot be zero\n");
+					exit(0);
+				}
+
+				i++;
+			}
+			else
+			{
+				printf("Output frequency number not defined\n");
+				exit(0);
+			}
+		}
+		/* Partitioning method: -g = geometric, -r = round-robin */
+		if(strcmp(argv[i],"-g") == 0) partition_method = 1;
+		if(strcmp(argv[i],"-r") == 0) partition_method = 2;
+		i++;
+	}
+
+<?if parallel?>
+    /* If user has already pre-partitioned initial data */
+    if (is_prepartitioned == 1) {
+        /* Each process adds its own node */
+        add_node(node_number, 0.0,0.0, 0.0,0.0, 0.0,0.0);
+        /* Now we can read the data */
+        readprepartitionedinitialstates(inputpath, outputpath, p_iteration_number);
+    }
+    else {
+<?end if?>
+	    /* Read initial data into p_xmachine <?if parallel?>on the master node<?end if?> */
+<?if parallel?>
+    if (node_number == 0)
+    {
+<?end if?>
+       //agent_list = p_xmachine;
+       readinitialstates(inputpath, outputpath, p_iteration_number, cloud_data, partition_method, 0);
+       /* Generate partitions */
+       generate_partitions(cloud_data,totalnodes,partition_method);
+       save_partition_data();
+<?if parallel?>
+    }
+<?end if?>
+
+<?if parallel?>
+    /* Broadcast node data */
+    broadcast_node_data(totalnodes, node_number);
+<?end if?>
+
+<?if serial?>
+    /* Partition data */
+    /* stc: no partitions in serial */
+	//partition_data(totalnodes, agent_list, cloud_data, partition_method);
+<?end if?>
+<?if parallel?>
+    /* Clear previously populated agent list before readinitialstates()
+     *  overwrite the pointers and dereference allocated memory.
+     */
+    freexmachines();
+
+    /* Partition the data by reading it in. Partitions are known so get the read function
+     * to do the partitioning for us.
+     */
+    readinitialstates(inputpath, outputpath, p_iteration_number, cloud_data, partition_method, 1);
+    }
+<?end if?>
+
+/* Use MB_IndexMap routines from libmboard v0.2 */
+/* For each agent constant (that is used in a filter(?))
+ * declare an index map handle */
+<?foreach constant_filter_variable?>	/* create map */
+	rc = MB_IndexMap_Create(&FLAME_map_$agent_name_$name, "$agent_name $name");
+	if (rc != MB_SUCCESS)
+	{
+		fprintf(stderr, "ERROR: Could not create map of $agent_name $name\n");
+		/* Add reason for error using error codes here */
+		<?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+		exit(rc);
+	}
+	/* loop though $agent_name agents and add $names to map */
+	current_xmachine_$agent_name_holder = $agent_name_$agent_start_state->agents;
+	while(current_xmachine_$agent_name_holder)
+	{
+		//printf("**** $name = %d\n", current_xmachine_$agent_name_holder->agent->$name);
+		rc = MB_IndexMap_AddEntry(FLAME_map_$agent_name_$name, current_xmachine_$agent_name_holder->agent->$name);
+		if (rc != MB_SUCCESS)
+		{
+			fprintf(stderr, "ERROR: Could not add value to map of $agent_name $name\n");
+			/* Add reason for error using error codes here */
+			<?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+			exit(rc);
+		}
+		
+		current_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
+	}
+	/* sync map */
+	rc = MB_IndexMap_Sync(FLAME_map_$agent_name_$name);
+	if (rc != MB_SUCCESS)
+	{
+		fprintf(stderr, "ERROR: Could not sync map of $agent_name $name\n");
+		/* Add reason for error using error codes here */
+		<?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+		exit(rc);
+	}
+<?end foreach?>
+
+<?if serial?>
+		/*i = 0;
+		current_node = *p_node_info;
+		while(current_node)
+		{
+			printf("No of agents on partition %d: %d\n", current_node->node_id, current_node->agent_total);
+			i += current_node->agent_total;
+			current_node = current_node->next;
+		}
+		printf("Agent total check: %d\n", i);*/
+
+        /* restore current_node pointer */
+		//current_node = *p_node_info;
+<?end if?>
+<?if parallel?>
+		/* Print processor name */
+		printf("%d> ", node_number);
+		MPI_Get_processor_name(processor_name, &processor_name_length);
+		printf("Processor name: %s\n", processor_name);
+		/* Print number of agents on node */
+		printf("%d> ", node_number);
+		printf("No of agents on node: %d\n", current_node->agent_total);
+		
+		/* Number of each agent type */
+		<?foreach xagent?>
+		printf("%d> ", node_number);
+		printf("$name agents on node: %d\n", $name_$start_state_state->count);
+		<?end foreach?>
+
+		/* Quickly check account for all agents */
+		MPI_Reduce(&current_node->agent_total, &i, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+		if(node_number == 0) printf("%d> Agent total check: %d\n",node_number, i);
+<?end if?>
+
+	/* Start log file (now so that xvisualiser can read straight away) */
+<?if parallel?>	if(node_number == 0)
+	{<?end if?>
+	/* Write log file */
+	sprintf(logfilepath, "%slog.xml", outputpath);
+	if((file = fopen(logfilepath, "w"))==NULL)
+	{
+		printf("Error: cannot open file '%s' for writing\n", logfilepath);
+		exit(0);
+	}
+	(void)fputs("<model_run>\n", file);
+	(void)fputs("<codetype>", file);
+<?if serial?>	(void)fputs("serial", file);<?end if?>
+<?if parallel?>	(void)fputs("parallel", file);<?end if?>
+	(void)fputs("</codetype>\n", file);
+	(void)fputs("<nodes>", file);
+	sprintf(data, "%i", totalnodes);
+	(void)fputs(data, file);
+	(void)fputs("</nodes>\n", file);
+
+	/* print timer into */
+	(void)fputs("<!-- <time> unit: milliseconds -->\n", file);
+
+	<?if serial?>sprintf(data, "unspecified");<?end if?>
+	<?if parallel?>sprintf(data, "%.2e ms", MPI_Wtick() * 1000.0);<?end if?>
+	(void)fputs("<!-- <time> timer resolution: ", file);
+	(void)fputs(data, file);
+	(void)fputs(")-->\n", file);
+
+	start = get_time();
+	stop = get_time();
+	sprintf(data, "%.2e ms", (stop - start) * 1000.0);
+	(void)fputs("<!-- <time> timer overhead: ~", file);
+	(void)fputs(data, file);
+	(void)fputs(")-->\n", file);
+
+
+	(void)fclose(file);
+<?if parallel?>	}<?end if?>
+	/* Start timing */
+	start = get_time();
+
+	for(iteration_loop=iteration_number+1; iteration_loop < iteration_number+iteration_total+1; iteration_loop++)
+	{
+		interval = get_time();
+
+		/* Print out iteration number */
+		<?if parallel?>
+        if (totalnodes <= COMPACT_PRINTOUT_P_THRESHOLD)
+        {
+            for (i = 0; i < node_number; i++) fprintf(stdout, "-------\t");
+            fprintf(stdout, "P%d:%d\t", node_number, iteration_loop);
+            for (i = node_number + 1; i < totalnodes; i++) fprintf(stdout, "-------\t");
+            fprintf(stdout, "\n");
+        }
+        else
+        {
+            fprintf(stdout, "P%d:%d\n", node_number, iteration_loop);
+        }
+
+        <?end if?>
+		<?if serial?>fprintf(stdout, "Iteration - %d\n", iteration_loop);<?end if?>
+		(void)fflush(stdout);
+        
+		/* START OF ITERATION */
+		
+		/* For each message check if their exists agents that input/output the message */
+        <?foreach message?>FLAME_$name_message_board_write = 0;
+        FLAME_$name_message_board_read = 0;
+        /* Sending agents */
+        <?foreach sendingxagent?>if($name_$start_state_state->agents != NULL) FLAME_$message_name_message_board_write = 1;
+        <?end foreach?>
+        /* Reading agents */
+        <?foreach readingxagent?>if($name_$start_state_state->agents != NULL) FLAME_$message_name_message_board_read = 1;
+        <?end foreach?>
+        /* Call message board library with details */
+        if(FLAME_$name_message_board_write == 0 &&
+            FLAME_$name_message_board_read == 0)
+                rc = MB_SetAccessMode(b_$name, MB_MODE_IDLE);
+        if(FLAME_$name_message_board_write == 1 &&
+            FLAME_$name_message_board_read == 0)
+                rc = MB_SetAccessMode(b_$name, MB_MODE_WRITEONLY);
+        if(FLAME_$name_message_board_write == 0 &&
+            FLAME_$name_message_board_read == 1)
+                rc = MB_SetAccessMode(b_$name, MB_MODE_READONLY);
+        if(FLAME_$name_message_board_write == 1 &&
+            FLAME_$name_message_board_read == 1)
+                rc = MB_SetAccessMode(b_$name, MB_MODE_READWRITE);
+        #ifdef ERRCHECK
+        if (rc != MB_SUCCESS)
+        {
+           fprintf(stderr, "ERROR: Could not set access mode of '$name' board\n");
+           switch(rc) {
+               case MB_ERR_INVALID:
+                   fprintf(stderr, "\t reason: '$name' board is invalid\n");
+                   break;
+               case MB_ERR_LOCKED:
+                   fprintf(stderr, "\t reason: '$name' board is locked\n");
+                   break;
+               case MB_ERR_MEMALLOC:
+                   fprintf(stderr, "\t reason: out of memory\n");
+                   break;
+               case MB_ERR_INTERNAL:
+                   fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+                   break;
+               default:
+                   fprintf(stderr, "\t MB_SyncStart returned error code: %d (see libmboard docs for details)\n", rc);
+                   break;
+           }
+               <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+               exit(rc);
+        }
+        #endif
+        <?end foreach?>
+        
+		<?foreach message?>
+		/* Start sync message boards that don't write */
+		if(FLAME_$name_message_board_write == 0)
+		{
+			/*printf("%d> $name message board sync start early as no agents sending any messages of this type\n", node_number);*/
+			
+			/* ********** sync message board here **********  */
+			if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_SyncStart(b_$name)\n");
+			rc = MB_SyncStart(b_$name);
+			if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finish MB_SyncStart(b_$name)\n");
+			#ifdef ERRCHECK
+			if (rc != MB_SUCCESS)
+			{
+			   fprintf(stderr, "ERROR: Could not start sync of '$name' board\n");
+			   switch(rc) {
+				   case MB_ERR_INVALID:
+					   fprintf(stderr, "\t reason: '$name' board is invalid\n");
+					   break;
+				   case MB_ERR_LOCKED:
+					   fprintf(stderr, "\t reason: '$name' board is locked\n");
+					   break;
+				   case MB_ERR_MEMALLOC:
+					   fprintf(stderr, "\t reason: out of memory\n");
+					   break;
+				   case MB_ERR_INTERNAL:
+					   fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+					   break;
+				   default:
+					   fprintf(stderr, "\t MB_SyncStart returned error code: %d (see libmboard docs for details)\n", rc);
+					   break;
+			   }
+			   
+					   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+					   exit(rc);
+			   }
+			   #endif
+		}
+		<?end foreach?>
+		
+<?foreach layer?><?if debug?><?foreach branching_state?>	/* DEBUG: States with branching functions */
+		current_xmachine_$agent_name_holder = $agent_name_$name_state->agents;
+		while(current_xmachine_$agent_name_holder)
+		{
+			FLAME_debug_count = 0;
+	<?foreach function?>		/* Function: $name */
+			<?if condition?>if($condition(current_xmachine_$agent_name_holder->agent)==1)
+			{ FLAME_debug_count++; }<?end if?>
+	<?end foreach?>		/*printf("FLAME_debug_count = %d\n", FLAME_debug_count);*/
+			if(FLAME_debug_count != 1)
+			{
+				fprintf(stderr, "ERROR: A function condition test has failed for agent type '$agent_name' leaving state '$name'\n");
+				if(FLAME_debug_count > 1)
+					fprintf(stderr, "\t reason: there was more than one possible outgoing transition function\n");
+				if(FLAME_debug_count == 0)
+					fprintf(stderr, "\t reason: there was no possible outgoing transition function\n");
+			}
+			
+			current_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
+		}
+	<?end foreach?><?end if?><?foreach function?><?foreach complete_sync?>
+	/* If mb is not read then leave sync complete until last possible moment */
+	if(FLAME_$message_name_message_board_read == 1)
+	{
+		if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_SyncComplete(b_$message_name)\n");
+		rc = MB_SyncComplete(b_$message_name);
+		if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finsh MB_SyncComplete(b_$message_name)\n");
+		#ifdef ERRCHECK
+		if (rc != MB_SUCCESS)
+		{
+		   fprintf(stderr, "ERROR: Could not complete sync of '$message_name' board\n");
+		   switch(rc) {
+				case MB_ERR_INVALID:
+				   fprintf(stderr, "\t reason: '$message_name' board is invalid\n");
+				   break;
+			   case MB_ERR_MEMALLOC:
+				   fprintf(stderr, "\t reason: out of memory\n");
+				   break;
+			   case MB_ERR_INTERNAL:
+				   fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+				   break;
+			   default:
+				   fprintf(stderr, "\t MB_SyncComplete returned error code: %d (see libmboard docs for details)\n", rc);
+				   break;
+		   }
+	
+		   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+		   exit(rc);
+		}
+		#endif
+    <?if tree2d?>/* Built 2d tree */
+    rc = MB_SearchTree_Create2D(b_$message_name, &tree_ptr_2d_$message_name,
+                           &$message_name_message_extract_x,
+                           &$message_name_message_extract_y);
+    #ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not create MB_SearchTree_Create2D for '$message_name'\n");
+       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       exit(rc);
+    }
+    #endif<?end if?>
+    <?if tree3d?>/* Built 3d tree */
+    rc = MB_SearchTree_Create3D(b_$message_name, &tree_ptr_3d_$message_name,
+                           &$message_name_message_extract_x,
+                           &$message_name_message_extract_y,
+                           &$message_name_message_extract_z);
+    #ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not create MB_SearchTree_Create3D for '$message_name'\n");
+       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       exit(rc);
+    }
+    #endif<?end if?>
+    <?if sync_filter?>
+    if(FLAME_USE_FILTERS_IN_SYNC) {
+    if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_Filter_Delete(&$filter_name_filter);\n");
+    rc = MB_Filter_Delete(&$filter_name_filter);
+    if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finish MB_Filter_Delete(&$filter_name_filter);\n");
+	if ( rc != MB_SUCCESS )
+	{
+		fprintf(stderr, "Error while assigning NULL function to board\n");
+
+		/* check value of rc to determine reason of failure. Handle error */
+		/* don't continue if error can't be handled */
+		exit(1);
+	}
+	/* Free memory used for filter composite params */
+	free(FLAME_m_$message_name_composite_params);
+	FLAME_m_$message_name_composite_params = NULL; }
+	<?end if?>
+	}
+	<?end foreach?>
+	if(FLAME_TEST_PRINT_START_AND_END_OF_MODEL_FUNCTIONS) printf("start $name\n");
+	current_xmachine_$agent_name_holder = $agent_name_$current_state_state->agents;
+	while(current_xmachine_$agent_name_holder)
+	{
+		temp_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
+		current_xmachine_$agent_name = current_xmachine_$agent_name_holder->agent;
+		current_xmachine_$agent_name_next_state = $agent_name_$next_state_state;
+		/* For backwards compatibility set current_xmachine */
+		<?foreach xagent?>current_xmachine->xmachine_$name = NULL;
+		<?end foreach?>current_xmachine->xmachine_$agent_name = current_xmachine_$agent_name;
+
+		<?if condition?>if($condition(current_xmachine_$agent_name)==1)
+		{<?end if?>
+
+		<?foreach function_input?>
+		<?if filter?>
+          <?if tree2d?>/* MB_Iterator 2d tree */
+          rc = MB_SearchTree_Search2D(tree_ptr_2d_$name, &i_$name,
+                           (double)current_xmachine_$agent_name->x - (double)$box,
+                           (double)current_xmachine_$agent_name->x + (double)$box,
+                           (double)current_xmachine_$agent_name->y - (double)$box,
+                           (double)current_xmachine_$agent_name->y + (double)$box);<?end if?>
+          <?if tree3d?>/* MB_Iterator 3d tree */
+          rc = MB_SearchTree_Search3D(tree_ptr_3d_$name, &i_$name,
+                           (double)current_xmachine_$agent_name->x - (double)$box,
+                           (double)current_xmachine_$agent_name->x + (double)$box,
+                           (double)current_xmachine_$agent_name->y - (double)$box,
+                           (double)current_xmachine_$agent_name->y + (double)$box,
+                           (double)current_xmachine_$agent_name->z - (double)$box,
+                           (double)current_xmachine_$agent_name->z + (double)$box);<?end if?>        
+          <?if nottree?>
+		    <?if no_sort?>rc = MB_Iterator_CreateFiltered(b_$name, &i_$name, &$filter, current_xmachine_$agent_name);<?end if?>
+		    <?if sort?>rc = MB_Iterator_CreateFilteredSorted(b_$name, &i_$name, &$filter, current_xmachine_$agent_name, &$sort);<?end if?><?end if?>
+		  <?end if?>
+		<?if no_filter?>
+		  <?if no_sort?>rc = MB_Iterator_Create(b_$name, &i_$name);<?end if?>
+		  <?if sort?>rc = MB_Iterator_CreateSorted(b_$name, &i_$name, &$sort);<?end if?>
+		<?end if?>
+		#ifdef ERRCHECK
+		if (rc != MB_SUCCESS)
+		{
+		   fprintf(stderr, "ERROR: Could not create Iterator for '$name'\n");
+		   switch(rc) {
+		       case MB_ERR_INVALID:
+		           fprintf(stderr, "\t reason: '$name' board is invalid\n");
+		           break;
+		       case MB_ERR_LOCKED:
+	               fprintf(stderr, "\t reason: '$name' board is locked\n");
+	               break;
+	           case MB_ERR_MEMALLOC:
+	               fprintf(stderr, "\t reason: out of memory\n");
+	               break;
+	           case MB_ERR_INTERNAL:
+	               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+	               break;
+	           default:
+	           <?if filter?>
+                   fprintf(stderr, "\t MB_Iterator_CreateFiltered returned error code: %d (see libmboard docs for details)\n", rc);
+               <?end if?>
+               <?if no_filter?>
+                   fprintf(stderr, "\t MB_Iterator_Create returned error code: %d (see libmboard docs for details)\n", rc);
+               <?end if?>
+                   break;
+		   }
+
+		   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+           exit(rc);
+		}
+		#endif
+		<?if random?>MB_Iterator_Randomise(i_$name);<?end if?>
+		<?end foreach?>
+
+			i = $name();
+
+		<?foreach function_input?>
+		    rc = MB_Iterator_Delete(&i_$name);
+		    #ifdef ERRCHECK
+		    if (rc != MB_SUCCESS)
+		    {
+		       fprintf(stderr, "ERROR: Could not delete '$name' iterator\n");
+		       switch(rc) {
+		           case MB_ERR_INVALID:
+		               fprintf(stderr, "\t reason: '$name' iterator is invalid\n");
+		               break;
+		           case MB_ERR_INTERNAL:
+		               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+		               break;
+		           default:
+                       fprintf(stderr, "\t MB_Iterator_Delete returned error code: %d (see libmboard docs for details)\n", rc);
+                       break;
+		       }
+
+		       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+               exit(rc);
+		    }
+		    #endif
+		<?end foreach?>
+
+			if(i == 1)
+			{
+				free_$agent_name_agent(current_xmachine_$agent_name_holder, $agent_name_$current_state_state);
+			}
+			else
+			{
+				transition_$agent_name_agent(current_xmachine_$agent_name_holder, $agent_name_$current_state_state, $agent_name_$next_state_state);
+			}
+		<?if condition?>}<?end if?>
+
+		current_xmachine_$agent_name = NULL;
+
+		current_xmachine_$agent_name_holder = temp_xmachine_$agent_name_holder;
+	}
+	if(FLAME_TEST_PRINT_START_AND_END_OF_MODEL_FUNCTIONS) printf("finish $name\n");
+<?foreach start_sync?>
+	if(FLAME_$message_name_message_board_write == 1)
+	{
+<?if sync_filter?>	if(FLAME_USE_FILTERS_IN_SYNC) 
+	{
+		//FLAME_build_filter_param_$filter_name();
+		//MB_Filter_Create($filter_sync_filter, $filter_sync)
+		FLAME_create_and_assign_$filter_name();
+	}<?end if?>
+		if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_SyncStart(b_$message_name)\n");
+		rc = MB_SyncStart(b_$message_name);
+		if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finish MB_SyncStart(b_$message_name)\n");
+		#ifdef ERRCHECK
+		if (rc != MB_SUCCESS)
+		{
+		   fprintf(stderr, "ERROR: Could not start sync of '$message_name' board\n");
+		   switch(rc) {
+			   case MB_ERR_INVALID:
+				   fprintf(stderr, "\t reason: '$message_name' board is invalid\n");
+				   break;
+			   case MB_ERR_LOCKED:
+				   fprintf(stderr, "\t reason: '$message_name' board is locked\n");
+				   break;
+			   case MB_ERR_MEMALLOC:
+				   fprintf(stderr, "\t reason: out of memory\n");
+				   break;
+			   case MB_ERR_INTERNAL:
+				   fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+				   break;
+			   default:
+				   fprintf(stderr, "\t MB_SyncStart returned error code: %d (see libmboard docs for details)\n", rc);
+				   break;
+		   }
+
+			<?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+			exit(rc);
+		}
+		#endif
+    }
+    
+<?end foreach?>
+<?end foreach?>
+/* End of layer number $number */
+
+/* Clear message boards that have finished being used
+ * and sync complete if doing late sync complete */
+<?foreach message?>
+if(FLAME_$name_message_board_read == 0)
+{
+	/*printf("%d> $name message board sync complete late as no agents reading any messages of this type\n", node_number);*/
+	
+	if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("start MB_SyncComplete(b_$name)\n");
+	rc = MB_SyncComplete(b_$name);
+	if(FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS) printf("finsh MB_SyncComplete(b_$name)\n");
+	#ifdef ERRCHECK
+	if (rc != MB_SUCCESS)
+	{
+	   fprintf(stderr, "ERROR: Could not complete sync of '$name' board\n");
+	   switch(rc) {
+			case MB_ERR_INVALID:
+			   fprintf(stderr, "\t reason: '$name' board is invalid\n");
+			   break;
+		   case MB_ERR_MEMALLOC:
+			   fprintf(stderr, "\t reason: out of memory\n");
+			   break;
+		   case MB_ERR_INTERNAL:
+			   fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+			   break;
+		   default:
+			   fprintf(stderr, "\t MB_SyncComplete returned error code: %d (see libmboard docs for details)\n", rc);
+			   break;
+	   }
+
+	   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+	   exit(rc);
+	}
+	#endif
+}
+
+    /* Delete any search trees */<?if tree2d?>
+    rc = MB_SearchTree_Delete(&tree_ptr_2d_$name);<?end if?><?if tree3d?>
+    rc = MB_SearchTree_Delete(&tree_ptr_3d_$name);<?end if?>
+
+    rc = MB_Clear(b_$name);
+    #ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not clear '$name' board\n");
+       switch(rc) {
+           case MB_ERR_INVALID:
+               fprintf(stderr, "\t reason: '$name' board is invalid\n");
+               break;
+           case MB_ERR_LOCKED:
+               fprintf(stderr, "\t reason: '$name' board is locked\n");
+               break;
+           case MB_ERR_INTERNAL:
+               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+               break;
+           default:
+               fprintf(stderr, "\t MB_Clear returned error code: %d (see libmboard docs for details)\n", rc);
+               break;
+
+       }
+
+       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       exit(rc);
+    }
+    #endif
+<?end foreach?>
+<?end foreach?>
+<?foreach xagent?><?foreach state?>
+	/*printf("$agent_name_$name_state->count = %d\n", $agent_name_$name_state->count);*/
+	$agent_name_$name_state->count = 0;
+<?end foreach?><?end foreach?>
+	/* Move agents to their start states */
+<?foreach xagent?><?foreach endstate?>
+	current_xmachine_$agent_name_holder = $agent_name_$name_state->agents;
+	while(current_xmachine_$agent_name_holder)
+	{
+		temp_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;
+		transition_$agent_name_agent(current_xmachine_$agent_name_holder, $agent_name_$name_state, $agent_name_$agent_start_state);
+
+		current_xmachine_$agent_name_holder = temp_xmachine_$agent_name_holder;
+	}
+<?end foreach?><?end foreach?>
+    if(iteration_loop%output_frequency == output_offset)
+    {
+        saveiterationdata(iteration_loop);
+    }
+<?foreach enditfunc?>
+		/* End of iteration code */
+		$code<?end foreach?>
+		/* Calculate if any agents need to jump S.P. */
+		/* propagate_agents(); */
+	/* Save iteration time to log file */
+<?if parallel?>		if(node_number == 0)
+		{<?end if?>
+		if((file = fopen(logfilepath, "a"))==NULL)
+		{
+			printf("Error: cannot open file '%s' for writing\n", logfilepath);
+			exit(0);
+		}
+		(void)fputs("<iteration><no>", file);
+		sprintf(data, "%i", iteration_loop);
+		(void)fputs(data, file);
+		(void)fputs("</no><time>", file);
+		sprintf(data, "%d", (int)((get_time() - interval) * 1000) );
+		(void)fputs(data, file);
+		(void)fputs("</time></iteration>\n", file);
+		(void)fclose(file);
+<?if parallel?>		}<?end if?>
+	}
+
+<?if parallel?>
+    /* Wait till all procs are done */
+    MPI_Barrier(MPI_COMM_WORLD);
+<?end if?>    
+
+	/* Stop timing and print total time */
+	stop = get_time();
+	total_time = stop - start;
+<?if serial?>	<?end if?><?if parallel?>	if(node_number == 0) <?end if?>printf("Execution time - %d:%02d:%03d [mins:secs:msecs]\n",
+       (int)(total_time/60), ((int)total_time)%60, (((int)(total_time * 1000.0)) % 1000));
+
+	clean_up(0);
+
+	/* Exit successfully by returning zero to Operating System */
+	return 0;
+}

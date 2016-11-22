@@ -1,0 +1,14 @@
+<states>
+<itno>0</itno>
+<environment>
+<env_int>10</env_int>
+<env_float>2.200000</env_float>
+<env_double>3.300000</env_double>
+<env_char>e</env_char>
+</environment>
+<xagent>
+<name>agent_a</name>
+<int_single>1</int_single>
+<int_single_2>2</int_single_2>
+</xagent>
+</states>

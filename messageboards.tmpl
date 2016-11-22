@@ -1,0 +1,147 @@
+/**
+ * \file  messageboards.c
+ * \brief Holds message board functions.
+ */
+
+#include "header.h"
+
+<?foreach message?>
+
+/* Box filtering functions */
+<?if make_x_func?>double $name_message_extract_x(void *msg_ptr) { return (double)((m_$name*)msg_ptr)->x; }<?end if?>
+<?if make_y_func?>double $name_message_extract_y(void *msg_ptr) { return (double)((m_$name*)msg_ptr)->y; }<?end if?>
+<?if make_z_func?>double $name_message_extract_z(void *msg_ptr) { return (double)((m_$name*)msg_ptr)->z; }<?end if?>
+
+union pu_$name 
+{
+    m_$name *ptr;
+    void *ptr_anon;
+};
+
+/** \fn void add_$name_message(<?foreach messagevar?>$type $name<?if notlast?>, <?end if?><?end foreach?>)
+ * \brief Add $name message by calling internal and processing.
+<?foreach messagevar?> * \param $name Message variable.
+<?end foreach?> */
+void add_$name_message(<?foreach messagevar?>$type $name<?if static_array?>[]<?end if?><?if notlast?>, <?end if?><?end foreach?>)
+{
+    int rc;
+	m_$name msg;
+    
+    <?foreach messagevar?><?if modeldatatype?><?if not_array?>copy_$type(&$name, &msg.$name);
+    <?end if?><?if dynamic_array?>copy_$type($name, &msg.$name);
+    <?end if?><?if static_array?>copy_$type_static_array($name, msg.$name, $arraylength);
+    <?end if?><?end if?><?if not_modeldatatype?><?if not_array?>msg.$name = $name;
+    <?end if?><?if dynamic_array?>copy_$type($name, &msg.$name);
+    <?end if?><?if static_array?>memcpy(msg.$name, $name, $arraylength*sizeof($type));
+    <?end if?><?end if?><?end foreach?>
+    
+    rc = MB_AddMessage(b_$name, &msg);
+    #ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not add message to '$name' board\n");
+       switch(rc) {
+           case MB_ERR_INVALID:
+               fprintf(stderr, "\t reason: '$name' board has not been created?\n");
+               break;
+           case MB_ERR_MEMALLOC:
+               fprintf(stderr, "\t reason: out of memory\n");
+               break;
+           case MB_ERR_LOCKED:
+               fprintf(stderr, "\t reason: '$name' board is locked\n");
+               break;
+           case MB_ERR_INTERNAL:
+               fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+               break;
+	       default:
+               fprintf(stderr, "\t MB_AddMessage returned error code: %d (see libmboard docs for details)\n", rc);
+               break;
+	   }
+	      
+	   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       exit(rc);
+    }
+    #endif
+}
+
+inline static m_$name* getInternalMessage_$name(void)
+{
+    static m_$name *msg_prev = NULL;
+    union pu_$name msg_pu;
+    int rc;
+    
+    /* deallocate previously returned message */
+    if (msg_prev != NULL) 
+    {
+        free(msg_prev);
+    }
+    else 
+    {
+        rc = MB_Iterator_Rewind(i_$name); 
+        #ifdef ERRCHECK
+        if (rc != MB_SUCCESS)
+        {
+            fprintf(stderr, "ERROR: Could not rewind '$name' Iterator\n");
+            switch(rc) {
+                case MB_ERR_INVALID:
+                    fprintf(stderr, "\t reason: '$name' Iterator has not been created?\n");
+                    break;
+	            default:
+                    fprintf(stderr, "\t MB_Iterator_Rewind returned error code: %d (see libmboard docs for details)\n", rc);
+                    break;
+	        }
+	       
+	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       	   exit(rc);
+        }
+        #endif
+    }
+    
+    /* get next message from iterator */
+    rc = MB_Iterator_GetMessage(i_$name, &(msg_pu.ptr_anon));
+    #ifdef ERRCHECK
+    if (rc != MB_SUCCESS)
+    {
+       fprintf(stderr, "ERROR: Could not get message from '$name' Iterator\n");
+       switch(rc) {
+           case MB_ERR_INVALID:
+               fprintf(stderr, "\t reason: '$name' Iterator has not been created?\n");
+               break;
+           case MB_ERR_MEMALLOC:
+               fprintf(stderr, "\t reason: out of memory\n");
+               break;
+	       default:
+               fprintf(stderr, "\t MB_Iterator_GetMessage returned error code: %d (see libmboard docs for details)\n", rc);
+               break;
+	       }
+	       
+	       <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+       	   exit(rc);
+    }
+    #endif
+    
+    /* store pointer so memory can be deallocated later */
+    msg_prev = msg_pu.ptr;
+    
+    return msg_pu.ptr;
+}
+
+/** \fn xmachine_message_$name * get_first_$name_message()
+ * \brief Get the first $name message in the $name message list.
+ * \return The first message in the list.
+ */
+m_$name * get_first_$name_message()
+{
+	return getInternalMessage_$name();
+}
+
+/** \fn xmachine_message_$name * get_next_$name_message(xmachine_message_$name * current)
+ * \brief Get the next $name message in the $name message list after the current message.
+ * \param current The current message in the list.
+ * \return The next message in the list.
+ */
+m_$name * get_next_$name_message(m_$name * current)
+{
+	return getInternalMessage_$name();
+}
+<?end foreach?>

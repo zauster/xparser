@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xmodel version="2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation='http://www.flame.ac.uk/schema/xmml_v2.xsd'>
+
+<name>test_model_7</name>
+<version>01</version>
+<description>Test 0.xml imports and outputs</description>
+<models>
+</models>
+
+<environment>
+
+<constants>
+  <variable><type>int</type><name>env_int</name><description>int value read in from 0.xml</description></variable>
+  <variable><type>float</type><name>env_float</name><description>float value read in from 0.xml</description></variable>
+  <variable><type>double</type><name>env_double</name><description>double value read in from 0.xml</description></variable>
+  <variable><type>char</type><name>env_char</name><description>char value read in from 0.xml</description></variable>
+</constants>
+
+<functionFiles>
+  <file>agent_a_functions.c</file>
+</functionFiles>
+
+</environment>
+
+<agents>
+
+<xagent>
+<name>agent_a</name>
+<description></description>
+<memory>
+  <variable><type>int</type><name>id</name><description></description></variable>
+</memory>
+
+<functions>
+
+<function><name>agent_a_1</name>
+<description></description>
+<currentState>start</currentState>
+<nextState>end</nextState>
+</function>
+
+</functions>
+
+</xagent>
+
+</agents>
+
+<messages>
+</messages>
+
+</xmodel>

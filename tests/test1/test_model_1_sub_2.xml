@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xmodel version="2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation='http://www.flame.ac.uk/schema/xmml_v2.xsd'>
+
+<name>test_model_simple_everthing_sub_2</name>
+<version>01</version>
+<description></description>
+
+<environment>
+
+</environment>
+
+<agents>
+
+<xagent>
+<name>agent_a</name>
+<description></description>
+<memory></memory>
+
+<functions>
+<function><name>agent_a_2</name>
+<description></description>
+<currentState>1</currentState>
+<nextState>end</nextState>
+<inputs>
+<input><messageName>m_sub_2</messageName></input>
+</inputs>
+</function>
+</functions>
+
+</xagent>
+
+<xagent>
+<name>agent_b</name>
+<description></description>
+<memory></memory>
+
+<functions>
+
+<function>
+<name>agent_b_2</name>
+<description></description>
+<currentState>1</currentState>
+<nextState>end</nextState>
+<condition>
+  <lhs><value>a.type</value></lhs>
+  <op>EQ</op>
+  <rhs><value>1</value></rhs>
+</condition>
+<outputs>
+<output><messageName>m_sub_2</messageName></output>
+</outputs>
+</function>
+
+<function>
+<name>idle</name>
+<description></description>
+<currentState>1</currentState>
+<nextState>end</nextState>
+<condition>
+  <lhs><value>a.type</value></lhs>
+  <op>NEQ</op>
+  <rhs><value>1</value></rhs>
+</condition>
+</function>
+
+</functions>
+
+</xagent>
+
+</agents>
+
+<messages>
+
+<message>
+<name>m_sub_2</name>
+<description></description>
+<variables>
+<variable><type>my_datatype_1</type><name>var_my_datatype_1</name><description></description></variable>
+<variable><type>my_datatype_2</type><name>var_my_datatype_2</name><description></description></variable>
+<variable><type>my_datatype_1</type><name>var_my_datatype_1_list[2]</name><description></description></variable>
+<variable><type>my_datatype_2</type><name>var_my_datatype_2_list[2]</name><description></description></variable>
+</variables>
+</message>
+
+</messages>
+
+</xmodel>

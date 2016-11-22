@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xmodel version="2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation='http://www.flame.ac.uk/schema/xmml_v2.xsd'>
+
+<name>test_truncated_empty_xml_tags</name>
+<version>01</version>
+<description>Test the reading of truncated empty xml tags</description>
+<models/>
+
+<environment>
+<constants/>
+<functionFiles/>
+<timeUnits/>
+<dataTypes/>
+</environment>
+
+<agents>
+<xagent>
+  <name>a</name>
+  <description/>
+  <memory>
+    <variable><type>int</type><name>int_single</name><description/></variable>
+  </memory>
+  <functions>
+  <function>
+    <name>idle</name>
+    <description/>
+    <currentState>start</currentState>
+    <nextState>end</nextState>
+  </function>
+  </functions>
+</xagent>
+</agents>
+
+<messages>
+<message>
+<name>a</name>
+<description/>
+<variables>
+<variable><type>int</type><name>int_single</name><description/></variable>
+</variables>
+</message>
+</messages>
+
+</xmodel>

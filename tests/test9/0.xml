@@ -1,0 +1,14 @@
+<states>
+<itno>0</itno>
+<xagent>
+<name>agent_a</name>
+<x>5</x>
+<y>5</y>
+<z>5</z>
+<box>1</box>
+<box2d_good>0</box2d_good>
+<box2d_bad>0</box2d_bad>
+<box3d_good>0</box3d_good>
+<box3d_bad>0</box3d_bad>
+</xagent>
+</states>
