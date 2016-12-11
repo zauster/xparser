@@ -2,6 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*****************************************************************
+ * 
+ * Change FLAME_XPARSER_DIR here if required
+ * 
+ *****************************************************************/
+ /** \def FLAME_XPARSER_DIR
+* \brief FLAME_XPARSER_DIR - the location of the xparser templates
+*/
+#define FLAME_XPARSER_DIR "."
+
 /** \def NAME
  * \brief Release name. */
 #define NAME "FLAME X-machine agent parser"
@@ -13,7 +23,7 @@
 #define VERSIONMINOR 17
 /** \def VERSIONMICRO
  * \brief Bug fixes. */
-#define VERSIONMICRO 0
+#define VERSIONMICRO 1
 /** \def DEBUG
  * \brief Debug output. */
 #define DEBUG 0
@@ -260,8 +270,8 @@ struct xmachine_function
 	struct xmachine_ioput * outputs;
 
 	/* Holds first inputs and last outputs of specific message types */
-	//struct xmachine_ioput * first_inputs;
-	//struct xmachine_ioput * last_outputs;
+	/*struct xmachine_ioput * first_inputs;*/
+	/*struct xmachine_ioput * last_outputs;*/
 	struct sync_pointer * start_syncs;
 	struct sync_pointer * complete_syncs;
 
@@ -395,6 +405,7 @@ struct xmachine
 	char yvar[50];							/**< Variable name for position in y-axis. */
 	char zvar[50];							/**< Variable name for position in z-axis. */
 	int var_number;							/**< Number of variables in memory. */
+	int gsl_lib;							/** bool to indicate the GSL_RND_SEED is present - thus gsl_lib being used */
 
 	struct xmachine * next;				/**< Pointer next X-machine in list. */
 };
@@ -542,6 +553,7 @@ struct model_data
 	int depends_style;
 	input_file ** p_files;
 	int debug_mode;
+	int gsl_lib;
 };
 
 /* explicit define datatypes so dont need to use struct anymore */
@@ -672,7 +684,7 @@ void remove_adj_function_recent(xmachine_function * function1);
 void add_adj_function(xmachine_function * function1, xmachine_function * function2, char * type);
 void free_adj_function(adj_function *adj_functions);
 
-//functions for output_colour
+/*functions for output_colour*/
 void addagent_colour(agent_colour **p_agent_colours, char * name, int colour_value);
 void freeagent_colours(agent_colour **p_agent_colours);
 int displayagent_colour(agent_colour **p_agent_colours, char * name);

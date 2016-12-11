@@ -2,8 +2,20 @@
  * \file  main.c
  * \brief Holds main function of the program.
  */
-
 #include "header.h"
+#include <time.h>
+
+<?if gsl_lib?>
+#ifdef GSL_LIB
+#include <gsl/gsl_rng.h>
+
+//Global GSL RNG: global constant variable: continues to exist for whole duration of main
+gsl_rng * FLAME_GSL_RNG;  /* global GSL random generator */
+const gsl_rng_type * T;
+unsigned long int gsl_seed;
+#endif
+<?end if?>
+
 #define COMPACT_PRINTOUT_P_THRESHOLD 8
 
 /** \fn int main(int argc, char * argv[])
@@ -36,7 +48,8 @@ int main(int argc, char * argv[])
 	/* Particle cloud data */
 	double cloud_data[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
 <?if debug?>	/* Count to debug function branches */
-	int FLAME_debug_count;<?end if?>
+	int FLAME_debug_count;
+<?end if?>
 
 /* For partition method. Makes geometric (-g flag) the default but may be overridden with -r for round-robin */
 	int partition_method=1;
@@ -57,8 +70,12 @@ int main(int argc, char * argv[])
 
 	/* Output frequency is 1 as default */
 	output_frequency = 1;
+
 	/* Set random seed */
-/*	srand(time(NULL)); */
+	srand((unsigned int) time(NULL));
+<?if debug?>
+	srand(0);
+<?end if?>
 
 	<?if parallel?>
 	/* MPI initialisation routine */
@@ -282,6 +299,40 @@ if(argc < 2)
     }
 <?end if?>
 
+<?if gsl_lib?>
+#ifdef GSL_LIB
+/******* GSL INIT */
+/* Use GSL Random Number Generator
+*
+* Has two environment variables:
+*	GSL_RNG_TYPE - generator type
+*	GSL_RNG_SEED - initial seed values
+* read and set through gsl_rng_env_setup()
+*/
+
+/* Read environment variables if set - returned as gsl_rng_default and gsl_rng_default_seed */
+	gsl_rng_env_setup();
+
+	//returns a pointer to a newly-created instance of gsl_rng
+	T = gsl_rng_default;
+	FLAME_GSL_RNG = gsl_rng_alloc (T);
+
+	gsl_seed = gsl_rng_default_seed;
+	<?if debug?>	
+	gsl_seed = (unsigned long int) FLAME_environment_variable_GSL_RNG_SEED;
+	if(gsl_seed == 0) gsl_seed = gsl_rng_default_seed;
+	<?end if?>
+	if(gsl_seed == 0) gsl_seed = (unsigned long int)time(NULL);
+
+	gsl_rng_set(FLAME_GSL_RNG, gsl_seed);
+
+	printf ("[GSL Random Number Generator] generator type: %s\n", gsl_rng_name (FLAME_GSL_RNG));
+	printf ("[GSL Random Number Generator] seed = %lu\n", gsl_seed);
+	printf ("[GSL Random Number Generator] first value = %lu\n", gsl_rng_get (FLAME_GSL_RNG));
+/******* END GSL INIT */
+#endif
+<?end if?>
+
 /* Use MB_IndexMap routines from libmboard v0.2 */
 /* For each agent constant (that is used in a filter(?))
  * declare an index map handle */
@@ -394,11 +445,70 @@ if(argc < 2)
 
 	(void)fclose(file);
 <?if parallel?>	}<?end if?>
-	/* Start timing */
+
+	/* For each message check if their exists agents that input/output the message */
+	<?foreach message?>FLAME_$name_message_board_write = 0;
+	FLAME_$name_message_board_read = 0;
+	/* Sending agents */
+	<?foreach sendingxagent?>if($name_$start_state_state->agents != NULL) FLAME_$message_name_message_board_write = 1;
+	<?end foreach?>
+	/* Reading agents */
+	<?foreach readingxagent?>if($name_$start_state_state->agents != NULL) FLAME_$message_name_message_board_read = 1;
+	<?end foreach?>
+	/* Call message board library with details */
+	if(FLAME_$name_message_board_write == 0 &&
+		FLAME_$name_message_board_read == 0)
+			rc = MB_SetAccessMode(b_$name, MB_MODE_IDLE);
+	if(FLAME_$name_message_board_write == 1 &&
+		FLAME_$name_message_board_read == 0)
+			rc = MB_SetAccessMode(b_$name, MB_MODE_WRITEONLY);
+	if(FLAME_$name_message_board_write == 0 &&
+		FLAME_$name_message_board_read == 1)
+			rc = MB_SetAccessMode(b_$name, MB_MODE_READONLY);
+	if(FLAME_$name_message_board_write == 1 &&
+		FLAME_$name_message_board_read == 1)
+			rc = MB_SetAccessMode(b_$name, MB_MODE_READWRITE);
+	#ifdef ERRCHECK
+	if (rc != MB_SUCCESS)
+	{
+	   fprintf(stderr, "ERROR: Could not set access mode of '$name' board\n");
+	   switch(rc) {
+		   case MB_ERR_INVALID:
+			   fprintf(stderr, "\t reason: '$name' board is invalid\n");
+			   break;
+		   case MB_ERR_LOCKED:
+			   fprintf(stderr, "\t reason: '$name' board is locked\n");
+			   break;
+		   case MB_ERR_MEMALLOC:
+			   fprintf(stderr, "\t reason: out of memory\n");
+			   break;
+		   case MB_ERR_INTERNAL:
+			   fprintf(stderr, "\t reason: internal error. Recompile libmoard in debug mode for more info \n");
+			   break;
+		   default:
+			   fprintf(stderr, "\t MB_SyncStart returned error code: %d (see libmboard docs for details)\n", rc);
+			   break;
+	   }
+		   <?if parallel?>MPI_Abort(MPI_COMM_WORLD, rc);<?end if?>
+		   exit(rc);
+	}
+	#endif
+	<?end foreach?>
+
+#ifdef START_END	
+/* Call initialisation function */
+	start_simulation();
+#endif
+
+/* Start timing */
 	start = get_time();
 
 	for(iteration_loop=iteration_number+1; iteration_loop < iteration_number+iteration_total+1; iteration_loop++)
 	{
+#ifdef START_END
+/* Start iteration function */
+	start_iteration();
+#endif
 		interval = get_time();
 
 		/* Print out iteration number */
@@ -513,7 +623,9 @@ if(argc < 2)
 		current_xmachine_$agent_name_holder = $agent_name_$name_state->agents;
 		while(current_xmachine_$agent_name_holder)
 		{
+<?if debug?>
 			FLAME_debug_count = 0;
+<?end if?>
 	<?foreach function?>		/* Function: $name */
 			<?if condition?>if($condition(current_xmachine_$agent_name_holder->agent)==1)
 			{ FLAME_debug_count++; }<?end if?>
@@ -826,6 +938,10 @@ if(FLAME_$name_message_board_read == 0)
     #endif
 <?end foreach?>
 <?end foreach?>
+	if(iteration_loop%output_frequency == output_offset)
+	{
+		saveiterationdata(iteration_loop);
+	}
 <?foreach xagent?><?foreach state?>
 	/*printf("$agent_name_$name_state->count = %d\n", $agent_name_$name_state->count);*/
 	$agent_name_$name_state->count = 0;
@@ -867,12 +983,29 @@ if(FLAME_$name_message_board_read == 0)
 		(void)fputs("</time></iteration>\n", file);
 		(void)fclose(file);
 <?if parallel?>		}<?end if?>
+
+#ifdef START_END
+/* End iteration function */
+	end_iteration();
+#endif
 	}
+
+#ifdef START_END
+/* End simualtion function */
+	end_simulation();
+#endif
 
 <?if parallel?>
     /* Wait till all procs are done */
     MPI_Barrier(MPI_COMM_WORLD);
 <?end if?>    
+
+<?if gsl_lib?>
+#ifdef GSL_LIB
+	/* Free pointer GSL RNG */
+	gsl_rng_free(FLAME_GSL_RNG);
+#endif
+<?end if?>
 
 	/* Stop timing and print total time */
 	stop = get_time();
