@@ -6,19 +6,41 @@
 # The assumption is that the user only provides C files
 # and a model files <file>.xml
 #
-DEFINES       = -DNONE
-LIBMBOARD_DIR = libmboard
+#===================================================
+# Change this variable for the location of the 
+# Message Board Library installation
+#===================================================
+LIBMBOARD_DIR = /usr/local/lib
 LIBMBOARD_INC = $(LIBMBOARD_DIR)/include
 LIBMBOARD_LIB = $(LIBMBOARD_DIR)/lib
 
-CC      = <?if serial?>gcc<?end if?><?if parallel?>mpicc<?end if?>
-CFLAGS  = -std=c99 -Wall -I$(LIBMBOARD_INC) ${DEFINES}
+#====================================================
+# Change these for your compliler/loaded
+#====================================================
+SERIAL_CCOMP	= gcc
+PARALLEL_CCOMP	= mpicc
 
-<?if debug?>CFLAGS += -D_DEBUG_MODE -g<?end if?>
+SERIAL_LOADER	= gcc
+PARALLEL_LOADER	= mpif77
+
+DEFINES		=
+<?if gsl_lib?>DEFINES		+= -DGSL_LIB<?end if?>
+#DEFINES	+= -DSTART_END 
+#DEFINES	+= -DGRAPHICS
+
+# C Compiler
+CC      = <?if serial?>$(SERIAL_CCOMP)<?end if?><?if parallel?>$(PARALLEL_CCOMP)<?end if?>
+CFLAGS  =  -I$(LIBMBOARD_INC) ${DEFINES}
+<?if debug?>CFLAGS += -std=c99 -Wall -D_DEBUG_MODE -g<?end if?>
 <?if final?>CFLAGS += -O3<?end if?>
 
-LDFLAGS = -L$(LIBMBOARD_LIB)
-LIBS    = <?if serial?>-lmboard_s<?if debug?>d<?end if?> <?end if?><?if parallel?>-lmboard_p<?if debug?>d<?end if?> <?end if?> -lm
+LD       = <?if serial?>$(SERIAL_LOADER)<?end if?><?if parallel?>$(PARALLEL_LOADER)<?end if?>
+
+LDFLAGS  = -L$(LIBMBOARD_LIB)
+<?if gsl_lib?>
+LIBS	+= -lgsl -lgslcblas
+<?end if?>
+LIBS    += <?if serial?>-lmboard_s<?if debug?>d<?end if?> <?end if?><?if parallel?>-lmboard_p<?if debug?>d<?end if?> <?end if?> -lm
 
 #FLAME source files
 FLAME   = main.c memory.c xml.c messageboards.c partitioning.c rules.c timing.c
@@ -39,7 +61,7 @@ RM = rm -f
 all: $(SOURCES) $(FLAME) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@ $(LIBS)
+	$(LD) $(LDFLAGS) $(OBJECTS) -o $@ $(LIBS)
 
 $(OBJECTS): $(DEPS)
 
@@ -47,6 +69,14 @@ $(OBJECTS): $(DEPS)
 	$(CC) -c $(CFLAGS) $< -o $@
 
 clean:
-	$(RM) $(OBJECTS) $(EXECUTABLE) $(EXECUTABLE).exe
+	$(RM) $(OBJECTS) $(EXECUTABLE) $(EXECUTABLE).exe 
 vclean:
 	$(RM) main $(EXECUTABLE) $(EXECUTABLE).exe $(OBJECTS)  $(FLAME) $(HEADERS)  $(AUX) Makefile
+format:
+	astyle -A3 $(SOURCES)
+	for file in $(patsubst %.c,%.h, $(SOURCES)) ; do \
+	echo $$file ; \
+	astyle -A3 $$file ; \
+	done 
+print:
+	a2ps -R -f10 --column=1 $(SOURCES)

@@ -23,6 +23,16 @@
 #define FLAME_TEST_PRINT_START_AND_END_OF_LIBMBOARD_CALLS 0
 #define FLAME_USE_FILTERS_IN_SYNC 1
 
+/*#define PAUSE printf("PAUSE - type anything to continue");i=getc(stdin);*/
+#define PAUSE
+
+#ifdef START_END
+int start_simulation(void);
+int end_simulation(void);
+int start_iteration(void);
+int end_iteration(void);
+#endif
+
 <?if parallel?>#include <mpi.h>
 <?end if?>
 /* Checking macros */
@@ -31,6 +41,24 @@
 #else
 #define CHECK_POINTER(PT)
 #endif
+
+<?foreach xagent?>
+<?foreach state?>
+<?if last?>
+#define START_LOOP_OVER_$agent_name_AGENTS  \
+    current_xmachine_$agent_name_holder = $agent_name_$name_state->agents;\
+    while (current_xmachine_$agent_name_holder) {\
+	temp_xmachine_$agent_name_holder = current_xmachine_$agent_name_holder->next;\
+	current_xmachine_$agent_name = current_xmachine_$agent_name_holder->agent;\
+	current_xmachine->xmachine_$agent_name = current_xmachine_$agent_name;
+#define END_LOOP_OVER_$agent_name_AGENTS \
+	current_xmachine_$agent_name = NULL;\
+	current_xmachine->xmachine_$agent_name = NULL;\
+	current_xmachine_$agent_name_holder = temp_xmachine_$agent_name_holder;\
+    }
+<?end if?>
+<?end foreach?>
+<?end foreach?>
 
 <?foreach envvar?>
 /** \def $uc_name
@@ -254,6 +282,7 @@ struct node_information
 {
 	int node_id;	/**< Node ID. */
 	double partition_data[6];	/**< Defines bounding box. */
+	int neighbours[10]; /**< Defines the neighbours to this node - -99 if no neighbour */
 	int agents_in_halo;	/**< Number of agents in the halo region. */
 	int agent_total;	/**< Total number of agents on the node. */
 	struct xmachine * agents;	/**< Pointer to list of X-machines. */
@@ -348,6 +377,13 @@ node_information ** p_node_info;
 /** \var node_information * current_node
 * \brief Pointer to current node */
 node_information * current_node;
+
+<?if serial?>
+/** \var int node_number\n
+ *  \brief Node number (not needed for serial codes) */
+int node_number;
+<?end if?>
+
 <?if parallel?>
 /** \var MPI_Status status
 * \brief MPI status */
