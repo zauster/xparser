@@ -1,0 +1,43 @@
+ <xmodel version="2">
+ <name>Test Model - Xparser 0.17.1 segfaults</name>
+ <version>Version 1.0, 11.01.2017</version>
+ <description>Author: Sander van der Hoog.</description>
+ <models/>
+  <environment/>
+  <agents>
+  <xagent>
+   <name>Agent_a</name>
+   <description></description>
+   <memory>
+    <variable>
+     <type>int</type>
+     <name>id</name>
+     <description>Agent ID.</description>
+    </variable>
+   </memory>
+    <functions>
+    <function>
+     <name>function_1</name>
+     <description></description>
+     <currentState>start_Agent_a</currentState>
+     <nextState>end_Agent_a</nextState>
+     <inputs/>
+     <outputs/>
+    </function>
+   </functions>
+  </xagent>
+ </agents>
+ <messages>
+  <message>
+   <name>info</name>
+   <description></description>
+   <variables>
+    <variable>
+     <type>int</type>
+     <name>id</name>
+     <description></description>
+    </variable>
+    </variables>
+  </message>
+ </messages>
+</xmodel>
