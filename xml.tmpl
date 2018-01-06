@@ -1344,7 +1344,8 @@ void write_int_static_array(FILE *file, int * temp, int size)
 	fputs("{", file);
 	for(i=0; i<size; i++)
 	{
-		assert(abs(temp[i])<FLAME_INT_MAX);
+		assert(temp[i] < FLAME_INT_MAX);
+		assert(temp[i] > FLAME_INT_MIN);
 		sprintf(data, "%i", temp[i]);
 		fputs(data, file);
 		if(i < size-1) fputs(", ", file);
@@ -1363,7 +1364,8 @@ void write_float_static_array(FILE *file, float * temp, int size)
 	fputs("{", file);
 	for(i=0; i<size; i++)
 	{
-		assert(fabs(temp[i])<FLAME_DOUBLE_MAX);
+		assert(temp[i] < FLAME_DOUBLE_MAX);
+		assert(temp[i] > FLAME_DOUBLE_MIN);
 		sprintf(data, "%f", temp[i]);
 		fputs(data, file);
 		if(i < size-1) fputs(", ", file);
@@ -1382,7 +1384,8 @@ void write_double_static_array(FILE *file, double * temp, int size)
 	fputs("{", file);
 	for(i=0; i<size; i++)
 	{
-		assert(fabs(temp[i])<FLAME_DOUBLE_MAX);
+		assert(temp[i] < FLAME_DOUBLE_MAX);
+		assert(temp[i] > FLAME_DOUBLE_MIN);
 		sprintf(data, "%f", temp[i]);
 		fputs(data, file);
 		if(i < size-1) fputs(", ", file);
@@ -1419,7 +1422,8 @@ void write_int_dynamic_array(FILE *file, int_array * temp)
 	fputs("{", file);
 	for(i=0; i<(*temp).size; i++)
 	{
-		assert(abs((*temp).array[i])<FLAME_INT_MAX);
+		assert((*temp).array[i] < FLAME_INT_MAX);
+		assert((*temp).array[i] > FLAME_INT_MIN);
 		sprintf(data, "%i", (*temp).array[i]);
 		fputs(data, file);
 		if(i < ((*temp).size-1)) fputs(", ", file);
@@ -1438,7 +1442,8 @@ void write_float_dynamic_array(FILE *file, float_array * temp)
 	fputs("{", file);
 	for(i=0; i<(*temp).size; i++)
 	{
-		assert(fabs((*temp).array[i])<FLAME_DOUBLE_MAX);
+		assert((*temp).array[i] < FLAME_DOUBLE_MAX);
+		assert((*temp).array[i] > FLAME_DOUBLE_MIN);
 		sprintf(data, "%f", (*temp).array[i]);
 		fputs(data, file);
 		if(i < ((*temp).size-1)) fputs(", ", file);
@@ -1457,7 +1462,8 @@ void write_double_dynamic_array(FILE *file, double_array * temp)
 	fputs("{", file);
 	for(i=0; i<(*temp).size; i++)
 	{
-		assert(fabs((*temp).array[i])<FLAME_DOUBLE_MAX);
+		assert((*temp).array[i] < FLAME_DOUBLE_MAX);
+		assert((*temp).array[i] > FLAME_DOUBLE_MIN);
 		sprintf(data, "%f", (*temp).array[i]);
 		fputs(data, file);
 		if(i < ((*temp).size-1)) fputs(", ", file);
@@ -1530,8 +1536,9 @@ void write_$name_agent(FILE *file, xmachine_memory_$name * current)
 	fputs("<xagent>\n" , file);
 	fputs("<name>$name</name>\n", file);
 <?foreach xagentvar?>		fputs("<$name>", file);
-	<?if not_array?><?if not_modeldatatype?>
-	assert(fabs(current->$name)<FLAME_DOUBLE_MAX);
+	<?if not_array?><?if not_modeldatatype?>	
+	//assert(current->$name < FLAME_DOUBLE_MAX);
+	//assert(current->$name > FLAME_DOUBLE_MIN);
 	sprintf(data, "%$c_type", current->$name);
 	fputs(data, file);<?end if?><?if modeldatatype?>write_$type(file, &current->$name);<?end if?><?end if?><?if static_array?>write_$type_static_array(file, current->$name, $arraylength);<?end if?><?if dynamic_array?>write_$notarraytype_dynamic_array(file, &current->$name);<?end if?>
 	fputs("</$name>\n", file);
