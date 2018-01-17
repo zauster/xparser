@@ -1,0 +1,183 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{url, verbatim}
+\usepackage{listings}
+\usepackage{boxedminipage}
+
+\begin{document}
+
+\section{FLAME unittests for function conditions}
+Sander van der Hoog\\
+\today
+
+This is a suite of unittests to test function conditions for FLAME models.
+The folder \url{xparser/tests/test_conditions} contains 16 test models. 
+See the readme.rd file in that folder for how to reproduce the tests. 
+Each model folder contains a distinct \url{model.xml} and \url{0.xml} file.
+The agent functions are the same for all tests, and only have one agent with two functions that either print out TRUE or FALSE.
+Use the xparser in this repository's root (make sure to build the \url{xparser} executable first).
+
+
+\bigskip
+\begin{itemize}
+\item The tests are formulated such that:
+\begin{itemize}
+\item if the "test condition" is true, run function \url{is_true} (prints out "TRUE");
+\item if the "logical complement" is true, run function \url{is_false} (prints out "FALSE").
+\end{itemize}
+
+\item Expressions to be tested are logical sentences $[\neg]A [\lor|\land] [\neg]B$, where $A$ is a time condition and $B$ is an agent-memory condition.
+The square brackets indicate optional operators.
+
+\item Table \ref{Table: tests} defines 16 unit tests to be executed. We run 1 iteration only, so for each test this should print out TRUE or FALSE only once.
+
+\item The tests are configured such that the "logical test expression" should always evaluate to TRUE and the "complement" should always evaluate to FALSE.
+
+\item A time unit is defined as "every even-numbered iteration":
+
+\smallskip
+\begin{boxedminipage}{7cm}
+\begin{lstlisting}
+   <timeUnit>
+    <name>even</name>
+    <unit>iteration</unit>
+    <period>2</period>
+   </timeUnit>
+\end{lstlisting}
+\end{boxedminipage}
+\end{itemize}
+
+\bigskip
+\subsubsection*{A. Time condition}
+\begin{itemize}
+\item The time condition $A$ is on function \url{test_is_true}.
+\item $A$ is specified as "execute every 2 periods, starting at period 1" (so 1 iteration will lead to execution).
+\item $\neg A$ is specified as "execute every 2 periods, starting at period 0" (so 1 iteration will not lead to execution).
+\item In Table \ref{Table: tests} an additional complication is that $A$ can be true or false:
+\begin{itemize}
+\item let models a,b encode (time condition A is false): A=0.
+\item let models c,d encode (time condition A is true): A=1.
+\end{itemize}
+\end{itemize}
+
+\bigskip
+\begin{minipage}{14cm}
+\begin{boxedminipage}{6cm}
+$A$:
+\begin{lstlisting}
+<condition>
+<time>
+<period>even</period>
+<phase>1</phase>
+</time>
+</condition>
+\end{lstlisting}
+\end{boxedminipage}
+%
+\begin{boxedminipage}{6cm}
+$\neg A$:
+\begin{lstlisting}
+<condition>
+<time>
+<period>even</period>
+<phase>0</phase>
+</time>
+</condition>
+\end{lstlisting}
+\end{boxedminipage}
+\end{minipage}
+
+\bigskip
+\subsubsection*{B. Memory condition}
+\begin{itemize}
+\item The memory condition is on function \url{test_is_false}.
+\item $B$ is specified as "ID is equal to 1".
+\item $\neg B$ is specified as "ID is not equal to 1".
+\item In Table \ref{Table: tests} we reflect that $B$ can be true or false:
+\begin{itemize}
+\item let models a,c encode (memory condition B is false): B=0.
+\item let models b,d encode (memory condition B is true): B=1.
+\end{itemize}
+
+\end{itemize}
+
+\bigskip
+\begin{minipage}{14cm}
+\begin{boxedminipage}{6cm}
+$B$:
+\begin{lstlisting}
+<condition>
+<lhs>
+  <value>a.id</value>
+</lhs>
+<op>EQ</op>
+<rhs>
+  <value>1</value>
+</rhs>
+</condition>
+\end{lstlisting}
+\end{boxedminipage}
+%
+\begin{boxedminipage}{6cm}
+$\neg B$:
+\begin{lstlisting}
+<condition>
+<lhs>
+  <value>a.id</value>
+</lhs>
+<op>NEQ</op>
+<rhs>
+  <value>1</value>
+</rhs>
+</condition>
+\end{lstlisting}
+\end{boxedminipage}
+\end{minipage}
+
+\begin{table}[Hb!]
+\label{Table: tests}
+\leavevmode\centering
+\begin{tabular}{|c|c|c||cccc|}
+\hline 
+		 & 				 & 						& \multicolumn{4}{c|}{Truth value of logical test}\\
+ 		 & 				 & 						& \multicolumn{4}{c|}{(given values of A and B in 0.xml)}\\
+ 		 & 				 & 						& \multicolumn{4}{c|}{}\\ 		 
+test no. & logical test & logical complement 	& \parbox{1cm}{a.\\A=0\\B=0\\} & \parbox{1cm}{b.\\A=0\\B=1\\} & \parbox{1cm}{c.\\A=1\\B=0\\} & \parbox{1cm}{d.\\A=1\\B=1\\}\\ 
+\hline 
+1 & $A \lor B$ & $\neg(A \lor B)$ & 0 & 1 & 1 & 1\\ 
+\hline 
+2 & $A \land B$ & $\neg(A \land B)$ & 0 & 0 & 0 & 1\\ 
+\hline 
+3 & $\neg A \lor B$ & $\neg(\neg A \lor B)$ & 1 & 1 & 0 & 1\\  
+\hline 
+4 & $\neg A \land B$ & $\neg(\neg A \land B)$ & 0 & 1 & 0 & 0\\  
+\hline 
+5 & $A \lor \neg B$ & $\neg(A \lor \neg B)$ & 1 & 0 & 1 & 1\\  
+\hline 
+6 & $A \land \neg B$ & $\neg(A \land \neg B)$ & 0 & 0 & 1 & 0\\  
+\hline 
+7 & $\neg A \lor \neg B$ & $\neg(\neg A \lor \neg B)$ & 1 & 1 & 1 & 0\\  
+\hline 
+8 & $\neg A \land \neg B$ & $\neg(\neg A \land \neg B)$ & 1 & 0 & 0 & 0\\  
+\hline \hline 
+9 & $B \lor A$ & $\neg(B \lor A)$ &  0 & 1 & 1 & 1\\  
+\hline 
+10 & $B \land A$ & $\neg(B \land A)$ & 0 & 0 & 0 & 1\\  
+\hline 
+11 & $\neg B \lor A$ & $\neg(\neg B \lor A)$ & 1 & 0 & 1 & 1\\  
+\hline 
+12 & $\neg B \land A$ & $\neg(\neg B \land A)$ & 0 & 0 & 1 & 0\\  
+\hline 
+13 & $B \lor \neg A$ & $\neg(B \lor \neg A)$ & 1 & 1 & 0 & 1\\  
+\hline 
+14 & $B \land \neg A$ & $\neg(B \land \neg A)$ & 0 & 1 & 0 & 0\\  
+\hline 
+15 & $\neg B \lor \neg A$ & $\neg(\neg B \lor \neg A)$ & 1 & 1 & 1 & 0\\  
+\hline 
+16 & $\neg B \land \neg A$ & $\neg(\neg B \land \neg A)$ & 1 & 0 & 0 & 0\\  
+\hline 
+\end{tabular}
+\caption{Unittests. Condition $A$ is always the time-condition, while $B$ is the memory condition. All pairwise logical expressions are tested, for all possible truth values of $A$ and $B$ (yielding $16\times 4=64$ tests in total). The upper halve of the table are tests with on the LHS the time-condition A and on the RHS the memory-condition (tests 1-8). In the lower halve (tests 9-16) this is reversed, in order to test if the xparser C code can deal with both orderings correctly. The truth values in the right-halve are the actual truth values that the tests should yield.}
+\end{table}
+
+\end{document}
