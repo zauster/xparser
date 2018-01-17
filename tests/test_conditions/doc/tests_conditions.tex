@@ -10,6 +10,7 @@
 Sander van der Hoog\\
 \today
 
+\bigskip
 This is a suite of unittests to test function conditions for FLAME models.
 The folder \url{xparser/tests/test_conditions} contains 16 test models. 
 See the readme.rd file in that folder for how to reproduce the tests. 
@@ -177,7 +178,7 @@ test no. & logical test & logical complement 	& \parbox{1cm}{a.\\A=0\\B=0\\} & \
 16 & $\neg B \land \neg A$ & $\neg(\neg B \land \neg A)$ & 1 & 0 & 0 & 0\\  
 \hline 
 \end{tabular}
-\caption{Unittests. Condition $A$ is always the time-condition, while $B$ is the memory condition. All pairwise logical expressions are tested, for all possible truth values of $A$ and $B$ (yielding $16\times 4=64$ tests in total). The upper halve of the table are tests with on the LHS the time-condition A and on the RHS the memory-condition (tests 1-8). In the lower halve (tests 9-16) this is reversed, in order to test if the xparser C code can deal with both orderings correctly. The truth values in the right-halve are the actual truth values that the tests should yield.}
+\caption{Look-up table for truth values of $64$ unittests. Condition $A$ is always the time-condition, while $B$ is the memory condition. All pairwise logical expressions are tested, for all possible truth values of $A$ and $B$ (yielding $16\times 4=64$ tests in total). The upper halve of the table are tests with on the LHS the time-condition A and on the RHS the memory-condition (tests 1-8). In the lower halve (tests 9-16) this is reversed, in order to test if the xparser C code can deal with both orderings correctly. The truth values in the right-halve are the actual truth values that the tests should yield.}
 \end{table}
 
 \end{document}
