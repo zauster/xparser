@@ -1,0 +1,29 @@
+<states>
+<itno>0</itno>
+<environment>
+</environment>
+<xagent>
+<name>Agent</name>
+  <id>1</id>
+</xagent>
+<xagent>
+<name>Agent</name>
+  <id>2</id>
+</xagent>
+<xagent>
+<name>Agent</name>
+  <id>3</id>
+</xagent>
+<xagent>
+<name>Agent</name>
+  <id>4</id>
+</xagent>
+<xagent>
+<name>Agent</name>
+  <id>5</id>
+</xagent>
+<xagent>
+<name>Agent</name>
+  <id>6</id>
+</xagent>
+</states>

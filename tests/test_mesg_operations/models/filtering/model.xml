@@ -1,0 +1,72 @@
+ <xmodel version="2">
+ <name>Test Model - Xparser 0.17.1 Message randomization</name>
+ <version>Version 1.0, 18.01.2018</version>
+ <description>Author: Sander van der Hoog (svdhoog@gmail.com)</description>
+ <models/>
+  <environment>
+  <functionFiles>
+   <file>agent_functions.c</file>
+  </functionFiles>
+  </environment>
+  <agents>
+  <xagent>
+   <name>Agent</name>
+   <description></description>
+   <memory>
+    <variable>
+     <type>int</type>
+     <name>id</name>
+     <description>Agent ID.</description>
+    </variable>
+   </memory>
+    <functions>
+    <function>
+     <name>send</name>
+     <description></description>
+     <currentState>start_Agent</currentState>
+     <nextState>read</nextState>
+     <inputs/>
+     <outputs>
+      <output>
+       <messageName>info</messageName>
+      </output>
+     </outputs>
+    </function>
+    <function>
+     <name>read</name>
+     <description></description>
+     <currentState>read</currentState>
+     <nextState>end_Agent</nextState>
+     <inputs>
+      <input>
+       <messageName>info</messageName>
+       <filter>
+       <lhs>
+       <value>m.id</value>
+       </lhs>
+       <op>GEQ</op>
+       <rhs>
+       <value>3</value>
+       </rhs>
+       </filter>
+      </input>
+      </inputs>
+     <outputs/>
+    </function>
+    </functions>
+  </xagent>
+ </agents>
+ <messages>
+  <message>
+   <name>info</name>
+   <description></description>
+   <variables>
+    <variable>
+     <type>int</type>
+     <name>id</name>
+     <description></description>
+    </variable>
+   </variables>
+  </message>
+ </messages>
+</xmodel>
