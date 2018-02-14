@@ -1,0 +1,76 @@
+[libmboard] Version        : 0.3.1 (SERIAL)
+[libmboard] Build date     : Fri Oct 21 14:49:49 CEST 2016
+[libmboard] Config options :  '--disable-tests'
+
+[libmboard] +++ This is a DEBUG version +++
+[libmboard] <settings> MBOARD_MEMPOOL_RECYCLE = 0 (default)
+[libmboard] <settings> MBOARD_MEMPOOL_BLOCKSIZE = 512 (default)
+FLAME Application: Test Model - Xparser 0.17.1 function conditions 
+Debug mode enabled 
+Iterations: 1
+xml: Geometric partitioning
+Reading initial data file: 0.xml
+Reading environment data from: 0.xml
+Reading agent data from: 0.xml
+output: type='snapshot' format='xml' location='' period='1' phase='0'
+xdiv=1 ydiv=1
+Partition 0: -999999.123456, 999999.123456, -999999.123456, 999999.123456
+Iteration - 1
+Execution time - 0:00:001 [mins:secs:msecs]
+[libmboard] Version        : 0.3.1 (SERIAL)
+[libmboard] Build date     : Fri Oct 21 14:49:49 CEST 2016
+[libmboard] Config options :  '--disable-tests'
+
+[libmboard] +++ This is a DEBUG version +++
+[libmboard] <settings> MBOARD_MEMPOOL_RECYCLE = 0 (default)
+[libmboard] <settings> MBOARD_MEMPOOL_BLOCKSIZE = 512 (default)
+FLAME Application: Test Model - Xparser 0.17.1 function conditions 
+Debug mode enabled 
+Iterations: 1
+xml: Geometric partitioning
+Reading initial data file: 0.xml
+Reading environment data from: 0.xml
+Reading agent data from: 0.xml
+output: type='snapshot' format='xml' location='' period='1' phase='0'
+xdiv=1 ydiv=1
+Partition 0: -999999.123456, 999999.123456, -999999.123456, 999999.123456
+Iteration - 1
+Execution time - 0:00:000 [mins:secs:msecs]
+[libmboard] Version        : 0.3.1 (SERIAL)
+[libmboard] Build date     : Fri Oct 21 14:49:49 CEST 2016
+[libmboard] Config options :  '--disable-tests'
+
+[libmboard] +++ This is a DEBUG version +++
+[libmboard] <settings> MBOARD_MEMPOOL_RECYCLE = 0 (default)
+[libmboard] <settings> MBOARD_MEMPOOL_BLOCKSIZE = 512 (default)
+FLAME Application: Test Model - Xparser 0.17.1 function conditions 
+Debug mode enabled 
+Iterations: 1
+xml: Geometric partitioning
+Reading initial data file: 0.xml
+Reading environment data from: 0.xml
+Reading agent data from: 0.xml
+output: type='snapshot' format='xml' location='' period='1' phase='0'
+xdiv=1 ydiv=1
+Partition 0: -999999.123456, 999999.123456, -999999.123456, 999999.123456
+Iteration - 1
+Execution time - 0:00:000 [mins:secs:msecs]
+[libmboard] Version        : 0.3.1 (SERIAL)
+[libmboard] Build date     : Fri Oct 21 14:49:49 CEST 2016
+[libmboard] Config options :  '--disable-tests'
+
+[libmboard] +++ This is a DEBUG version +++
+[libmboard] <settings> MBOARD_MEMPOOL_RECYCLE = 0 (default)
+[libmboard] <settings> MBOARD_MEMPOOL_BLOCKSIZE = 512 (default)
+FLAME Application: Test Model - Xparser 0.17.1 function conditions 
+Debug mode enabled 
+Iterations: 1
+xml: Geometric partitioning
+Reading initial data file: 0.xml
+Reading environment data from: 0.xml
+Reading agent data from: 0.xml
+output: type='snapshot' format='xml' location='' period='1' phase='0'
+xdiv=1 ydiv=1
+Partition 0: -999999.123456, 999999.123456, -999999.123456, 999999.123456
+Iteration - 1
+Execution time - 0:00:000 [mins:secs:msecs]

@@ -459,7 +459,12 @@ void freexmachines()
  */
 void set_$name($type <?if dynamic_array?>* <?end if?><?if static_array?>*<?end if?>$name<?if static_array?>[]<?end if?>)
 {
-<?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name) (*current_xmachine->xmachine_$name).$allvar_name = $allvar_name;
+<?foreach xagent?><?if allvar_in_agent?>	if(current_xmachine->xmachine_$name)
+	{
+		assert($allvar_name < FLAME_DOUBLE_MAX);
+		assert($allvar_name > FLAME_DOUBLE_MIN);
+		(*current_xmachine->xmachine_$name).$allvar_name = $allvar_name;
+	}
 <?end if?><?end foreach?>}
 <?end if?><?end if?>
 /** \fn $type get_$name()
