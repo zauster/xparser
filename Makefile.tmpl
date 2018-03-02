@@ -80,3 +80,7 @@ format:
 	done 
 print:
 	a2ps -R -f10 --column=1 $(SOURCES)
+dotchart:
+	dot process_order_graph.dot -Tpdf > process_order_graph.pdf; \
+	dot stategraph_colour.dot -Tpdf > stategraph_colour.pdf; \
+	dot stategraph.dot -Tpdf > stategraph.pdf;
