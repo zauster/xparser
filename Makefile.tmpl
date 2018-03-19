@@ -23,13 +23,18 @@ PARALLEL_CCOMP	= mpicc
 SERIAL_LOADER	= gcc
 PARALLEL_LOADER	= mpif77
 
+# if you want to carry out a 'preparation' command before compiling,
+# such as instrumentation with e.g. 'Score-P' you can use:
+# 'make PREP="scorep" from the command line
+PREP = 
+
 DEFINES		=
 <?if gsl_lib?>DEFINES		+= -DGSL_LIB<?end if?>
 #DEFINES	+= -DSTART_END 
 #DEFINES	+= -DGRAPHICS
 
 # C Compiler
-CC      = <?if serial?>$(SERIAL_CCOMP)<?end if?><?if parallel?>$(PARALLEL_CCOMP)<?end if?>
+CC      = <?if serial?>$(SERIAL_CCOMP)<?end if?><?if parallel?>$(PREP) $(PARALLEL_CCOMP)<?end if?>
 CFLAGS  =  -I$(LIBMBOARD_INC) ${DEFINES}
 <?if debug?>CFLAGS += -std=c99 -Wall -D_DEBUG_MODE -g<?end if?>
 <?if final?>CFLAGS += -O3<?end if?>
