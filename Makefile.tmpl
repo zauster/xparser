@@ -39,7 +39,7 @@ CFLAGS  =  -I$(LIBMBOARD_INC) ${DEFINES}
 <?if debug?>CFLAGS += -std=c99 -Wall -D_DEBUG_MODE -g<?end if?>
 <?if final?>CFLAGS += -O3<?end if?>
 
-LD       = <?if serial?>$(SERIAL_LOADER)<?end if?><?if parallel?>$(PARALLEL_LOADER)<?end if?>
+LD       = <?if serial?>$(SERIAL_LOADER)<?end if?><?if parallel?>$(PREP) $(PARALLEL_LOADER)<?end if?>
 
 LDFLAGS  = -L$(LIBMBOARD_LIB)
 <?if gsl_lib?>
