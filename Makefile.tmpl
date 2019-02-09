@@ -10,21 +10,23 @@
 # Change this variable for the location of the 
 # Message Board Library installation
 #===================================================
-LIBMBOARD_DIR = /usr/local
+LIBMBOARD_DIR = /usr
 LIBMBOARD_INC = $(LIBMBOARD_DIR)/include
 LIBMBOARD_LIB = $(LIBMBOARD_DIR)/lib
 
 #====================================================
 # Change these for your compliler/loaded
 #====================================================
+DIRPREFIX = /usr/bin
+
 SERIAL_CCOMP	= gcc
-PARALLEL_CCOMP	= mpicc
+PARALLEL_CCOMP	= $(DIRPREFIX)/mpicc
 
 SERIAL_LOADER	= gcc
-PARALLEL_LOADER	= mpif77
+PARALLEL_LOADER	= $(DIRPREFIX)/mpif77
 
 # if you want to carry out a 'preparation' command before compiling,
-# such as instrumentation with e.g. 'Score-P' you can use:
+# such as instrumentation with e.g. tau, Score-P you can use:
 # 'make PREP="scorep" from the command line
 PREP = 
 
